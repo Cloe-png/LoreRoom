@@ -27,7 +27,7 @@
         @if($graphRelations->isEmpty())
             <p class="muted">Aucune relation a afficher.</p>
         @else
-            <div id="relations-network" style="height:560px; border:1px dashed rgba(114,84,49,.35); border-radius:8px; background:rgba(255,255,255,.25);"></div>
+            <div id="relations-network" style="height:680px; border:1px dashed rgba(114,84,49,.35); border-radius:8px; background:rgba(255,255,255,.25);"></div>
             @php
                 $networkEdges = $graphRelations->values();
                 $networkNodes = [];
@@ -112,7 +112,32 @@
             </tbody>
         </table>
 
-        <div style="margin-top:10px;">{{ $relations->links() }}</div>
+        <div class="stack" style="margin-top:10px; justify-content:space-between;">
+            <p class="muted" style="margin:0;">
+                Page {{ $relations->currentPage() }} / {{ max(1, $relations->lastPage()) }}
+            </p>
+            <div class="stack">
+                @if($relations->onFirstPage())
+                    <span class="btn secondary" style="opacity:.55; pointer-events:none;">Précédent</span>
+                @else
+                    <a class="btn secondary" href="{{ $relations->previousPageUrl() }}">Précédent</a>
+                @endif
+
+                @for($page = 1; $page <= $relations->lastPage(); $page++)
+                    @if($page === $relations->currentPage())
+                        <span class="btn" style="pointer-events:none;">{{ $page }}</span>
+                    @else
+                        <a class="btn secondary" href="{{ $relations->url($page) }}">{{ $page }}</a>
+                    @endif
+                @endfor
+
+                @if($relations->hasMorePages())
+                    <a class="btn secondary" href="{{ $relations->nextPageUrl() }}">Suivant</a>
+                @else
+                    <span class="btn secondary" style="opacity:.55; pointer-events:none;">Suivant</span>
+                @endif
+            </div>
+        </div>
     </section>
 
     @if(!$graphRelations->isEmpty())
@@ -125,11 +150,20 @@
                 const rawNodes = @json(array_values($networkNodes));
                 const rawEdges = @json($networkEdges);
 
+                function compactLabel(name) {
+                    const value = String(name || '').trim();
+                    if (value === '') return '-';
+                    const parts = value.split(/\s+/);
+                    if (parts.length <= 1) return value;
+                    return `${parts[0]}\n${parts.slice(1).join(' ')}`;
+                }
+
                 const nodes = rawNodes.map((n) => {
                     const node = {
                         id: n.id,
-                        label: n.label,
-                        font: { face: 'Georgia', color: n.is_dead ? '#4e5665' : '#3a2a17', size: 16, strokeWidth: 0 },
+                        label: compactLabel(n.label),
+                        title: n.label,
+                        font: { face: 'Georgia', color: n.is_dead ? '#4e5665' : '#3a2a17', size: 12, strokeWidth: 0, multi: true, align: 'center' },
                         borderWidth: 3,
                         color: n.is_dead
                             ? { background: '#bcc3d0', border: '#5b6574' }
@@ -139,40 +173,80 @@
                     if (n.image) {
                         node.shape = 'circularImage';
                         node.image = n.image;
-                        node.size = 30;
+                        node.size = 26;
                         node.brokenImage = undefined;
                     } else {
                         node.shape = 'dot';
-                        node.size = 28;
+                        node.size = 20;
                     }
 
                     return node;
                 });
 
-                const edges = rawEdges.map((e) => ({
-                    from: e.from_id,
-                    to: e.to_id,
-                    arrows: e.bidirectional ? '' : 'to',
-                    label: e.type || '',
-                    font: { face: 'Georgia', color: '#4f3b21', size: 13, strokeWidth: 0, align: 'top' },
-                    color: { color: 'rgba(67,93,125,.82)' },
-                    width: 2.8,
-                    smooth: false,
-                }));
+                // Deterministic circular layout to avoid node/label collisions.
+                const count = Math.max(1, nodes.length);
+                const radius = Math.max(260, 38 * count);
+                nodes.forEach((node, index) => {
+                    const angle = (index / count) * Math.PI * 2;
+                    node.x = Math.round(Math.cos(angle) * radius);
+                    node.y = Math.round(Math.sin(angle) * radius);
+                    node.fixed = { x: true, y: true };
+                });
+
+                // Group duplicate links to avoid text/arrow overload.
+                const grouped = new Map();
+                rawEdges.forEach((e) => {
+                    const from = Number(e.from_id || 0);
+                    const to = Number(e.to_id || 0);
+                    if (!from || !to || from === to) return;
+                    const key = `${from}->${to}`;
+                    if (!grouped.has(key)) {
+                        grouped.set(key, { from, to, bidirectional: !!e.bidirectional, types: new Set(), count: 0 });
+                    }
+                    const row = grouped.get(key);
+                    row.bidirectional = row.bidirectional || !!e.bidirectional;
+                    if (e.type) row.types.add(String(e.type));
+                    row.count += 1;
+                });
+
+                const hasReverse = (from, to) => grouped.has(`${to}->${from}`);
+                const edges = Array.from(grouped.values()).map((e) => {
+                    const reverse = hasReverse(e.from, e.to);
+                    const smooth = reverse
+                        ? { enabled: true, type: 'curvedCW', roundness: 0.24 }
+                        : { enabled: true, type: 'continuous', roundness: 0.18 };
+                    const title = e.types.size > 0 ? Array.from(e.types).join(' | ') : 'Relation';
+                    return {
+                        from: e.from,
+                        to: e.to,
+                        arrows: e.bidirectional
+                            ? { from: { enabled: true, scaleFactor: 0.58 }, to: { enabled: true, scaleFactor: 0.58 } }
+                            : { to: { enabled: true, scaleFactor: 0.72 } },
+                        // Keep canvas readable: types are shown on hover only.
+                        label: '',
+                        title,
+                        font: { face: 'Georgia', color: '#4f3b21', size: 11, strokeWidth: 0, align: 'top' },
+                        color: { color: 'rgba(67,93,125,.74)' },
+                        width: Math.min(4, 1.8 + (e.count * 0.45)),
+                        smooth,
+                    };
+                });
 
                 const data = { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) };
                 const options = {
-                    physics: {
-                        enabled: true,
-                        stabilization: { iterations: 180, fit: true },
-                        barnesHut: { springLength: 150, springConstant: 0.03, damping: 0.28 },
-                    },
-                    interaction: { hover: true, navigationButtons: true, keyboard: true },
+                    physics: false,
+                    interaction: { hover: true, navigationButtons: true, keyboard: true, tooltipDelay: 80 },
                     nodes: { shapeProperties: { useBorderWithImage: true } },
-                    edges: { selectionWidth: 0 },
+                    edges: { selectionWidth: 0, hoverWidth: 0.4 },
                 };
 
-                new vis.Network(root, data, options);
+                const network = new vis.Network(root, data, options);
+                network.once('stabilized', function () {
+                    network.fit({
+                        animation: false,
+                        padding: { top: 80, right: 80, bottom: 100, left: 80 },
+                    });
+                });
             })();
         </script>
     @endif

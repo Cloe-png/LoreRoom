@@ -34,6 +34,14 @@
             border-color: rgba(166, 85, 85, .35);
             color: #6b2a2a;
         }
+        .genealogy-basic-wrap {
+            border: 1px solid rgba(114,84,49,.22);
+            border-radius: 12px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,.82), rgba(252,248,237,.86)),
+                radial-gradient(800px 360px at 50% 0%, rgba(188,170,132,.1), transparent 70%);
+            padding: 10px;
+        }
     </style>
     <section class="panel" style="margin-top:0;">
         <form method="GET" action="{{ route('manage.genealogy.index') }}" class="grid-4">
@@ -96,12 +104,14 @@
                 Vue lisible: filiation verticale, fratrie en pointille horizontal.
             </p>
             <div class="genealogy-dates-focus">
-                <span class="chip">{{ $focusName }}</span>
-                <span class="chip birth">Naissance: {{ $focusBirth }}</span>
-                <span class="chip death">Mort: {{ $focusDeath }}</span>
+                <span id="focus-name-chip" class="chip">{{ $focusName }}</span>
+                <span id="focus-birth-chip" class="chip birth">Naissance: {{ $focusBirth }}</span>
+                <span id="focus-death-chip" class="chip death">Mort: {{ $focusDeath }}</span>
             </div>
             <div id="genealogy-network-error" class="muted" style="display:none; margin:0 0 10px; padding:10px; border:1px solid rgba(130,60,60,.28); border-radius:8px; background:rgba(255,245,245,.7); color:#6d2a2a;"></div>
-            <div id="genealogy-network" style="height:720px; border:1px dashed rgba(114,84,49,.35); border-radius:10px; background:rgba(255,255,255,.24);"></div>
+            <div class="genealogy-basic-wrap">
+                <div id="genealogy-network" style="height:720px; border:1px dashed rgba(114,84,49,.25); border-radius:10px; background:rgba(255,255,255,.35);"></div>
+            </div>
         </section>
     @endif
 
@@ -144,11 +154,15 @@
                 try {
                     const rawNodes = @json($graphNodes);
                     const rawEdges = @json($edges->values());
+                    const rawNodesById = new Map(rawNodes.map((n) => [Number(n.id), n]));
                     const twinNodeIds = new Set(
                         rawEdges
                             .filter((e) => (e.kind || '') === 'sibling' && (e.sibling_kind || '') === 'twin')
                             .flatMap((e) => [e.from, e.to])
                     );
+                    const focusNameChip = document.getElementById('focus-name-chip');
+                    const focusBirthChip = document.getElementById('focus-birth-chip');
+                    const focusDeathChip = document.getElementById('focus-death-chip');
 
                 function formatDateFr(isoDate) {
                     if (!isoDate || typeof isoDate !== 'string') return '...';
@@ -179,31 +193,25 @@
                     const isTwin = twinNodeIds.has(n.id);
                     const node = {
                         id: n.id,
-                        label: [n.label, life.line1, life.line2, n.generation].filter(Boolean).join('\n'),
+                        label: n.label || 'Personnage',
                         title: `${n.label}\n${life.line1}\n${life.line2}`,
                         level: n.level,
                         font: {
                             face: 'Georgia',
-                            color: n.is_dead ? '#515c6e' : '#3a2a17',
-                            size: 15,
+                            color: n.is_dead ? '#495262' : '#2f2a23',
+                            size: 17,
                             multi: true,
                             align: 'center',
                         },
-                        borderWidth: n.is_selected ? 6 : (isTwin ? 5 : 3),
+                        borderWidth: n.is_selected ? 3 : (isTwin ? 3 : 2),
                         color: n.is_dead
-                            ? { background: '#b8c0cf', border: '#596273' }
-                            : (isTwin ? { background: '#ffe9c7', border: '#d07a12' } : { background: '#f2dfbe', border: '#8b6332' }),
-                        margin: { top: 8, right: 10, bottom: 8, left: 10 },
+                            ? { background: '#edf1f6', border: '#70798a' }
+                            : (isTwin ? { background: '#fff4df', border: '#bb8a3a' } : { background: '#f8f7f2', border: '#4e4e4e' }),
+                        margin: { top: 8, right: 14, bottom: 8, left: 14 },
+                        shape: 'box',
+                        widthConstraint: { minimum: 140, maximum: 220 },
+                        heightConstraint: { minimum: 42 },
                     };
-
-                    if (n.image) {
-                        node.shape = 'circularImage';
-                        node.image = n.image;
-                        node.size = 36;
-                    } else {
-                        node.shape = 'dot';
-                        node.size = 33;
-                    }
 
                     return node;
                 });
@@ -211,9 +219,9 @@
                 const lineageStyle = {
                     arrows: '',
                     label: '',
-                    width: 3.2,
-                    color: { color: 'rgba(28,28,28,.92)' },
-                    smooth: { enabled: true, type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.08 },
+                    width: 2.2,
+                    color: { color: 'rgba(56,56,56,.95)' },
+                    smooth: { enabled: true, type: 'cubicBezier', forceDirection: 'vertical', roundness: 0.12 },
                 };
                 const siblingStyle = {
                     arrows: '',
@@ -226,17 +234,17 @@
                 const twinStyle = {
                     arrows: '',
                     label: '',
-                    dashes: [7, 4],
-                    width: 4.5,
-                    color: { color: 'rgba(208,122,18,.95)' },
+                    dashes: [8, 5],
+                    width: 2.6,
+                    color: { color: 'rgba(166,120,49,.92)' },
                     smooth: false,
                 };
                 const coupleStyle = {
                     arrows: '',
                     label: '',
-                    dashes: [9, 5],
-                    width: 4,
-                    color: { color: 'rgba(10,10,10,.95)' },
+                    dashes: [9, 6],
+                    width: 2.2,
+                    color: { color: 'rgba(66,66,66,.9)' },
                     smooth: false,
                 };
 
@@ -294,27 +302,30 @@
                     }
                 });
 
+                // Add explicit couple links coming from DB (spouse links), including couples without children.
                 rawEdges.forEach((e) => {
-                    const isSibling = (e.kind || '') === 'sibling';
-                    if (!isSibling) return;
-                    const isTwin = (e.sibling_kind || '') === 'twin';
-                    visEdges.push({
-                        from: e.from,
-                        to: e.to,
-                        ...(isTwin ? twinStyle : siblingStyle),
-                    });
+                    if ((e.kind || '') !== 'couple') return;
+                    const a = Number(e.from || 0);
+                    const b = Number(e.to || 0);
+                    if (!a || !b || !nodeIdSet.has(a) || !nodeIdSet.has(b)) return;
+                    const key = `${Math.min(a, b)}-${Math.max(a, b)}`;
+                    if (coupleKeys.has(key)) return;
+                    visEdges.push({ from: a, to: b, ...coupleStyle });
+                    coupleKeys.add(key);
                 });
 
-                    const data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
-                    const options = {
+                // Sibling links are intentionally hidden to keep the chart clean like a classic pedigree.
+
+                const data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
+                const options = {
                         layout: {
                             hierarchical: {
                                 enabled: true,
                                 direction: 'UD',
                                 sortMethod: 'directed',
-                                nodeSpacing: 210,
-                                levelSeparation: 210,
-                                treeSpacing: 210,
+                                nodeSpacing: 190,
+                                levelSeparation: 150,
+                                treeSpacing: 190,
                                 edgeMinimization: true,
                                 parentCentralization: true,
                             },
@@ -322,9 +333,25 @@
                         physics: false,
                         interaction: { hover: true, navigationButtons: true, keyboard: true },
                         nodes: { shapeProperties: { useBorderWithImage: true } },
-                    };
+                };
 
-                    new vis.Network(root, data, options);
+                    const network = new vis.Network(root, data, options);
+
+                    function updateFocusChips(nodeId) {
+                        const raw = rawNodesById.get(Number(nodeId));
+                        if (!raw) return;
+                        const life = formatLifeDates(raw.birth_date, raw.death_date, raw.is_dead);
+                        if (focusNameChip) focusNameChip.textContent = raw.label || 'Personnage';
+                        if (focusBirthChip) focusBirthChip.textContent = `Naissance: ${life.birthText}`;
+                        if (focusDeathChip) focusDeathChip.textContent = `Mort: ${life.deathText}`;
+                    }
+
+                    network.on('click', function (params) {
+                        if (!params.nodes || params.nodes.length === 0) return;
+                        const clickedId = params.nodes[0];
+                        if (!rawNodesById.has(Number(clickedId))) return;
+                        updateFocusChips(clickedId);
+                    });
                 } catch (error) {
                     showGraphError("Erreur JS dans l'arbre genealogique: " + (error && error.message ? error.message : "inconnue"));
                     console.error(error);

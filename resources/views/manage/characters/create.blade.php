@@ -1,4 +1,4 @@
-@extends('manage.layout')
+﻿@extends('manage.layout')
 
 @section('title', 'Gestion - Nouveau personnage')
 @section('header', 'Nouveau personnage')
@@ -64,10 +64,6 @@
                     <input type="text" name="last_name" value="{{ old('last_name') }}">
                 </div>
                 <div class="field">
-                    <label>Famille (pivot)</label>
-                    <input type="text" name="family_name" value="{{ old('family_name') }}" placeholder="Ex: Stark">
-                </div>
-                <div class="field">
                     <label>Alias / surnoms</label>
                     <input type="text" name="aliases" value="{{ old('aliases') }}">
                 </div>
@@ -106,6 +102,13 @@
                 </div>
             </div>
 
+            <details class="accordion" open>
+                <summary>Famille</summary>
+                <div class="accordion-body">
+                    <div class="field">
+                        <label>Famille (pivot)</label>
+                        <input type="text" name="family_name" value="{{ old('family_name') }}" placeholder="Ex: Stark">
+                    </div>
             <div class="grid-4">
                 <div class="field">
                     <label>Père</label>
@@ -122,6 +125,15 @@
                         <option value="">Inconnue</option>
                         @foreach($parents as $parent)
                             <option value="{{ $parent->id }}" {{ old('mother_id') == $parent->id ? 'selected' : '' }}>{{ $parent->display_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Epouse / Epoux</label>
+                    <select name="spouse_id">
+                        <option value="">Inconnu(e)</option>
+                        @foreach($spouses as $spouse)
+                            <option value="{{ $spouse->id }}" {{ old('spouse_id') == $spouse->id ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -148,8 +160,6 @@
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children') ? 'checked' : '' }}> Enfants (oui/non)</label>
                 <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frere / soeur (oui/non)</label>
-                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power') ? 'checked' : '' }}> Pouvoir actif</label>
-                <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', 1) ? 'checked' : '' }}> Secrets privés</label>
             </div>
 
             <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -227,6 +237,14 @@
                         </div>
                     </div>
                 @endif
+            </div>
+
+                </div>
+            </details>
+
+            <div class="stack" style="margin-bottom:12px;">
+                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power') ? 'checked' : '' }}> Pouvoir actif</label>
+                <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', 1) ? 'checked' : '' }}> Secrets prives</label>
             </div>
 
             <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -570,3 +588,4 @@
         })();
     </script>
 @endsection
+

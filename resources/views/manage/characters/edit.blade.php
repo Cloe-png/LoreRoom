@@ -1,4 +1,4 @@
-@extends('manage.layout')
+﻿@extends('manage.layout')
 
 @section('title', 'Gestion - Éditer personnage')
 @section('header', 'Éditer personnage')
@@ -61,7 +61,6 @@
             <div class="grid-4">
                 <div class="field"><label>Prénom</label><input type="text" name="first_name" value="{{ old('first_name', $character->first_name ?: $character->name) }}" required></div>
                 <div class="field"><label>Nom</label><input type="text" name="last_name" value="{{ old('last_name', $character->last_name) }}"></div>
-                <div class="field"><label>Famille (pivot)</label><input type="text" name="family_name" value="{{ old('family_name', $character->family_name) }}" placeholder="Ex: Stark"></div>
                 <div class="field"><label>Alias / surnoms</label><input type="text" name="aliases" value="{{ old('aliases', $character->aliases) }}"></div>
                 <div class="field">
                     <label>Statut</label>
@@ -89,6 +88,13 @@
                 <div class="field"><label>Date de mort</label><input type="date" name="death_date" value="{{ old('death_date', optional($character->death_date)->format('Y-m-d')) }}"></div>
             </div>
 
+            <details class="accordion" open>
+                <summary>Famille</summary>
+                <div class="accordion-body">
+                    <div class="field">
+                        <label>Famille (pivot)</label>
+                        <input type="text" name="family_name" value="{{ old('family_name', $character->family_name) }}" placeholder="Ex: Stark">
+                    </div>
             <div class="grid-4">
                 <div class="field">
                     <label>Père</label>
@@ -112,7 +118,7 @@
                     <label>Epouse/Epoux</label>
                     <select name="spouse_id">
                         <option value="">Inconnue</option>
-                        @foreach($parents as $spouse)
+                        @foreach($spouses as $spouse)
                             <option value="{{ $spouse->id }}" {{ old('spouse_id', $character->spouse_id) == $spouse->id ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
                         @endforeach
                     </select>
@@ -140,8 +146,6 @@
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children', $character->has_children) ? 'checked' : '' }}> Enfants (oui/non)</label>
                 <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister', $character->has_brother_sister) ? 'checked' : '' }}> Frere / soeur (oui/non)</label>
-                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power', $character->has_power) ? 'checked' : '' }}> Pouvoir actif</label>
-                <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', $character->secrets_is_private ?? true) ? 'checked' : '' }}> Secrets privés</label>
             </div>
 
             <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -219,6 +223,14 @@
                         </div>
                     </div>
                 @endif
+            </div>
+
+                </div>
+            </details>
+
+            <div class="stack" style="margin-bottom:12px;">
+                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power', $character->has_power) ? 'checked' : '' }}> Pouvoir actif</label>
+                <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', $character->secrets_is_private ?? true) ? 'checked' : '' }}> Secrets prives</label>
             </div>
 
             <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -527,3 +539,4 @@
         })();
     </script>
 @endsection
+

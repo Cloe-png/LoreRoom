@@ -25,6 +25,7 @@ class GenealogyController extends Controller
                 'status',
                 'father_id',
                 'mother_id',
+                'spouse_id',
                 'birth_date',
                 'death_date',
                 'image_path',
@@ -169,6 +170,30 @@ class GenealogyController extends Controller
 
         }
 
+        // Always include spouses of currently included characters so couples are visible in the tree.
+        $includedIdsNow = $levels->keys()->map(fn ($id) => (int) $id)->all();
+        foreach ($includedIdsNow as $includedId) {
+            $character = $byId->get($includedId);
+            if (!$character) {
+                continue;
+            }
+            $spouseId = (int) ($character->spouse_id ?? 0);
+            if ($spouseId <= 0 || !$byId->has($spouseId)) {
+                continue;
+            }
+
+            if (!$levels->has($spouseId)) {
+                $levels->put($spouseId, (int) $levels->get($includedId, 0));
+            }
+
+            $edges->push([
+                'from' => $includedId,
+                'to' => $spouseId,
+                'label' => 'couple',
+                'kind' => 'couple',
+            ]);
+        }
+
         // Build sibling links as a chain per sibling group to keep graph readable.
         $includedIds = $levels->keys()->map(fn ($id) => (int) $id)->all();
         $included = $characters->whereIn('id', $includedIds);
@@ -256,6 +281,12 @@ class GenealogyController extends Controller
                     $b = max((int) $edge['from'], (int) $edge['to']);
 
                     return 'sibling-' . $a . '-' . $b . '-' . ($edge['label'] ?? '');
+                }
+                if (($edge['kind'] ?? '') === 'couple') {
+                    $a = min((int) $edge['from'], (int) $edge['to']);
+                    $b = max((int) $edge['from'], (int) $edge['to']);
+
+                    return 'couple-' . $a . '-' . $b;
                 }
 
                 return $edge['from'] . '-' . $edge['to'];
