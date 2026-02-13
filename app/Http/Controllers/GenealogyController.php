@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class GenealogyController extends Controller
 {
     public function index()
     {
         $characters = Character::query()
-            ->with('primaryGalleryImage')
+            ->orderByRaw('birth_date IS NULL')
+            ->orderBy('birth_date')
             ->orderBy('first_name')
             ->orderBy('last_name')
             ->get([
@@ -121,12 +123,12 @@ class GenealogyController extends Controller
                 foreach (['father_id' => -1, 'mother_id' => -1] as $parentField => $delta) {
                     $parentId = (int) ($current->{$parentField} ?? 0);
                     if ($parentId > 0 && $byId->has($parentId)) {
-                        $edges->push([
-                            'from' => $parentId,
-                            'to' => $currentId,
-                            'label' => $parentField === 'father_id' ? 'pere' : 'mere',
-                            'kind' => 'lineage',
-                        ]);
+                $edges->push([
+                    'from' => $parentId,
+                    'to' => $currentId,
+                    'label' => '',
+                    'kind' => 'lineage',
+                ]);
                         $next = $level + $delta;
                         if (!$levels->has($parentId) || abs($next) < abs((int) $levels->get($parentId))) {
                             $levels->put($parentId, $next);
@@ -135,15 +137,26 @@ class GenealogyController extends Controller
                     }
                 }
 
-                $children = $characters->filter(function ($character) use ($currentId) {
-                    return (int) $character->father_id === $currentId || (int) $character->mother_id === $currentId;
-                });
+                $children = $characters
+                    ->filter(function ($character) use ($currentId) {
+                        return (int) $character->father_id === $currentId || (int) $character->mother_id === $currentId;
+                    })
+                    ->sort(function ($a, $b) {
+                        $dateA = optional($a->birth_date)->format('Y-m-d') ?: '9999-12-31';
+                        $dateB = optional($b->birth_date)->format('Y-m-d') ?: '9999-12-31';
+                        if ($dateA === $dateB) {
+                            return strcmp((string) $a->display_name, (string) $b->display_name);
+                        }
+
+                        return strcmp($dateA, $dateB);
+                    })
+                    ->values();
 
                 foreach ($children as $child) {
                     $edges->push([
                         'from' => $currentId,
                         'to' => (int) $child->id,
-                        'label' => 'enfant',
+                        'label' => '',
                         'kind' => 'lineage',
                     ]);
                     $next = $level + 1;
@@ -154,30 +167,47 @@ class GenealogyController extends Controller
                 }
             }
 
-            $siblings = $characters->filter(function ($character) use ($currentId, $current) {
-                if ((int) $character->id === (int) $currentId) {
-                    return false;
+        }
+
+        // Build sibling links as a chain per sibling group to keep graph readable.
+        $includedIds = $levels->keys()->map(fn ($id) => (int) $id)->all();
+        $included = $characters->whereIn('id', $includedIds);
+        $siblingGroups = [];
+        foreach ($included as $character) {
+            $fatherId = (int) ($character->father_id ?? 0);
+            $motherId = (int) ($character->mother_id ?? 0);
+            if ($fatherId <= 0 && $motherId <= 0) {
+                continue;
+            }
+            $key = $fatherId . '-' . $motherId;
+            $siblingGroups[$key][] = $character;
+        }
+
+        foreach ($siblingGroups as $group) {
+            if (count($group) < 2) {
+                continue;
+            }
+
+            usort($group, function ($a, $b) {
+                $dateA = optional($a->birth_date)->format('Y-m-d') ?: '9999-12-31';
+                $dateB = optional($b->birth_date)->format('Y-m-d') ?: '9999-12-31';
+                if ($dateA === $dateB) {
+                    return strcmp((string) $a->display_name, (string) $b->display_name);
                 }
 
-                $sharedFather = (int) $current->father_id > 0 && (int) $character->father_id === (int) $current->father_id;
-                $sharedMother = (int) $current->mother_id > 0 && (int) $character->mother_id === (int) $current->mother_id;
-
-                return $sharedFather || $sharedMother;
+                return strcmp($dateA, $dateB);
             });
 
-            foreach ($siblings as $sibling) {
-                $siblingId = (int) $sibling->id;
+            for ($i = 0; $i < count($group) - 1; $i++) {
+                $left = $group[$i];
+                $right = $group[$i + 1];
                 $edges->push([
-                    'from' => (int) $currentId,
-                    'to' => $siblingId,
-                    'label' => $this->resolveSiblingLabel($current, $sibling),
+                    'from' => (int) $left->id,
+                    'to' => (int) $right->id,
+                    'label' => '',
+                    'sibling_kind' => $this->resolveSiblingKind($left, $right),
                     'kind' => 'sibling',
                 ]);
-
-                if (!$levels->has($siblingId)) {
-                    $levels->put($siblingId, (int) $level);
-                    $queue->push([$siblingId, (int) $level]);
-                }
             }
         }
 
@@ -192,7 +222,9 @@ class GenealogyController extends Controller
                     'name' => $character ? $character->display_name : ('#' . $id),
                     'gender' => $character->gender ?? null,
                     'status' => $character->status ?? null,
-                    'image_path' => !empty($character->image_path) ? $character->image_path : optional($character->primaryGalleryImage)->image_path,
+                    'father_id' => $character ? (int) ($character->father_id ?? 0) : 0,
+                    'mother_id' => $character ? (int) ($character->mother_id ?? 0) : 0,
+                    'image_path' => $this->resolveUsableImagePath($character),
                     'level' => (int) $level,
                     'generation' => $this->generationLabel((int) $level),
                     'birth_date' => $birthDate ?: null,
@@ -200,7 +232,21 @@ class GenealogyController extends Controller
                 ];
             })
             ->values()
-            ->sortBy([['level', 'asc'], ['name', 'asc']])
+            ->sort(function (array $a, array $b) {
+                $levelCmp = ((int) $a['level']) <=> ((int) $b['level']);
+                if ($levelCmp !== 0) {
+                    return $levelCmp;
+                }
+
+                $dateA = (string) ($a['birth_date'] ?? '9999-12-31');
+                $dateB = (string) ($b['birth_date'] ?? '9999-12-31');
+                $dateCmp = strcmp($dateA, $dateB);
+                if ($dateCmp !== 0) {
+                    return $dateCmp;
+                }
+
+                return strcmp((string) ($a['name'] ?? ''), (string) ($b['name'] ?? ''));
+            })
             ->values();
 
         $edges = $edges
@@ -278,7 +324,7 @@ class GenealogyController extends Controller
         return trim((string) end($parts));
     }
 
-    private function resolveSiblingLabel(Character $character, Character $sibling): string
+    private function resolveSiblingKind(Character $character, Character $sibling): string
     {
         $sharedFather = (int) $character->father_id > 0 && (int) $character->father_id === (int) $sibling->father_id;
         $sharedMother = (int) $character->mother_id > 0 && (int) $character->mother_id === (int) $sibling->mother_id;
@@ -286,14 +332,14 @@ class GenealogyController extends Controller
             && optional($character->birth_date)->format('Y-m-d') === optional($sibling->birth_date)->format('Y-m-d');
 
         if ($sharedFather && $sharedMother) {
-            return $isTwin ? 'jumeaux' : 'frere/soeur';
+            return $isTwin ? 'twin' : 'full';
         }
 
         if ($sharedFather || $sharedMother) {
-            return 'demi-frere/soeur';
+            return 'half';
         }
 
-        return 'fratrie';
+        return 'sibling';
     }
 
     private function generationLabel(int $level): string
@@ -307,5 +353,16 @@ class GenealogyController extends Controller
         }
 
         return 'Generation +' . $level;
+    }
+
+    private function resolveUsableImagePath(?Character $character): ?string
+    {
+        if (!$character || empty($character->image_path)) {
+            return null;
+        }
+
+        $path = (string) $character->image_path;
+
+        return Storage::disk('public')->exists($path) ? $path : null;
     }
 }

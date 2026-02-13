@@ -10,7 +10,7 @@
                 <strong>Personnage source</strong>
                 @if(!empty($relation->from_photo))
                     <p style="margin:10px 0 10px;">
-                        <img src="{{ route('media.show', ['path' => $relation->from_photo]) }}" alt="Photo source" style="width:90px; height:90px; border-radius:10px; object-fit:cover; border:1px solid rgba(101,74,42,.35);">
+                        <img src="{{ route('media.show', ['path' => $relation->from_photo], false) }}" alt="Photo source" style="width:90px; height:90px; border-radius:10px; object-fit:cover; border:1px solid rgba(101,74,42,.35);">
                     </p>
                 @endif
                 <p>{{ optional($relation->fromCharacter)->display_name ?: '-' }}</p>
@@ -19,7 +19,7 @@
                 <strong>Personnage cible</strong>
                 @if(!empty($relation->to_photo))
                     <p style="margin:10px 0 10px;">
-                        <img src="{{ route('media.show', ['path' => $relation->to_photo]) }}" alt="Photo cible" style="width:90px; height:90px; border-radius:10px; object-fit:cover; border:1px solid rgba(101,74,42,.35);">
+                        <img src="{{ route('media.show', ['path' => $relation->to_photo], false) }}" alt="Photo cible" style="width:90px; height:90px; border-radius:10px; object-fit:cover; border:1px solid rgba(101,74,42,.35);">
                     </p>
                 @endif
                 <p>{{ optional($relation->toCharacter)->display_name ?: '-' }}</p>

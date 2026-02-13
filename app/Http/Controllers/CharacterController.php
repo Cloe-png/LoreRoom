@@ -19,6 +19,7 @@ use Illuminate\Validation\Rule;
 class CharacterController extends Controller
 {
     private const AUTO_FAMILY_TAG = '[AUTO_FAMILY]';
+    private const AUTO_SIBLING_TAG = '[AUTO_SIBLING]';
 
     public function index()
     {
@@ -81,6 +82,9 @@ class CharacterController extends Controller
         ]);
         $childrenLinkType = old('children_link_type', 'father');
         $selectedChildrenIds = old('children_ids', []);
+        $selectedFullSiblingIds = old('sibling_ids_full', []);
+        $selectedTwinSiblingIds = old('sibling_ids_twin', []);
+        $selectedHalfSiblingIds = old('sibling_ids_half', []);
 
         return view('manage.characters.create', compact(
             'defaultWorld',
@@ -93,7 +97,10 @@ class CharacterController extends Controller
             'jobRows',
             'eventRows',
             'childrenLinkType',
-            'selectedChildrenIds'
+            'selectedChildrenIds',
+            'selectedFullSiblingIds',
+            'selectedTwinSiblingIds',
+            'selectedHalfSiblingIds'
         ));
     }
 
@@ -166,6 +173,12 @@ class CharacterController extends Controller
             'children_link_type' => ['nullable', Rule::in(['father', 'mother'])],
             'children_ids' => ['nullable', 'array'],
             'children_ids.*' => ['nullable', 'exists:characters,id'],
+            'sibling_ids_full' => ['nullable', 'array'],
+            'sibling_ids_full.*' => ['nullable', 'exists:characters,id'],
+            'sibling_ids_twin' => ['nullable', 'array'],
+            'sibling_ids_twin.*' => ['nullable', 'exists:characters,id'],
+            'sibling_ids_half' => ['nullable', 'array'],
+            'sibling_ids_half.*' => ['nullable', 'exists:characters,id'],
         ]);
 
         $data['has_children'] = $request->boolean('has_children');
@@ -190,12 +203,17 @@ class CharacterController extends Controller
         $eventRows = $data['events'] ?? [];
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+        $siblingIdsByKind = [
+            'full' => collect($data['sibling_ids_full'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+            'twin' => collect($data['sibling_ids_twin'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+            'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+        ];
         unset($data['relations']);
         unset($data['items'], $data['jobs'], $data['events']);
-        unset($data['children_link_type'], $data['children_ids']);
+        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds) {
+        DB::transaction(function () use ($request, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncOutgoingRelations($character, $relationRows);
@@ -204,6 +222,7 @@ class CharacterController extends Controller
             $this->syncCharacterEvents($character, $eventRows);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
+            $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
             $this->syncAutoFamilyRelationsForCharacters(array_filter([
                 $character->id,
                 $character->father_id,
@@ -356,6 +375,38 @@ class CharacterController extends Controller
             $childrenLinkType = !empty($fatherChildrenIds) ? 'father' : 'mother';
         }
 
+        if (old('sibling_ids_full') !== null || old('sibling_ids_twin') !== null || old('sibling_ids_half') !== null) {
+            $selectedFullSiblingIds = old('sibling_ids_full', []);
+            $selectedTwinSiblingIds = old('sibling_ids_twin', []);
+            $selectedHalfSiblingIds = old('sibling_ids_half', []);
+        } else {
+            $siblingRows = $character->outgoingRelations()
+                ->where('description', 'like', self::AUTO_SIBLING_TAG . '%')
+                ->get(['to_character_id', 'relation_type', 'sibling_kind']);
+            $selectedFullSiblingIds = [];
+            $selectedTwinSiblingIds = [];
+            $selectedHalfSiblingIds = [];
+            foreach ($siblingRows as $row) {
+                $toId = (int) $row->to_character_id;
+                if ($toId <= 0) {
+                    continue;
+                }
+                $kind = (string) $row->sibling_kind !== ''
+                    ? (string) $row->sibling_kind
+                    : $this->siblingKindFromRelationType((string) $row->relation_type);
+                if ($kind === 'twin') {
+                    $selectedTwinSiblingIds[] = $toId;
+                } elseif ($kind === 'half') {
+                    $selectedHalfSiblingIds[] = $toId;
+                } else {
+                    $selectedFullSiblingIds[] = $toId;
+                }
+            }
+            $selectedFullSiblingIds = array_values(array_unique($selectedFullSiblingIds));
+            $selectedTwinSiblingIds = array_values(array_unique($selectedTwinSiblingIds));
+            $selectedHalfSiblingIds = array_values(array_unique($selectedHalfSiblingIds));
+        }
+
         $existingGallery = $character->galleryImages()->get();
 
         return view('manage.characters.edit', compact(
@@ -371,7 +422,10 @@ class CharacterController extends Controller
             'eventRows',
             'existingGallery',
             'childrenLinkType',
-            'selectedChildrenIds'
+            'selectedChildrenIds',
+            'selectedFullSiblingIds',
+            'selectedTwinSiblingIds',
+            'selectedHalfSiblingIds'
         ));
     }
 
@@ -446,6 +500,12 @@ class CharacterController extends Controller
             'children_link_type' => ['nullable', Rule::in(['father', 'mother'])],
             'children_ids' => ['nullable', 'array'],
             'children_ids.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
+            'sibling_ids_full' => ['nullable', 'array'],
+            'sibling_ids_full.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
+            'sibling_ids_twin' => ['nullable', 'array'],
+            'sibling_ids_twin.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
+            'sibling_ids_half' => ['nullable', 'array'],
+            'sibling_ids_half.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
         ]);
 
         $data['has_children'] = $request->boolean('has_children');
@@ -473,17 +533,22 @@ class CharacterController extends Controller
         $eventRows = $data['events'] ?? [];
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+        $siblingIdsByKind = [
+            'full' => collect($data['sibling_ids_full'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+            'twin' => collect($data['sibling_ids_twin'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+            'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
+        ];
         $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
         unset($data['items'], $data['jobs'], $data['events'], $data['remove_gallery_ids']);
-        unset($data['children_link_type'], $data['children_ids']);
+        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
 
         $oldFatherId = $character->father_id;
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncOutgoingRelations($character, $relationRows);
@@ -493,7 +558,7 @@ class CharacterController extends Controller
             $this->removeCharacterGalleryImages($character, $removeGalleryIds);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
-            $this->syncChildrenLinks($character, (bool) $data['has_brother_sister'], 'brother_sister', $selectedChildrenIds);
+            $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
 
             $this->syncAutoFamilyRelationsForCharacters(array_filter([
                 $character->id,
@@ -562,6 +627,88 @@ class CharacterController extends Controller
         $column = $linkType === 'mother' ? 'mother_id' : 'father_id';
 
         Character::whereIn('id', $selectedChildrenIds)->update([$column => $character->id]);
+    }
+
+    private function syncSiblingRelations(Character $character, bool $hasSiblings, array $siblingsByKind): void
+    {
+        $characterId = (int) $character->id;
+        $kinds = ['full', 'twin', 'half'];
+        $normalized = [];
+        foreach ($kinds as $kind) {
+            $normalized[$kind] = collect($siblingsByKind[$kind] ?? [])
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0 && $id !== $characterId)
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        CharacterRelation::query()
+            ->where(function ($query) use ($characterId) {
+                $query->where('from_character_id', $characterId)
+                    ->orWhere('to_character_id', $characterId);
+            })
+            ->where('description', 'like', self::AUTO_SIBLING_TAG . '%')
+            ->delete();
+
+        if (!$hasSiblings) {
+            return;
+        }
+
+        $priority = ['full' => 1, 'half' => 2, 'twin' => 3];
+        $resolvedKindsBySiblingId = [];
+        foreach ($normalized as $kind => $ids) {
+            foreach ($ids as $id) {
+                if (!isset($resolvedKindsBySiblingId[$id]) || $priority[$kind] > $priority[$resolvedKindsBySiblingId[$id]]) {
+                    $resolvedKindsBySiblingId[$id] = $kind;
+                }
+            }
+        }
+
+        if (empty($resolvedKindsBySiblingId)) {
+            return;
+        }
+
+        $siblings = Character::query()
+            ->whereIn('id', array_keys($resolvedKindsBySiblingId))
+            ->get(['id', 'gender']);
+
+        foreach ($siblings as $sibling) {
+            $kind = $resolvedKindsBySiblingId[(int) $sibling->id] ?? 'full';
+            $fromType = $this->siblingRelationTypeFromKindGender($kind, (string) $character->gender);
+            $toType = $this->siblingRelationTypeFromKindGender($kind, (string) $sibling->gender);
+            $description = self::AUTO_SIBLING_TAG . ' ' . $kind;
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => $characterId,
+                    'to_character_id' => (int) $sibling->id,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $fromType,
+                    'relation_category' => 'family_sibling',
+                    'sibling_kind' => $kind,
+                    'intensity' => 9,
+                    'is_bidirectional' => false,
+                ]
+            );
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => (int) $sibling->id,
+                    'to_character_id' => $characterId,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $toType,
+                    'relation_category' => 'family_sibling',
+                    'sibling_kind' => $kind,
+                    'intensity' => 9,
+                    'is_bidirectional' => false,
+                ]
+            );
+        }
     }
 
     private function syncSpouseLink(Character $character, ?int $spouseId): array
@@ -766,6 +913,53 @@ class CharacterController extends Controller
         }
 
         return [$category, $siblingKind];
+    }
+
+    private function siblingRelationTypeFromKindGender(string $kind, string $gender): string
+    {
+        if ($kind === 'twin') {
+            if ($gender === 'femme') {
+                return 'jumelle';
+            }
+            if ($gender === 'homme') {
+                return 'jumeau';
+            }
+
+            return 'jumeaux';
+        }
+
+        if ($kind === 'half') {
+            if ($gender === 'femme') {
+                return 'demi-soeur';
+            }
+            if ($gender === 'homme') {
+                return 'demi-frere';
+            }
+
+            return 'demi-frere/soeur';
+        }
+
+        if ($gender === 'femme') {
+            return 'soeur';
+        }
+        if ($gender === 'homme') {
+            return 'frere';
+        }
+
+        return 'frere/soeur';
+    }
+
+    private function siblingKindFromRelationType(string $relationType): string
+    {
+        $type = mb_strtolower(trim($relationType));
+        if (in_array($type, ['jumeau', 'jumelle', 'jumeaux'], true)) {
+            return 'twin';
+        }
+        if (in_array($type, ['demi-frere', 'demi-soeur', 'demi-frere/soeur'], true)) {
+            return 'half';
+        }
+
+        return 'full';
     }
 
     private function syncCharacterItems(Character $character, array $rows): void

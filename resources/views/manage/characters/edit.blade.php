@@ -139,6 +139,7 @@
 
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children', $character->has_children) ? 'checked' : '' }}> Enfants (oui/non)</label>
+                <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister', $character->has_brother_sister) ? 'checked' : '' }}> Frere / soeur (oui/non)</label>
                 <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power', $character->has_power) ? 'checked' : '' }}> Pouvoir actif</label>
                 <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', $character->secrets_is_private ?? true) ? 'checked' : '' }}> Secrets privés</label>
             </div>
@@ -171,6 +172,53 @@
                         @endif
                     </div>
                 </div>
+            </div>
+
+            <div id="siblings-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
+                @php
+                    $selectedFullSiblings = collect($selectedFullSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                    $selectedTwinSiblings = collect($selectedTwinSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                    $selectedHalfSiblings = collect($selectedHalfSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                @endphp
+                @if($characters->isEmpty())
+                    <p class="muted">Aucun personnage cree pour le moment.</p>
+                @else
+                    <div class="grid-4">
+                        <div class="field" style="grid-column: span 4;">
+                            <label>Zone frere / soeur</label>
+                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                @foreach($characters as $siblingCandidate)
+                                    <label>
+                                        <input type="checkbox" name="sibling_ids_full[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedFullSiblings) ? 'checked' : '' }}>
+                                        {{ $siblingCandidate->display_name }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="field" style="grid-column: span 4;">
+                            <label>Zone jumeau / jumelle</label>
+                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                @foreach($characters as $siblingCandidate)
+                                    <label>
+                                        <input type="checkbox" name="sibling_ids_twin[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedTwinSiblings) ? 'checked' : '' }}>
+                                        {{ $siblingCandidate->display_name }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        <div class="field" style="grid-column: span 4;">
+                            <label>Zone demi-frere / demi-soeur</label>
+                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                @foreach($characters as $siblingCandidate)
+                                    <label>
+                                        <input type="checkbox" name="sibling_ids_half[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedHalfSiblings) ? 'checked' : '' }}>
+                                        {{ $siblingCandidate->display_name }}
+                                    </label>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -463,13 +511,18 @@
 
             const hasChildren = document.getElementById('has_children');
             const childrenPanel = document.getElementById('children-panel');
+            const hasBroSis = document.getElementById('has_brother_sister');
+            const siblingsPanel = document.getElementById('siblings-panel');
             const hasPower = document.getElementById('has_power');
             const powerPanel = document.getElementById('power-panel');
             function toggleChildrenPanel() { if (hasChildren && childrenPanel) childrenPanel.style.display = hasChildren.checked ? 'block' : 'none'; }
+            function toggleSiblingsPanel() { if (hasBroSis && siblingsPanel) siblingsPanel.style.display = hasBroSis.checked ? 'block' : 'none'; }
             function togglePowerPanel() { if (hasPower && powerPanel) powerPanel.style.display = hasPower.checked ? 'block' : 'none'; }
             toggleChildrenPanel();
+            toggleSiblingsPanel();
             togglePowerPanel();
             if (hasChildren) hasChildren.addEventListener('change', toggleChildrenPanel);
+            if (hasBroSis) hasBroSis.addEventListener('change', toggleSiblingsPanel);
             if (hasPower) hasPower.addEventListener('change', togglePowerPanel);
         })();
     </script>

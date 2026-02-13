@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Character;
 use App\Models\CharacterRelation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CharacterRelationController extends Controller
 {
@@ -37,6 +38,8 @@ class CharacterRelationController extends Controller
 
         $relations->getCollection()->transform(function (CharacterRelation $relation) {
             $relation->display_type = $this->resolveDisplayRelationType($relation);
+            $relation->from_photo = $this->resolveCharacterPhotoPath($relation->fromCharacter);
+            $relation->to_photo = $this->resolveCharacterPhotoPath($relation->toCharacter);
             return $relation;
         });
 
@@ -198,11 +201,13 @@ class CharacterRelationController extends Controller
             return null;
         }
 
-        if (!empty($character->image_path)) {
-            return $character->image_path;
+        if (empty($character->image_path)) {
+            return null;
         }
 
-        return optional($character->primaryGalleryImage)->image_path;
+        $path = (string) $character->image_path;
+
+        return Storage::disk('public')->exists($path) ? $path : null;
     }
 
     private function assignRelationMetadata(array $data): array
