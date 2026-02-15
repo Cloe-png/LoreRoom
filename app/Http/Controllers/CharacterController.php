@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Controllers;
 
@@ -69,7 +69,7 @@ class CharacterController extends Controller
         $spouses = Character::orderBy('name')->get();
         $characters = Character::orderBy('name')->get();
         $relationRows = old('relations', [
-            ['to_character_id' => '', 'relation_type' => '', 'intensity' => '', 'is_bidirectional' => '1', 'description' => ''],
+            ['to_character_id' => '', 'relation_type' => '', 'is_bidirectional' => '1', 'description' => ''],
         ]);
         $itemRows = old('items', [
             ['name' => '', 'rarity' => '', 'notes' => ''],
@@ -108,7 +108,7 @@ class CharacterController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => 'Créez d\'abord un monde.'])->withInput();
         }
 
         $data = $request->validate([
@@ -134,16 +134,13 @@ class CharacterController extends Controller
             'power_level' => ['nullable', 'integer', 'min:1', 'max:10'],
             'power_description' => ['nullable', 'string', 'max:3000'],
             'height' => ['nullable', 'string', 'max:120'],
-            'silhouette' => ['nullable', 'string', 'max:120'],
             'hair_eyes' => ['nullable', 'string', 'max:255'],
             'hair_color' => ['nullable', 'string', 'max:120'],
             'eye_color' => ['nullable', 'string', 'max:120'],
-            'posture' => ['nullable', 'string', 'max:2000'],
             'marks' => ['nullable', 'string', 'max:2000'],
             'clothing_style' => ['nullable', 'string', 'max:2000'],
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
-            'psychology_notes' => ['nullable', 'string', 'max:3000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -155,7 +152,6 @@ class CharacterController extends Controller
             'relations.*.to_character_id' => ['nullable', 'exists:characters,id'],
             'relations.*.relation_type' => ['nullable', 'string', 'max:120'],
             'relations.*.description' => ['nullable', 'string', 'max:3000'],
-            'relations.*.intensity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'relations.*.is_bidirectional' => ['nullable', 'boolean'],
             'items' => ['nullable', 'array'],
             'items.*.name' => ['nullable', 'string', 'max:160'],
@@ -307,14 +303,13 @@ class CharacterController extends Controller
                         'to_character_id' => (string) $relation->to_character_id,
                         'relation_type' => $relation->relation_type,
                         'description' => $relation->description,
-                        'intensity' => $relation->intensity,
                         'is_bidirectional' => $relation->is_bidirectional ? '1' : '0',
                     ];
                 })
                 ->all();
 
             if (empty($relationRows)) {
-                $relationRows[] = ['to_character_id' => '', 'relation_type' => '', 'intensity' => '', 'is_bidirectional' => '1', 'description' => ''];
+                $relationRows[] = ['to_character_id' => '', 'relation_type' => '', 'is_bidirectional' => '1', 'description' => ''];
             }
         }
 
@@ -433,7 +428,7 @@ class CharacterController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => 'Créez d\'abord un monde.'])->withInput();
         }
 
         $data = $request->validate([
@@ -459,16 +454,13 @@ class CharacterController extends Controller
             'power_level' => ['nullable', 'integer', 'min:1', 'max:10'],
             'power_description' => ['nullable', 'string', 'max:3000'],
             'height' => ['nullable', 'string', 'max:120'],
-            'silhouette' => ['nullable', 'string', 'max:120'],
             'hair_eyes' => ['nullable', 'string', 'max:255'],
             'hair_color' => ['nullable', 'string', 'max:120'],
             'eye_color' => ['nullable', 'string', 'max:120'],
-            'posture' => ['nullable', 'string', 'max:2000'],
             'marks' => ['nullable', 'string', 'max:2000'],
             'clothing_style' => ['nullable', 'string', 'max:2000'],
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
-            'psychology_notes' => ['nullable', 'string', 'max:3000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -482,7 +474,6 @@ class CharacterController extends Controller
             'relations.*.to_character_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'relations.*.relation_type' => ['nullable', 'string', 'max:120'],
             'relations.*.description' => ['nullable', 'string', 'max:3000'],
-            'relations.*.intensity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'relations.*.is_bidirectional' => ['nullable', 'boolean'],
             'items' => ['nullable', 'array'],
             'items.*.name' => ['nullable', 'string', 'max:160'],
@@ -609,7 +600,6 @@ class CharacterController extends Controller
                 'relation_category' => $this->inferRelationMetadata($type)[0],
                 'sibling_kind' => $this->inferRelationMetadata($type)[1],
                 'description' => trim((string) ($row['description'] ?? '')) ?: null,
-                'intensity' => isset($row['intensity']) && $row['intensity'] !== '' ? (int) $row['intensity'] : null,
                 'is_bidirectional' => (bool) ($row['is_bidirectional'] ?? true),
             ]);
         }

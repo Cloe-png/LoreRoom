@@ -85,7 +85,6 @@ class CharacterRelationController extends Controller
             'to_character_id' => ['required', 'exists:characters,id'],
             'relation_type' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:3000'],
-            'intensity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'is_bidirectional' => ['nullable', 'boolean'],
         ]);
 
@@ -122,7 +121,6 @@ class CharacterRelationController extends Controller
             'to_character_id' => ['required', 'exists:characters,id'],
             'relation_type' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:3000'],
-            'intensity' => ['nullable', 'integer', 'min:1', 'max:10'],
             'is_bidirectional' => ['nullable', 'boolean'],
         ]);
 

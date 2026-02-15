@@ -1,4 +1,4 @@
-@extends('manage.layout')
+﻿@extends('manage.layout')
 
 @section('title', 'Gestion - Personnage')
 @section('header', $character->display_name)
@@ -44,7 +44,7 @@
                 <p><strong>Père:</strong> {{ optional($character->father)->display_name ?: 'Inconnu' }}</p>
                 <p><strong>Mère:</strong> {{ optional($character->mother)->display_name ?: 'Inconnue' }}</p>
                 <p><strong>A des enfants:</strong> {{ $character->has_children ? 'Oui' : 'Non' }}</p>
-                <p><strong>Enfants lies:</strong> {{ $children->isEmpty() ? 'Aucun' : $children->pluck('display_name')->join(', ') }}</p>
+                <p><strong>Enfants liés:</strong> {{ $children->isEmpty() ? 'Aucun' : $children->pluck('display_name')->join(', ') }}</p>
                 <p><strong>Lieu de naissance:</strong> {{ optional($character->birthPlace)->name ?: '-' }}</p>
                 <p><strong>Résidence actuelle:</strong> {{ optional($character->residencePlace)->name ?: '-' }}</p>
             </div>
@@ -76,15 +76,12 @@
                 <strong>Psychologie</strong>
                 <p><strong>Qualités:</strong> {{ $character->qualities ?: '-' }}</p>
                 <p><strong>Défauts:</strong> {{ $character->flaws ?: '-' }}</p>
-                <p><strong>Notes:</strong> {{ $character->psychology_notes ?: '-' }}</p>
-                <p><strong>Voix / tics:</strong> {{ $character->voice_tics ?: '-' }}</p>
+                <p><strong>Voix / tics de langage:</strong> {{ $character->voice_tics ?: '-' }}</p>
             </div>
             <div class="card" style="grid-column: span 2;">
                 <strong>Apparence</strong>
-                <p><strong>Taille / silhouette:</strong> {{ $character->height ?: '-' }} / {{ $character->silhouette ?: '-' }}</p>
                 <p><strong>Cheveux:</strong> {{ $character->hair_color ?: $character->hair_eyes ?: '-' }}</p>
                 <p><strong>Yeux:</strong> {{ $character->eye_color ?: $character->hair_eyes ?: '-' }}</p>
-                <p><strong>Posture:</strong> {{ $character->posture ?: '-' }}</p>
                 <p><strong>Marques:</strong> {{ $character->marks ?: '-' }}</p>
                 <p><strong>Style:</strong> {{ $character->clothing_style ?: '-' }}</p>
             </div>

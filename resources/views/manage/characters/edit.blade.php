@@ -251,10 +251,8 @@
                 <div class="accordion-body">
                     <div class="grid-4">
                         <div class="field"><label>Taille</label><input type="text" name="height" value="{{ old('height', $character->height) }}"></div>
-                        <div class="field"><label>Silhouette</label><input type="text" name="silhouette" value="{{ old('silhouette', $character->silhouette) }}"></div>
                         <div class="field"><label>Cheveux</label><input type="text" name="hair_color" value="{{ old('hair_color', $character->hair_color ?: $character->hair_eyes) }}"></div>
                         <div class="field"><label>Yeux</label><input type="text" name="eye_color" value="{{ old('eye_color', $character->eye_color ?: $character->hair_eyes) }}"></div>
-                        <div class="field"><label>Posture</label><input type="text" name="posture" value="{{ old('posture', $character->posture) }}"></div>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks', $character->marks) }}</textarea></div>
                     <div class="field"><label>Maniere de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style', $character->clothing_style) }}</textarea></div>
@@ -266,8 +264,7 @@
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities', $character->qualities) }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws', $character->flaws) }}</textarea></div>
-                    <div class="field"><label>Notes psychologiques</label><textarea name="psychology_notes">{{ old('psychology_notes', $character->psychology_notes) }}</textarea></div>
-                    <div class="field"><label>Voix / tics de langage</label><textarea name="voice_tics">{{ old('voice_tics', $character->voice_tics) }}</textarea></div>
+                    <div class="field"><label>Voix</label><textarea name="voice_tics">{{ old('voice_tics', $character->voice_tics) }}</textarea></div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary', $character->summary) }}</textarea></div>
                 </div>
             </details>
@@ -385,7 +382,6 @@
                                 </select>
                             </div>
                             <div class="field"><label>Type</label><input type="text" name="relations[{{ $i }}][relation_type]" value="{{ $row['relation_type'] ?? '' }}"></div>
-                            <div class="field"><label>Intensite</label><input type="number" min="1" max="10" name="relations[{{ $i }}][intensity]" value="{{ $row['intensity'] ?? '' }}"></div>
                         </div>
                         <div class="grid-4">
                             <div class="field"><label>Sens</label><select name="relations[{{ $i }}][is_bidirectional]"><option value="1" {{ (string)($row['is_bidirectional'] ?? '1') === '1' ? 'selected' : '' }}>Bidirectionnelle</option><option value="0" {{ (string)($row['is_bidirectional'] ?? '1') === '0' ? 'selected' : '' }}>Unidirectionnelle</option></select></div>
@@ -451,7 +447,6 @@
             <div class="grid-4">
                 <div class="field" style="grid-column: span 2;"><label>Lie a</label><select data-field="to_character_id"><option value="">Aucun</option>@foreach($characters as $linkedCharacter)<option value="{{ $linkedCharacter->id }}">{{ $linkedCharacter->display_name }}</option>@endforeach</select></div>
                 <div class="field"><label>Type</label><input type="text" data-field="relation_type"></div>
-                <div class="field"><label>Intensite</label><input type="number" min="1" max="10" data-field="intensity"></div>
             </div>
             <div class="grid-4">
                 <div class="field"><label>Sens</label><select data-field="is_bidirectional"><option value="1">Bidirectionnelle</option><option value="0">Unidirectionnelle</option></select></div>

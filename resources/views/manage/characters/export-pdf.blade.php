@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -73,15 +73,12 @@
 
 <div class="section">
     <h2>Apparence et psychologie</h2>
-    <p><span class="label">Taille / silhouette:</span> {{ $character->height ?: '-' }} / {{ $character->silhouette ?: '-' }}</p>
     <p><span class="label">Cheveux:</span> {{ $character->hair_color ?: $character->hair_eyes ?: '-' }}</p>
     <p><span class="label">Yeux:</span> {{ $character->eye_color ?: $character->hair_eyes ?: '-' }}</p>
-    <p><span class="label">Posture:</span> {{ $character->posture ?: '-' }}</p>
     <p><span class="label">Marques:</span> {{ $character->marks ?: '-' }}</p>
     <p><span class="label">Style:</span> {{ $character->clothing_style ?: '-' }}</p>
     <p><span class="label">Qualités:</span> {{ $character->qualities ?: '-' }}</p>
     <p><span class="label">Défauts:</span> {{ $character->flaws ?: '-' }}</p>
-    <p><span class="label">Psychologie:</span> {{ $character->psychology_notes ?: '-' }}</p>
     <p><span class="label">Voix / tics:</span> {{ $character->voice_tics ?: '-' }}</p>
     <p><span class="label">Résumé:</span> {{ $character->summary ?: '-' }}</p>
 </div>

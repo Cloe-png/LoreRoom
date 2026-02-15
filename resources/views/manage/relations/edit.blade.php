@@ -47,10 +47,6 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>Intensite (1-10)</label>
-                    <input type="number" min="1" max="10" name="intensity" value="{{ old('intensity', $relation->intensity) }}">
-                </div>
-                <div class="field">
                     <label>Sens</label>
                     <select name="is_bidirectional">
                         @php $bi = (string) old('is_bidirectional', $relation->is_bidirectional ? '1' : '0'); @endphp

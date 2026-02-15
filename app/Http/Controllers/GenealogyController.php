@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Character;
+use App\Models\CharacterRelation;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -31,64 +32,39 @@ class GenealogyController extends Controller
                 'image_path',
             ]);
 
-        $pivotMode = (string) request('pivot_mode', 'character');
-        if (!in_array($pivotMode, ['character', 'family', 'both'], true)) {
-            $pivotMode = 'character';
-        }
-
-        $families = $characters
-            ->map(function ($character) {
-                return $this->resolveFamilyName($character);
-            })
-            ->filter()
-            ->unique()
-            ->sort()
-            ->values();
-
-        $selectedFamily = trim((string) request('family', ''));
-        if (($pivotMode === 'family' || $pivotMode === 'both') && ($selectedFamily === '' || !$families->contains($selectedFamily))) {
-            $selectedFamily = (string) ($families->first() ?? '');
-        }
-
-        $selectedId = (int) request('character_id', 0);
+        $selectedId = (int) request('focus_id', 0);
         if ($selectedId <= 0 || !$characters->firstWhere('id', $selectedId)) {
             $selectedId = (int) ($characters->first()->id ?? 0);
         }
 
-        $rootIds = collect();
-        if (in_array($pivotMode, ['character', 'both'], true) && $selectedId > 0) {
-            $rootIds->push($selectedId);
-        }
-        if (in_array($pivotMode, ['family', 'both'], true) && $selectedFamily !== '') {
-            $familyIds = $characters
-                ->filter(function ($character) use ($selectedFamily) {
-                    return $this->resolveFamilyName($character) === $selectedFamily;
-                })
-                ->pluck('id');
-            $rootIds = $rootIds->merge($familyIds);
-        }
-        $rootIds = $rootIds->filter()->unique()->values();
+        $rootIds = $characters
+            ->filter(function ($character) {
+                return (int) ($character->father_id ?? 0) === 0 && (int) ($character->mother_id ?? 0) === 0;
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
 
         if ($rootIds->isEmpty() && $selectedId > 0) {
             $rootIds->push($selectedId);
         }
 
-        [$nodes, $edges] = $this->buildFamilyGraph($characters, $rootIds->all(), 3);
+        $couplePairs = $this->loadCouplePairs($characters);
+        [$nodes, $edges] = $this->buildFamilyGraph($characters, $rootIds->all(), 10, $couplePairs);
         $layout = $this->buildLayout($nodes);
 
         return view('manage.genealogy.index', [
             'characters' => $characters,
             'selectedId' => $selectedId,
-            'families' => $families,
-            'selectedFamily' => $selectedFamily,
-            'pivotMode' => $pivotMode,
             'nodes' => $nodes,
             'edges' => $edges,
             'layout' => $layout,
         ]);
     }
 
-    private function buildFamilyGraph(Collection $characters, array $rootIds, int $depth): array
+    private function buildFamilyGraph(Collection $characters, array $rootIds, int $depth, Collection $couplePairs): array
     {
         $rootIds = collect($rootIds)->map(function ($id) {
             return (int) $id;
@@ -170,28 +146,39 @@ class GenealogyController extends Controller
 
         }
 
-        // Always include spouses of currently included characters so couples are visible in the tree.
-        $includedIdsNow = $levels->keys()->map(fn ($id) => (int) $id)->all();
-        foreach ($includedIdsNow as $includedId) {
-            $character = $byId->get($includedId);
-            if (!$character) {
-                continue;
-            }
-            $spouseId = (int) ($character->spouse_id ?? 0);
-            if ($spouseId <= 0 || !$byId->has($spouseId)) {
-                continue;
-            }
+        // Always include spouses/couples of currently included characters so partner placement is stable.
+        $expanded = true;
+        while ($expanded) {
+            $expanded = false;
+            foreach ($couplePairs as $pair) {
+                $leftId = (int) ($pair['a'] ?? 0);
+                $rightId = (int) ($pair['b'] ?? 0);
+                if ($leftId <= 0 || $rightId <= 0 || !$byId->has($leftId) || !$byId->has($rightId)) {
+                    continue;
+                }
 
-            if (!$levels->has($spouseId)) {
-                $levels->put($spouseId, (int) $levels->get($includedId, 0));
-            }
+                $leftIncluded = $levels->has($leftId);
+                $rightIncluded = $levels->has($rightId);
+                if (!$leftIncluded && !$rightIncluded) {
+                    continue;
+                }
 
-            $edges->push([
-                'from' => $includedId,
-                'to' => $spouseId,
-                'label' => 'couple',
-                'kind' => 'couple',
-            ]);
+                if (!$leftIncluded) {
+                    $levels->put($leftId, (int) $levels->get($rightId, 0));
+                    $expanded = true;
+                }
+                if (!$rightIncluded) {
+                    $levels->put($rightId, (int) $levels->get($leftId, 0));
+                    $expanded = true;
+                }
+
+                $edges->push([
+                    'from' => $leftId,
+                    'to' => $rightId,
+                    'label' => 'couple',
+                    'kind' => 'couple',
+                ]);
+            }
         }
 
         // Build sibling links as a chain per sibling group to keep graph readable.
@@ -249,6 +236,7 @@ class GenealogyController extends Controller
                     'status' => $character->status ?? null,
                     'father_id' => $character ? (int) ($character->father_id ?? 0) : 0,
                     'mother_id' => $character ? (int) ($character->mother_id ?? 0) : 0,
+                    'spouse_id' => $character ? (int) ($character->spouse_id ?? 0) : 0,
                     'image_path' => $this->resolveUsableImagePath($character),
                     'level' => (int) $level,
                     'generation' => $this->generationLabel((int) $level),
@@ -333,26 +321,64 @@ class GenealogyController extends Controller
         ];
     }
 
-    private function resolveFamilyName(Character $character): string
+    private function loadCouplePairs(Collection $characters): Collection
     {
-        $familyName = trim((string) ($character->family_name ?? ''));
-        if ($familyName !== '') {
-            return $familyName;
+        $ids = $characters->pluck('id')->map(fn ($id) => (int) $id)->filter()->values();
+        if ($ids->isEmpty()) {
+            return collect();
         }
 
-        $lastName = trim((string) ($character->last_name ?? ''));
-        if ($lastName !== '') {
-            return $lastName;
-        }
+        $spousePairs = $characters
+            ->map(function (Character $character) use ($ids) {
+                $left = (int) $character->id;
+                $right = (int) ($character->spouse_id ?? 0);
+                if ($left <= 0 || $right <= 0 || !$ids->contains($right)) {
+                    return null;
+                }
+                $a = min($left, $right);
+                $b = max($left, $right);
 
-        $name = trim((string) ($character->name ?? ''));
-        if ($name === '') {
-            return '';
-        }
+                return ['a' => $a, 'b' => $b];
+            })
+            ->filter();
 
-        $parts = preg_split('/\s+/', $name);
+        $relationPairs = CharacterRelation::query()
+            ->whereIn('from_character_id', $ids)
+            ->whereIn('to_character_id', $ids)
+            ->where(function ($query) {
+                $query->where('relation_category', 'family_couple')
+                    ->orWhereIn('relation_type', [
+                        'epoux',
+                        'epouse',
+                        'epoux/epouse',
+                        'amour',
+                        'mari',
+                        'femme',
+                        'conjoint',
+                        'conjointe',
+                        'couple',
+                    ]);
+            })
+            ->get(['from_character_id', 'to_character_id'])
+            ->map(function ($relation) {
+                $left = (int) $relation->from_character_id;
+                $right = (int) $relation->to_character_id;
+                if ($left <= 0 || $right <= 0) {
+                    return null;
+                }
+                $a = min($left, $right);
+                $b = max($left, $right);
 
-        return trim((string) end($parts));
+                return ['a' => $a, 'b' => $b];
+            })
+            ->filter();
+
+        return $spousePairs
+            ->merge($relationPairs)
+            ->unique(function (array $pair) {
+                return (int) $pair['a'] . '-' . (int) $pair['b'];
+            })
+            ->values();
     }
 
     private function resolveSiblingKind(Character $character, Character $sibling): string
@@ -376,7 +402,7 @@ class GenealogyController extends Controller
     private function generationLabel(int $level): string
     {
         if ($level === 0) {
-            return 'Generation pivot';
+            return 'Generation 0';
         }
 
         if ($level < 0) {

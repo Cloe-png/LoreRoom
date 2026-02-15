@@ -31,10 +31,6 @@
                 <p>{{ $relation->display_type ?? $relation->relation_type }}</p>
             </div>
             <div class="card">
-                <strong>Intensite</strong>
-                <p>{{ $relation->intensity ?: '-' }}/10</p>
-            </div>
-            <div class="card">
                 <strong>Sens</strong>
                 <p>{{ $relation->is_bidirectional ? 'Bidirectionnelle' : 'Unidirectionnelle' }}</p>
             </div>

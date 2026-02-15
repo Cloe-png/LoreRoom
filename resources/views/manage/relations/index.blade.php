@@ -64,7 +64,6 @@
                     <th>Depuis</th>
                     <th>Vers</th>
                     <th>Type</th>
-                    <th>Intensite</th>
                     <th>Sens</th>
                     <th>Actions</th>
                 </tr>
@@ -95,7 +94,6 @@
                         </div>
                     </td>
                     <td>{{ $relation->display_type ?? $relation->relation_type }}</td>
-                    <td>{{ $relation->intensity ?: '-' }}/10</td>
                     <td>{{ $relation->is_bidirectional ? 'Bidirectionnelle' : 'Unidirectionnelle' }}</td>
                     <td class="stack">
                         <a class="btn secondary" href="{{ route('manage.relations.show', $relation) }}">Voir</a>
@@ -107,7 +105,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="muted">Aucune relation.</td></tr>
+                <tr><td colspan="5" class="muted">Aucune relation.</td></tr>
             @endforelse
             </tbody>
         </table>

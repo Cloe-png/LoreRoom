@@ -44,10 +44,6 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>Intensite (1-10)</label>
-                    <input type="number" min="1" max="10" name="intensity" value="{{ old('intensity') }}">
-                </div>
-                <div class="field">
                     <label>Sens</label>
                     <select name="is_bidirectional">
                         <option value="1" {{ old('is_bidirectional', '1') == '1' ? 'selected' : '' }}>Bidirectionnelle</option>
