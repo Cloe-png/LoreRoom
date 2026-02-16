@@ -4,6 +4,25 @@
 @section('header', $character->display_name)
 
 @section('content')
+    <style>
+        .gallery-slide {
+            display: none;
+        }
+        .gallery-slide.is-active {
+            display: block;
+        }
+        .gallery-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            border: 1px solid rgba(80,59,32,.45);
+            background: rgba(255,255,255,.45);
+            cursor: pointer;
+        }
+        .gallery-dot.is-active {
+            background: #8f6a3a;
+        }
+    </style>
     <section class="panel">
         @php
             $children = $character->childrenFromFather->merge($character->childrenFromMother)->unique('id');
@@ -155,7 +174,7 @@
             @else
                 <div id="character-gallery-carousel" style="position:relative; max-width:780px; margin-top:10px;">
                     @foreach($character->galleryImages as $img)
-                        <div class="gallery-slide{{ $loop->first ? ' is-active' : '' }}" style="{{ $loop->first ? '' : 'display:none;' }}">
+                        <div class="gallery-slide{{ $loop->first ? ' is-active' : '' }}">
                             <div style="height:430px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(101,74,42,.35); background:linear-gradient(180deg, rgba(34,27,20,.14), rgba(18,14,10,.22)); overflow:hidden;">
                                 <img
                                     src="{{ route('media.show', ['path' => $img->image_path]) }}"
@@ -169,7 +188,7 @@
                     @if($character->galleryImages->count() > 1)
                         <div id="gallery-dots" style="margin-top:8px; display:flex; gap:8px; justify-content:center;">
                             @foreach($character->galleryImages as $img)
-                                <button type="button" class="gallery-dot{{ $loop->first ? ' is-active' : '' }}" data-slide-index="{{ $loop->index }}" style="width:10px; height:10px; border-radius:50%; border:1px solid rgba(80,59,32,.45); background:{{ $loop->first ? '#8f6a3a' : 'rgba(255,255,255,.45)' }}; cursor:pointer;"></button>
+                                <button type="button" class="gallery-dot{{ $loop->first ? ' is-active' : '' }}" data-slide-index="{{ $loop->index }}"></button>
                             @endforeach
                         </div>
                     @endif

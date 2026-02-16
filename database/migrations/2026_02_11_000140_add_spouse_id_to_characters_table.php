@@ -8,20 +8,23 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('characters', function (Blueprint $table) {
-            $table->foreignId('spouse_id')
-                ->nullable()
-                ->after('mother_id')
-                ->constrained('characters')
-                ->nullOnDelete();
-        });
+        if (!Schema::hasColumn('characters', 'spouse_id')) {
+            Schema::table('characters', function (Blueprint $table) {
+                $table->foreignId('spouse_id')
+                    ->nullable()
+                    ->after('mother_id')
+                    ->constrained('characters')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     public function down()
     {
-        Schema::table('characters', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('spouse_id');
-        });
+        if (Schema::hasColumn('characters', 'spouse_id')) {
+            Schema::table('characters', function (Blueprint $table) {
+                $table->dropConstrainedForeignId('spouse_id');
+            });
+        }
     }
 };
-
