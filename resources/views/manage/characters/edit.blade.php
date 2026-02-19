@@ -321,25 +321,6 @@
             </details>
 
             <details class="accordion">
-                <summary>Timeline perso</summary>
-                <div class="accordion-body">
-            <div id="events-list">
-                @foreach(($eventRows ?? []) as $i => $event)
-                    <div class="panel" data-event-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field"><label>Date</label><input type="date" name="events[{{ $i }}][event_date]" value="{{ $event['event_date'] ?? '' }}"></div>
-                            <div class="field" style="grid-column: span 3;"><label>Titre événement</label><input type="text" name="events[{{ $i }}][title]" value="{{ $event['title'] ?? '' }}"></div>
-                        </div>
-                        <div class="field"><label>Details</label><textarea name="events[{{ $i }}][details]">{{ $event['details'] ?? '' }}</textarea></div>
-                        <button class="btn danger" type="button" data-remove-event>Retirer</button>
-                    </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-event-btn">Ajouter un événement</button></div>
-                </div>
-            </details>
-
-            <details class="accordion">
                 <summary>Galerie d'images</summary>
                 <div class="accordion-body">
             @if(!empty($existingGallery) && $existingGallery->count() > 0)
@@ -417,16 +398,6 @@
             <button class="btn danger" type="button" data-remove-item>Retirer</button>
         </div>
     </template>
-    <template id="event-row-template">
-        <div class="panel" data-event-row style="margin-top:10px; padding:10px;">
-            <div class="grid-4">
-                <div class="field"><label>Date</label><input type="date" data-field="event_date"></div>
-                <div class="field" style="grid-column: span 3;"><label>Titre événement</label><input type="text" data-field="title"></div>
-            </div>
-            <div class="field"><label>Details</label><textarea data-field="details"></textarea></div>
-            <button class="btn danger" type="button" data-remove-event>Retirer</button>
-        </div>
-    </template>
     <template id="job-row-template">
         <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
@@ -499,8 +470,6 @@
             bindCollection('relations-list', 'add-relation-btn', 'relation-row-template', 'data-relation-row', 'data-remove-relation', 'relations');
             bindCollection('items-list', 'add-item-btn', 'item-row-template', 'data-item-row', 'data-remove-item', 'items');
             bindCollection('jobs-list', 'add-job-btn', 'job-row-template', 'data-job-row', 'data-remove-job', 'jobs');
-            bindCollection('events-list', 'add-event-btn', 'event-row-template', 'data-event-row', 'data-remove-event', 'events');
-
             const galleryList = document.getElementById('gallery-list');
             const addGalleryBtn = document.getElementById('add-gallery-btn');
             const galleryTpl = document.getElementById('gallery-row-template');

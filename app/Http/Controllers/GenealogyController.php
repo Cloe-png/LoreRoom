@@ -118,15 +118,7 @@ class GenealogyController extends Controller
                     ->filter(function ($character) use ($currentId) {
                         return (int) $character->father_id === $currentId || (int) $character->mother_id === $currentId;
                     })
-                    ->sort(function ($a, $b) {
-                        $dateA = optional($a->birth_date)->format('Y-m-d') ?: '9999-12-31';
-                        $dateB = optional($b->birth_date)->format('Y-m-d') ?: '9999-12-31';
-                        if ($dateA === $dateB) {
-                            return strcmp((string) $a->display_name, (string) $b->display_name);
-                        }
-
-                        return strcmp($dateA, $dateB);
-                    })
+                    ->sort(fn (Character $a, Character $b) => $this->compareByBirthThenName($a, $b))
                     ->values();
 
                 foreach ($children as $child) {
@@ -200,15 +192,7 @@ class GenealogyController extends Controller
                 continue;
             }
 
-            usort($group, function ($a, $b) {
-                $dateA = optional($a->birth_date)->format('Y-m-d') ?: '9999-12-31';
-                $dateB = optional($b->birth_date)->format('Y-m-d') ?: '9999-12-31';
-                if ($dateA === $dateB) {
-                    return strcmp((string) $a->display_name, (string) $b->display_name);
-                }
-
-                return strcmp($dateA, $dateB);
-            });
+            usort($group, fn (Character $a, Character $b) => $this->compareByBirthThenName($a, $b));
 
             for ($i = 0; $i < count($group) - 1; $i++) {
                 $left = $group[$i];
@@ -421,5 +405,16 @@ class GenealogyController extends Controller
         $path = (string) $character->image_path;
 
         return Storage::disk('public')->exists($path) ? $path : null;
+    }
+
+    private function compareByBirthThenName(Character $a, Character $b): int
+    {
+        $dateA = optional($a->birth_date)->format('Y-m-d') ?: '9999-12-31';
+        $dateB = optional($b->birth_date)->format('Y-m-d') ?: '9999-12-31';
+        if ($dateA !== $dateB) {
+            return strcmp($dateA, $dateB);
+        }
+
+        return strcmp((string) $a->display_name, (string) $b->display_name);
     }
 }

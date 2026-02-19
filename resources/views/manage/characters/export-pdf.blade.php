@@ -125,26 +125,6 @@
 </div>
 
 <div class="section">
-    <h2>Timeline perso</h2>
-    @if($character->events->isEmpty())
-        <p class="muted">Aucun événement.</p>
-    @else
-        <table class="tbl">
-            <thead><tr><th>Date</th><th>Titre</th><th>Détails</th></tr></thead>
-            <tbody>
-            @foreach($character->events as $event)
-                <tr>
-                    <td>{{ optional($event->event_date)->format('Y-m-d') ?: '-' }}</td>
-                    <td>{{ $event->title }}</td>
-                    <td>{{ $event->details ?: '-' }}</td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
-    @endif
-</div>
-
-<div class="section">
     <h2>Galerie</h2>
     @if($character->galleryImages->isEmpty())
         <p class="muted">Aucune image.</p>

@@ -167,6 +167,14 @@ class Character extends Model
         return $this->hasOne(CharacterGalleryImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function chronicles()
+    {
+        return $this->belongsToMany(Chronicle::class, 'chronicle_character', 'character_id', 'chronicle_id')
+            ->withTimestamps()
+            ->orderBy('event_date')
+            ->orderBy('id');
+    }
+
     public function getDisplayNameAttribute()
     {
         $full = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));

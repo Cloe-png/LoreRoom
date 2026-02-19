@@ -16,7 +16,7 @@
                 <input type="text" name="title" value="{{ old('title') }}" required>
             </div>
             <div class="field">
-                <label>Date d'événement</label>
+                <label>Date evenement</label>
                 <input type="date" name="event_date" value="{{ old('event_date') }}">
             </div>
             <div class="field">
@@ -28,15 +28,26 @@
                 </select>
             </div>
             <div class="field">
-                <label>Résumé</label>
+                <label>Resume</label>
                 <textarea name="summary">{{ old('summary') }}</textarea>
             </div>
             <div class="field">
                 <label>Contenu</label>
                 <textarea name="content">{{ old('content') }}</textarea>
             </div>
+            <div class="field">
+                <label>Personnages lies</label>
+                <select name="linked_character_ids[]" multiple size="8">
+                    @foreach($characters as $character)
+                        <option value="{{ $character->id }}" @selected(collect(old('linked_character_ids', []))->contains($character->id))>
+                            {{ $character->display_name }}{{ $character->birth_date ? ' (' . $character->birth_date->format('Y-m-d') . ')' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <p class="muted">Maintiens Ctrl (ou Cmd) pour selectionner plusieurs personnages.</p>
+            </div>
             <div class="stack">
-                <button class="btn" type="submit">Créer</button>
+                <button class="btn" type="submit">Creer</button>
                 <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Annuler</a>
             </div>
         </form>

@@ -14,36 +14,20 @@ class ChronicleController extends Controller
 {
     public function index(Request $request)
     {
-        $validated = $request->validate([
-            'mode' => ['nullable', Rule::in(['global', 'character'])],
-            'character_id' => ['nullable', 'integer', 'exists:characters,id'],
-        ]);
-
-        $timelineMode = $validated['mode'] ?? null;
-        $selectedCharacterId = isset($validated['character_id']) ? (int) $validated['character_id'] : null;
-
         $characters = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'preferred_color'])
+            ->select(['id', 'name', 'first_name', 'last_name', 'preferred_color', 'image_path', 'birth_date'])
+            ->orderByRaw('birth_date IS NULL, birth_date ASC')
             ->orderBy('name')
             ->get();
 
-        if ($timelineMode === 'character') {
-            $timelineEvents = $this->buildCharacterTimeline($selectedCharacterId);
-        } elseif ($timelineMode === 'global') {
-            $timelineEvents = $this->buildGlobalTimeline();
-        } else {
-            $timelineEvents = collect();
-        }
+        return view('manage.chronicles.index', compact('characters'));
+    }
 
-        $chronicles = Chronicle::with('world')->latest()->paginate(10);
+    public function globalTimeline()
+    {
+        $timelineEvents = $this->buildGlobalTimeline();
 
-        return view('manage.chronicles.index', compact(
-            'chronicles',
-            'characters',
-            'timelineEvents',
-            'timelineMode',
-            'selectedCharacterId'
-        ));
+        return view('manage.chronicles.global', compact('timelineEvents'));
     }
 
     public function characterTimeline(Character $character)
@@ -56,21 +40,36 @@ class ChronicleController extends Controller
     private function buildGlobalTimeline(): Collection
     {
         $chronicleEvents = Chronicle::query()
-            ->with('world:id,name')
+            ->with([
+                'world:id,name',
+                'linkedCharacters:id,name,first_name,last_name,preferred_color,image_path',
+            ])
             ->get()
             ->map(function (Chronicle $chronicle) {
+                $linked = $chronicle->linkedCharacters;
+                $firstLinked = $linked->first();
+                $linkedNames = $linked->pluck('display_name')->filter()->values()->all();
+
                 return [
                     'date' => $chronicle->event_date,
                     'title' => $chronicle->title,
                     'description' => $chronicle->summary,
                     'type' => 'chronicle',
                     'source_name' => optional($chronicle->world)->name,
+                    'related_person_name' => $firstLinked ? $firstLinked->display_name : null,
+                    'related_person_link' => $firstLinked ? route('manage.characters.show', $firstLinked) : null,
+                    'related_people' => $linkedNames,
+                    'photo_path' => $firstLinked ? $firstLinked->image_path : null,
+                    'accent_color' => $this->resolveColor($firstLinked ? $firstLinked->preferred_color : null),
                     'link' => route('manage.chronicles.show', $chronicle),
+                    'edit_link' => route('manage.chronicles.edit', $chronicle),
+                    'delete_link' => route('manage.chronicles.destroy', $chronicle),
+                    'can_manage' => true,
                 ];
             });
 
         $characterEvents = CharacterEvent::query()
-            ->with('character:id,name,first_name,last_name,birth_date,death_date')
+            ->with('character:id,name,first_name,last_name,birth_date,death_date,preferred_color,image_path')
             ->get()
             ->map(function (CharacterEvent $event) {
                 $character = $event->character;
@@ -81,13 +80,18 @@ class ChronicleController extends Controller
                     'description' => $event->details,
                     'type' => 'character_event',
                     'source_name' => $character ? $character->display_name : null,
+                    'related_person_name' => $character ? $character->display_name : null,
+                    'related_person_link' => $character ? route('manage.characters.show', $character) : null,
+                    'related_people' => $character ? [$character->display_name] : [],
+                    'photo_path' => $character ? $character->image_path : null,
                     'accent_color' => $this->resolveColor($character ? $character->preferred_color : null),
                     'link' => $character ? route('manage.characters.show', $character) : null,
+                    'can_manage' => false,
                 ];
             });
 
         $lifeEvents = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'death_date'])
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'death_date', 'preferred_color', 'image_path'])
             ->where(function ($query) {
                 $query->whereNotNull('birth_date')
                     ->orWhereNotNull('death_date');
@@ -103,8 +107,13 @@ class ChronicleController extends Controller
                         'description' => null,
                         'type' => 'birth',
                         'source_name' => $character->display_name,
+                        'related_person_name' => $character->display_name,
+                        'related_person_link' => route('manage.characters.show', $character),
+                        'related_people' => [$character->display_name],
+                        'photo_path' => $character->image_path,
                         'accent_color' => $this->resolveColor($character->preferred_color),
                         'link' => route('manage.characters.show', $character),
+                        'can_manage' => false,
                     ];
                 }
 
@@ -115,8 +124,13 @@ class ChronicleController extends Controller
                         'description' => null,
                         'type' => 'death',
                         'source_name' => $character->display_name,
+                        'related_person_name' => $character->display_name,
+                        'related_person_link' => route('manage.characters.show', $character),
+                        'related_people' => [$character->display_name],
+                        'photo_path' => $character->image_path,
                         'accent_color' => $this->resolveColor($character->preferred_color),
                         'link' => route('manage.characters.show', $character),
+                        'can_manage' => false,
                     ];
                 }
 
@@ -151,7 +165,7 @@ class ChronicleController extends Controller
         }
 
         $character = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'death_date', 'preferred_color'])
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'death_date', 'preferred_color', 'image_path'])
             ->find($characterId);
 
         if (!$character) {
@@ -167,8 +181,35 @@ class ChronicleController extends Controller
                     'description' => $event->details,
                     'type' => 'character_event',
                     'source_name' => $character->display_name,
+                    'related_person_name' => $character->display_name,
+                    'related_person_link' => route('manage.characters.show', $character),
+                    'related_people' => [$character->display_name],
+                    'photo_path' => $character->image_path,
                     'accent_color' => $this->resolveColor($character->preferred_color),
                     'link' => route('manage.characters.show', $character),
+                    'can_manage' => false,
+                ];
+            });
+
+        $chronicleEntries = $character->chronicles()
+            ->with('world:id,name')
+            ->get()
+            ->map(function (Chronicle $chronicle) use ($character) {
+                return [
+                    'date' => $chronicle->event_date,
+                    'title' => $chronicle->title,
+                    'description' => $chronicle->summary,
+                    'type' => 'chronicle',
+                    'source_name' => optional($chronicle->world)->name,
+                    'related_person_name' => $character->display_name,
+                    'related_person_link' => route('manage.characters.show', $character),
+                    'related_people' => [$character->display_name],
+                    'photo_path' => $character->image_path,
+                    'accent_color' => $this->resolveColor($character->preferred_color),
+                    'link' => route('manage.chronicles.show', $chronicle),
+                    'edit_link' => route('manage.chronicles.edit', $chronicle),
+                    'delete_link' => route('manage.chronicles.destroy', $chronicle),
+                    'can_manage' => true,
                 ];
             });
 
@@ -180,8 +221,13 @@ class ChronicleController extends Controller
                 'description' => null,
                 'type' => 'birth',
                 'source_name' => $character->display_name,
+                'related_person_name' => $character->display_name,
+                'related_person_link' => route('manage.characters.show', $character),
+                'related_people' => [$character->display_name],
+                'photo_path' => $character->image_path,
                 'accent_color' => $this->resolveColor($character->preferred_color),
                 'link' => route('manage.characters.show', $character),
+                'can_manage' => false,
             ]);
         }
 
@@ -192,12 +238,18 @@ class ChronicleController extends Controller
                 'description' => null,
                 'type' => 'death',
                 'source_name' => $character->display_name,
+                'related_person_name' => $character->display_name,
+                'related_person_link' => route('manage.characters.show', $character),
+                'related_people' => [$character->display_name],
+                'photo_path' => $character->image_path,
                 'accent_color' => $this->resolveColor($character->preferred_color),
                 'link' => route('manage.characters.show', $character),
+                'can_manage' => false,
             ]);
         }
 
         return $eventEntries
+            ->concat($chronicleEntries)
             ->concat($lifeEntries)
             ->sort(function (array $a, array $b) {
                 if ($a['date'] && $b['date']) {
@@ -240,8 +292,13 @@ class ChronicleController extends Controller
     public function create()
     {
         $defaultWorld = World::query()->orderBy('id')->first();
+        $characters = Character::query()
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date'])
+            ->orderByRaw('birth_date IS NULL, birth_date ASC')
+            ->orderBy('name')
+            ->get();
 
-        return view('manage.chronicles.create', compact('defaultWorld'));
+        return view('manage.chronicles.create', compact('defaultWorld', 'characters'));
     }
 
     public function store(Request $request)
@@ -257,10 +314,15 @@ class ChronicleController extends Controller
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
+            'linked_character_ids' => ['nullable', 'array'],
+            'linked_character_ids.*' => ['integer', 'exists:characters,id'],
         ]);
         $data['world_id'] = $defaultWorldId;
+        $linkedCharacterIds = array_values(array_unique(array_map('intval', $data['linked_character_ids'] ?? [])));
+        unset($data['linked_character_ids']);
 
-        Chronicle::create($data);
+        $chronicle = Chronicle::create($data);
+        $chronicle->linkedCharacters()->sync($linkedCharacterIds);
 
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique creee.');
     }
@@ -274,9 +336,15 @@ class ChronicleController extends Controller
 
     public function edit(Chronicle $chronicle)
     {
+        $chronicle->load('linkedCharacters:id');
         $defaultWorld = World::query()->orderBy('id')->first();
+        $characters = Character::query()
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date'])
+            ->orderByRaw('birth_date IS NULL, birth_date ASC')
+            ->orderBy('name')
+            ->get();
 
-        return view('manage.chronicles.edit', compact('chronicle', 'defaultWorld'));
+        return view('manage.chronicles.edit', compact('chronicle', 'defaultWorld', 'characters'));
     }
 
     public function update(Request $request, Chronicle $chronicle)
@@ -292,10 +360,15 @@ class ChronicleController extends Controller
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
             'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
+            'linked_character_ids' => ['nullable', 'array'],
+            'linked_character_ids.*' => ['integer', 'exists:characters,id'],
         ]);
         $data['world_id'] = $defaultWorldId;
+        $linkedCharacterIds = array_values(array_unique(array_map('intval', $data['linked_character_ids'] ?? [])));
+        unset($data['linked_character_ids']);
 
         $chronicle->update($data);
+        $chronicle->linkedCharacters()->sync($linkedCharacterIds);
 
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique mise à jour.');
     }

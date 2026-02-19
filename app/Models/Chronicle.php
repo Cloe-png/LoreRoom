@@ -26,5 +26,12 @@ class Chronicle extends Model
     {
         return $this->belongsTo(World::class);
     }
+
+    public function linkedCharacters()
+    {
+        return $this->belongsToMany(Character::class, 'chronicle_character', 'chronicle_id', 'character_id')
+            ->withTimestamps()
+            ->orderBy('name');
+    }
 }
 

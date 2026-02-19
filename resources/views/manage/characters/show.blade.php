@@ -148,26 +148,6 @@
         </div>
 
         <div class="panel">
-            <strong>Timeline perso</strong>
-            @if($character->events->isEmpty())
-                <p class="muted">Aucun événement.</p>
-            @else
-                <table>
-                    <thead><tr><th>Date</th><th>Titre</th><th>Détails</th></tr></thead>
-                    <tbody>
-                        @foreach($character->events as $event)
-                            <tr>
-                                <td>{{ optional($event->event_date)->format('Y-m-d') ?: '-' }}</td>
-                                <td>{{ $event->title }}</td>
-                                <td>{{ $event->details ?: '-' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-        </div>
-
-        <div class="panel">
             <strong>Galerie</strong>
             @if($character->galleryImages->isEmpty())
                 <p class="muted">Aucune image de galerie.</p>

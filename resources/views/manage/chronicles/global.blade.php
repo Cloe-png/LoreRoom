@@ -1,12 +1,11 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Chroniques personnage')
+@section('title', 'Gestion - Chroniques globales')
 @section('header', 'Chroniques')
 
 @section('content')
     <style>
         .poster-page {
-            --line-x: 86px;
             --line-color: #d71920;
             --line-glow: rgba(215, 25, 32, .2);
         }
@@ -179,12 +178,11 @@
     <section class="panel poster-page">
         <div class="poster-head">
             <div>
-                <h3 class="poster-title">Frise - {{ $character->display_name }}</h3>
+                <h3 class="poster-title">Frise globale</h3>
                 <p class="poster-sub">Evenements alternes a gauche et a droite de la ligne centrale.</p>
             </div>
             <div class="stack">
                 <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
-                <a class="btn secondary" href="{{ route('manage.chronicles.global') }}">Global</a>
                 <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
             </div>
         </div>

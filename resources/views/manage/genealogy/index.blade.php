@@ -345,8 +345,14 @@
                     const pairEvidence=new Map();
                     nodes.forEach(ch=>{ const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m){ const key=[f,m].sort((a,b)=>a-b).join('-'); pairEvidence.set(key,(pairEvidence.get(key)||0)+1); } });
                     const pickPartner=(p)=>{ const pn=byId.get(p); if(!pn)return 0; const base=(partner.get(p)||[]); const spouse=Number(pn.spouse_id||0); const merged=[...base, ...(spouse? [spouse] : [])]; const candidates=[...new Set(merged)].filter(x=>{ const xn=byId.get(x); return !!xn&&xn.level===pn.level; }); if(!candidates.length)return 0; if(spouse&&candidates.includes(spouse))return spouse; if(candidates.length===1)return candidates[0]; let best=0,bestScore=-1; candidates.forEach(c=>{ const key=[p,c].sort((a,b)=>a-b).join('-'); const score=Number(pairEvidence.get(key)||0); if(score>bestScore){ best=c; bestScore=score; } }); return best||0; };
+                    const byBirthThenName=(a,b)=>{
+                        const dA=String(a.birth_date||'9999-12-31');
+                        const dB=String(b.birth_date||'9999-12-31');
+                        return dA.localeCompare(dB) || String(a.label||'').localeCompare(String(b.label||''));
+                    };
                     const fam=new Map();
                     nodes.forEach(ch=>{ let ps=[]; const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m)ps=[f,m].sort((a,b)=>a-b); else if(f||m){ const p=f||m; const inferred=pickPartner(p); ps=inferred?[p,inferred].sort((a,b)=>a-b):[p]; } else return; const key=ps.join('-'); if(!fam.has(key))fam.set(key,{parents:ps,children:[]}); fam.get(key).children.push(ch.id); });
+                    fam.forEach((f)=>{ f.children=(f.children||[]).sort((a,b)=>byBirthThenName(byId.get(a)||{}, byId.get(b)||{})); });
 
                     const svg=S('svg',{width:svgW,height:svgH,viewBox:`0 0 ${svgW} ${svgH}`});
                     const viewport=S('g');
@@ -417,7 +423,11 @@
                             if(!parents.length || !children.length) return;
                             const pp=parents.map(id=>pos.get(id)).filter(Boolean);
                             if(!pp.length) return;
-                            const ch=children.map(id=>pos.get(id)).filter(Boolean).sort((a,b)=>a.x-b.x);
+                            const ch=children
+                                .map(id=>({id,p:pos.get(id)}))
+                                .filter(row=>!!row.p)
+                                .sort((a,b)=>byBirthThenName(byId.get(a.id)||{}, byId.get(b.id)||{}))
+                                .map(row=>row.p);
                             if(!ch.length) return;
 
                             const py=Math.max(...pp.map(p=>p.y+H));

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Character;
-use App\Models\CharacterEvent;
 use App\Models\CharacterGalleryImage;
 use App\Models\CharacterItem;
 use App\Models\CharacterJob;
@@ -77,9 +76,6 @@ class CharacterController extends Controller
         $jobRows = old('jobs', [
             ['job_name' => '', 'start_year' => '', 'end_year' => '', 'notes' => ''],
         ]);
-        $eventRows = old('events', [
-            ['event_date' => '', 'title' => '', 'details' => ''],
-        ]);
         $childrenLinkType = old('children_link_type', 'father');
         $selectedChildrenIds = old('children_ids', []);
         $selectedFullSiblingIds = old('sibling_ids_full', []);
@@ -95,7 +91,6 @@ class CharacterController extends Controller
             'relationRows',
             'itemRows',
             'jobRows',
-            'eventRows',
             'childrenLinkType',
             'selectedChildrenIds',
             'selectedFullSiblingIds',
@@ -163,10 +158,6 @@ class CharacterController extends Controller
             'jobs.*.start_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.end_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.notes' => ['nullable', 'string', 'max:2000'],
-            'events' => ['nullable', 'array'],
-            'events.*.event_date' => ['nullable', 'date'],
-            'events.*.title' => ['nullable', 'string', 'max:180'],
-            'events.*.details' => ['nullable', 'string', 'max:3000'],
             'children_link_type' => ['nullable', Rule::in(['father', 'mother'])],
             'children_ids' => ['nullable', 'array'],
             'children_ids.*' => ['nullable', 'exists:characters,id'],
@@ -198,7 +189,6 @@ class CharacterController extends Controller
         $relationRows = $data['relations'] ?? [];
         $itemRows = $data['items'] ?? [];
         $jobRows = $data['jobs'] ?? [];
-        $eventRows = $data['events'] ?? [];
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $siblingIdsByKind = [
@@ -207,17 +197,16 @@ class CharacterController extends Controller
             'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
         ];
         unset($data['relations']);
-        unset($data['items'], $data['jobs'], $data['events']);
+        unset($data['items'], $data['jobs']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
+        DB::transaction(function () use ($request, $data, $spouseId, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
-            $this->syncCharacterEvents($character, $eventRows);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
             $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
@@ -245,7 +234,6 @@ class CharacterController extends Controller
             'childrenFromMother',
             'items',
             'jobs',
-            'events',
             'galleryImages',
         ]);
 
@@ -265,7 +253,6 @@ class CharacterController extends Controller
             'childrenFromMother',
             'items',
             'jobs',
-            'events',
             'galleryImages',
         ]);
 
@@ -346,24 +333,6 @@ class CharacterController extends Controller
             }
         }
 
-        if (old('events') !== null) {
-            $eventRows = old('events');
-        } else {
-            $eventRows = $character->events()
-                ->get()
-                ->map(function ($event) {
-                    return [
-                        'event_date' => optional($event->event_date)->format('Y-m-d'),
-                        'title' => $event->title,
-                        'details' => $event->details,
-                    ];
-                })
-                ->all();
-            if (empty($eventRows)) {
-                $eventRows[] = ['event_date' => '', 'title' => '', 'details' => ''];
-            }
-        }
-
         if (old('children_ids') !== null) {
             $selectedChildrenIds = old('children_ids', []);
             $childrenLinkType = old('children_link_type', 'father');
@@ -416,7 +385,6 @@ class CharacterController extends Controller
             'relationRows',
             'itemRows',
             'jobRows',
-            'eventRows',
             'existingGallery',
             'childrenLinkType',
             'selectedChildrenIds',
@@ -487,10 +455,6 @@ class CharacterController extends Controller
             'jobs.*.start_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.end_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.notes' => ['nullable', 'string', 'max:2000'],
-            'events' => ['nullable', 'array'],
-            'events.*.event_date' => ['nullable', 'date'],
-            'events.*.title' => ['nullable', 'string', 'max:180'],
-            'events.*.details' => ['nullable', 'string', 'max:3000'],
             'children_link_type' => ['nullable', Rule::in(['father', 'mother'])],
             'children_ids' => ['nullable', 'array'],
             'children_ids.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
@@ -525,7 +489,6 @@ class CharacterController extends Controller
         $relationRows = $data['relations'] ?? [];
         $itemRows = $data['items'] ?? [];
         $jobRows = $data['jobs'] ?? [];
-        $eventRows = $data['events'] ?? [];
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $siblingIdsByKind = [
@@ -535,7 +498,7 @@ class CharacterController extends Controller
         ];
         $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
-        unset($data['items'], $data['jobs'], $data['events'], $data['remove_gallery_ids']);
+        unset($data['items'], $data['jobs'], $data['remove_gallery_ids']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
 
@@ -543,13 +506,12 @@ class CharacterController extends Controller
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $relationRows, $itemRows, $jobRows, $eventRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
-            $this->syncCharacterEvents($character, $eventRows);
             $this->removeCharacterGalleryImages($character, $removeGalleryIds);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
@@ -1000,25 +962,6 @@ class CharacterController extends Controller
                 'start_year' => $startYear,
                 'end_year' => $endYear,
                 'notes' => trim((string) ($row['notes'] ?? '')) ?: null,
-            ]);
-        }
-    }
-
-    private function syncCharacterEvents(Character $character, array $rows): void
-    {
-        $character->events()->delete();
-
-        foreach ($rows as $row) {
-            $title = trim((string) ($row['title'] ?? ''));
-            if ($title === '') {
-                continue;
-            }
-
-            CharacterEvent::create([
-                'character_id' => $character->id,
-                'event_date' => $row['event_date'] ?: null,
-                'title' => $title,
-                'details' => trim((string) ($row['details'] ?? '')) ?: null,
             ]);
         }
     }
