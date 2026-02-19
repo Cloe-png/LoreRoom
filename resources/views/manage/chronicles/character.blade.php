@@ -1,119 +1,28 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Chroniques')
+@section('title', 'Gestion - Chroniques personnage')
 @section('header', 'Chroniques')
 
 @section('content')
     <style>
-        .chrono-surface {
-            --tone-panel: rgba(255, 252, 245, .72);
-            --tone-border: rgba(110, 77, 41, .26);
+        .character-surface {
             --tone-text: #2d2112;
         }
-        .chrono-head {
+        .character-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
             margin-bottom: 12px;
         }
-        .chrono-title {
+        .character-title {
             margin: 0;
             color: var(--tone-text);
-            letter-spacing: .01em;
         }
-        .chrono-sub {
+        .character-sub {
             margin: 4px 0 0;
-            font-size: .92rem;
             color: rgba(56,41,21,.72);
-        }
-        .mode-switch {
-            margin-top: 14px;
-            padding: 14px;
-            border: 1px solid var(--tone-border);
-            border-radius: 14px;
-            background: linear-gradient(180deg, var(--tone-panel) 0%, rgba(255, 248, 234, .62) 100%);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
-        }
-        .global-wrap {
-            display: flex;
-            justify-content: center;
-            margin: 4px 0 16px;
-        }
-        .global-btn {
-            min-width: 390px;
-            min-height: 66px;
-            font-size: 1.15rem;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            border-width: 2px;
-        }
-        .characters-tools {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-        .characters-search {
-            width: 100%;
-            min-height: 46px;
-            border-radius: 12px;
-            border: 1px solid var(--tone-border);
-            padding: 0 14px;
-            background: #fffdf7;
-            color: #2c2c2c;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 2px 6px rgba(0,0,0,.04);
-        }
-        .characters-search:focus {
-            outline: none;
-            border-color: #b78345;
-            box-shadow: 0 0 0 3px rgba(183, 131, 69, .18);
-        }
-        .characters-scroll {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-            max-height: 280px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: 4px 8px 8px 2px;
-            border-radius: 12px;
-            background: rgba(255,255,255,.45);
-            border: 1px solid rgba(115, 82, 47, .2);
-            scrollbar-width: thin;
-            scrollbar-color: #9f7640 rgba(132, 101, 63, .16);
-        }
-        .mode-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 46px;
-            padding: 0 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(79, 58, 31, .7);
-            background: linear-gradient(180deg, #fffcf4 0%, #efe4ce 100%);
-            color: #2b2012;
-            font-weight: 700;
-            text-decoration: none;
-            transition: transform .12s ease, box-shadow .12s ease, background .12s ease, color .12s ease;
-            box-shadow: 0 2px 0 rgba(70, 50, 25, .25);
-        }
-        .mode-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(37,29,20,.14);
-            background: linear-gradient(180deg, #fffef9 0%, #f3e7d2 100%);
-        }
-        .mode-btn.active {
-            background: linear-gradient(180deg, #272522 0%, #171614 100%);
-            color: #ffffff;
-            border-color: #171614;
-            box-shadow: inset 0 -2px 0 rgba(255,255,255,.18), 0 5px 12px rgba(0,0,0,.18);
-        }
-        .character-btn {
-            width: auto;
-            min-height: 44px;
-            justify-content: flex-start;
-            padding: 0 14px;
-            border-left: 6px solid var(--char-color, rgba(79, 58, 31, .7));
+            font-size: .92rem;
         }
         .timeline-wrap {
             margin-top: 18px;
@@ -230,11 +139,6 @@
             text-transform: uppercase;
             letter-spacing: .02em;
         }
-        .badge.chronicle {
-            background: #efe3cf;
-            border-color: #ceb183;
-            color: #5f431f;
-        }
         .badge.character_event {
             background: color-mix(in srgb, var(--event-color, #9fbfda) 16%, #ffffff 84%);
             border-color: color-mix(in srgb, var(--event-color, #9fbfda) 70%, #ffffff 30%);
@@ -268,74 +172,40 @@
             background: linear-gradient(180deg, rgba(255,255,255,.68) 0%, rgba(246,236,217,.55) 100%);
         }
         @media (max-width: 640px) {
-            .chrono-head {
+            .character-head {
                 flex-direction: column;
                 align-items: flex-start;
-            }
-            .global-btn {
-                width: 100%;
-                min-width: 0;
-            }
-            .mode-switch {
-                padding: 10px;
-            }
-            .characters-scroll {
-                grid-template-columns: 1fr;
             }
             .timeline-track {
                 min-width: 760px;
                 padding: 78px 14px;
             }
         }
-        @media (max-width: 1040px) {
-            .characters-scroll {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
     </style>
 
-    <section class="panel chrono-surface">
-        <div class="chrono-head">
+    @php
+        $characterColor = null;
+        if (!empty($character->preferred_color)) {
+            $normalized = trim($character->preferred_color);
+            if ($normalized !== '' && $normalized[0] !== '#') {
+                $normalized = '#' . $normalized;
+            }
+            if (preg_match('/^#([A-Fa-f0-9]{3}|[A-Fa-f0-9]{6})$/', $normalized)) {
+                $characterColor = strtoupper($normalized);
+            }
+        }
+    @endphp
+
+    <section class="panel character-surface" style="{{ $characterColor ? '--event-color:' . $characterColor . ';' : '' }}">
+        <div class="character-head">
             <div>
-                <h3 class="chrono-title">Frise chronologique</h3>
-                <p class="chrono-sub">Vue globale du lore ou bascule vers une frise par personnage.</p>
+                <h3 class="character-title">Frise - {{ $character->display_name }}</h3>
+                <p class="character-sub">Chronologie dediee au personnage.</p>
             </div>
-            <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
-        </div>
-
-        <div class="mode-switch">
-            <div class="global-wrap">
-                <a
-                    class="mode-btn global-btn {{ $timelineMode === 'global' ? 'active' : '' }}"
-                    href="{{ route('manage.chronicles.index', ['mode' => 'global']) }}"
-                >
-                    Global
-                </a>
-            </div>
-
-            <div class="characters-tools">
-                <input
-                    id="character-filter"
-                    class="characters-search"
-                    type="search"
-                    placeholder="Rechercher un personnage..."
-                    autocomplete="off"
-                >
-            </div>
-
-            <div class="characters-scroll" id="characters-scroll">
-                @foreach($characters as $character)
-                    @php $charColor = $character->preferred_color ?: null; @endphp
-                    <a
-                        class="mode-btn character-btn"
-                        href="{{ route('manage.chronicles.character', $character) }}"
-                        style="{{ $charColor ? '--char-color:' . $charColor . ';' : '' }}"
-                        data-character-btn
-                        data-character-name="{{ strtolower($character->display_name) }}"
-                    >
-                        {{ $character->display_name }}
-                    </a>
-                @endforeach
+            <div class="stack">
+                <a class="btn secondary" href="{{ url()->previous() }}">Retour</a>
+                <a class="btn secondary" href="{{ route('manage.chronicles.index', ['mode' => 'global']) }}">Global</a>
+                <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
             </div>
         </div>
 
@@ -343,18 +213,13 @@
             $timelineItems = $timelineEvents->values();
 
             $typeLabels = [
-                'chronicle' => 'Chronique',
                 'character_event' => 'Personnage',
                 'birth' => 'Naissance',
                 'death' => 'Deces',
             ];
         @endphp
 
-        @if(!$timelineMode)
-            <p class="timeline-empty muted">Choisis Global ou un personnage pour afficher la frise.</p>
-        @elseif($timelineMode === 'character' && !$selectedCharacterId)
-            <p class="timeline-empty muted">Selectionne un personnage pour afficher sa frise.</p>
-        @elseif($timelineItems->isEmpty())
+        @if($timelineItems->isEmpty())
             <p class="timeline-empty muted">Aucun evenement a afficher.</p>
         @else
             <div class="timeline-wrap">
@@ -394,23 +259,4 @@
             </div>
         @endif
     </section>
-    <script>
-        (function () {
-            var filter = document.getElementById('character-filter');
-            var buttons = document.querySelectorAll('[data-character-btn]');
-
-            if (!filter || !buttons.length) {
-                return;
-            }
-
-            filter.addEventListener('input', function () {
-                var value = (filter.value || '').trim().toLowerCase();
-
-                buttons.forEach(function (button) {
-                    var name = button.getAttribute('data-character-name') || '';
-                    button.style.display = name.indexOf(value) !== -1 ? 'inline-flex' : 'none';
-                });
-            });
-        })();
-    </script>
 @endsection

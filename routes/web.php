@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('manage/worlds', WorldController::class)->names('manage.worlds');
     Route::resource('manage/characters', CharacterController::class)->names('manage.characters');
     Route::resource('manage/places', PlaceController::class)->names('manage.places');
+    Route::get('manage/chronicles/characters/{character}', [ChronicleController::class, 'characterTimeline'])->name('manage.chronicles.character');
     Route::resource('manage/chronicles', ChronicleController::class)->names('manage.chronicles');
     Route::resource('manage/maps', ImaginaryMapController::class)->names('manage.maps');
     Route::resource('manage/relations', CharacterRelationController::class)->names('manage.relations');
