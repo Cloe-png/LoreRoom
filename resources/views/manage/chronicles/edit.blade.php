@@ -1,7 +1,7 @@
 ﻿@extends('manage.layout')
 
-@section('title', 'Gestion - Editer chronique')
-@section('header', 'Editer chronique')
+@section('title', 'Gestion - Éditer chronique')
+@section('header', 'Éditer chronique')
 
 @section('content')
     <style>

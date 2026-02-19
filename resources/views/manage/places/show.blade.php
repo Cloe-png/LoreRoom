@@ -6,7 +6,7 @@
 @section('content')
     <section class="panel">
         <p><strong>Monde:</strong> {{ optional($place->world)->name }}</p>
-        <p><strong>Region:</strong> {{ $place->region ?: 'Non definie' }}</p>
+        <p><strong>Région:</strong> {{ $place->region ?: 'Non définie' }}</p>
         <p><strong>Résumé:</strong><br>{{ $place->summary ?: 'Aucun résumé.' }}</p>
         <div class="stack">
             <a class="btn secondary" href="{{ route('manage.places.edit', $place) }}">Éditer</a>

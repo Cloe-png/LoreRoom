@@ -138,7 +138,7 @@
                         </div>
                         <div class="wanted-actions">
                             <a class="btn secondary" href="{{ route('manage.characters.show', $character) }}">Voir</a>
-                            <a class="btn secondary" href="{{ route('manage.characters.edit', $character) }}">Editer</a>
+                            <a class="btn secondary" href="{{ route('manage.characters.edit', $character) }}">Éditer</a>
                             <form class="inline" method="POST" action="{{ route('manage.characters.destroy', $character) }}">
                                 @csrf @method('DELETE')
                                 <button class="btn danger" type="submit">Supprimer</button>

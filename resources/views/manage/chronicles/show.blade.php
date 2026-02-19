@@ -12,7 +12,7 @@
         <p><strong>Résumé:</strong><br>{{ $chronicle->summary ?: 'Aucun résumé.' }}</p>
         <p><strong>Contenu:</strong><br>{{ $chronicle->content ?: 'Aucun contenu.' }}</p>
         <div class="stack">
-            <a class="btn secondary" href="{{ route('manage.chronicles.edit', $chronicle) }}">Editer</a>
+            <a class="btn secondary" href="{{ route('manage.chronicles.edit', $chronicle) }}">Éditer</a>
             <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
         </div>
     </section>

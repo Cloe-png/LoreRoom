@@ -59,7 +59,7 @@
             </div>
 
             <div class="field">
-                <label>Couleur preferee (relations)</label>
+                <label>Couleur préférée (relations)</label>
                 <input type="color" name="preferred_color" value="{{ old('preferred_color', $character->preferred_color ?: '#8F6A3A') }}">
             </div>
 
@@ -138,7 +138,7 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>Residence actuelle</label>
+                    <label>Résidence actuelle</label>
                     <select name="residence_place_id">
                         <option value="">Inconnue</option>
                         @foreach($places as $place)
@@ -260,7 +260,7 @@
                         <div class="field"><label>Yeux</label><input type="text" name="eye_color" value="{{ old('eye_color', $character->eye_color ?: $character->hair_eyes) }}"></div>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks', $character->marks) }}</textarea></div>
-                    <div class="field"><label>Maniere de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style', $character->clothing_style) }}</textarea></div>
+                    <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style', $character->clothing_style) }}</textarea></div>
                 </div>
             </details>
 
@@ -282,7 +282,7 @@
                     <div class="panel" data-item-row style="margin-top:10px; padding:10px;">
                         <div class="grid-4">
                             <div class="field" style="grid-column: span 2;"><label>Nom objet</label><input type="text" name="items[{{ $i }}][name]" value="{{ $item['name'] ?? '' }}"></div>
-                            <div class="field"><label>Rarete</label>
+                            <div class="field"><label>Rareté</label>
                                 <select name="items[{{ $i }}][rarity]">
                                     <option value="">-</option>
                                     @foreach(['commun','rare','epique','legendaire','mythique'] as $rarity)
@@ -316,7 +316,7 @@
                     </div>
                 @endforeach
             </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-job-btn">Ajouter un metier</button></div>
+            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-job-btn">Ajouter un métier</button></div>
                 </div>
             </details>
 
@@ -392,7 +392,7 @@
         <div class="panel" data-item-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
                 <div class="field" style="grid-column: span 2;"><label>Nom objet</label><input type="text" data-field="name"></div>
-                <div class="field"><label>Rarete</label><select data-field="rarity"><option value="">-</option><option value="commun">Commun</option><option value="rare">Rare</option><option value="epique">Epique</option><option value="legendaire">Legendaire</option><option value="mythique">Mythique</option></select></div>
+                <div class="field"><label>Rareté</label><select data-field="rarity"><option value="">-</option><option value="commun">Commun</option><option value="rare">Rare</option><option value="epique">Épique</option><option value="legendaire">Légendaire</option><option value="mythique">Mythique</option></select></div>
                 <div class="field"><label>Notes</label><textarea data-field="notes"></textarea></div>
             </div>
             <button class="btn danger" type="button" data-remove-item>Retirer</button>

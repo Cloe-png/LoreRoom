@@ -44,7 +44,7 @@
             <p style="white-space: pre-line;">{{ $relation->description ?: 'Aucune description.' }}</p>
         </div>
         <div class="stack" style="margin-top:12px;">
-            <a class="btn secondary" href="{{ route('manage.relations.edit', $relation) }}">Editer</a>
+            <a class="btn secondary" href="{{ route('manage.relations.edit', $relation) }}">Éditer</a>
             <a class="btn secondary" href="{{ route('manage.relations.index') }}">Retour</a>
         </div>
     </section>

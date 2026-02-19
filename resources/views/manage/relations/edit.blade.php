@@ -1,7 +1,7 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Editer relation')
-@section('header', 'Editer relation')
+@section('title', 'Gestion - Éditer relation')
+@section('header', 'Éditer relation')
 
 @section('content')
     <section class="panel">

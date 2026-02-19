@@ -285,6 +285,11 @@ class CharacterController extends Controller
             $relationRows = old('relations');
         } else {
             $relationRows = $character->outgoingRelations()
+                ->where(function ($query) {
+                    $query->whereNull('description')
+                        ->orWhere('description', 'not like', self::AUTO_FAMILY_TAG . '%')
+                        ->where('description', 'not like', self::AUTO_SIBLING_TAG . '%');
+                })
                 ->orderBy('id')
                 ->get()
                 ->map(function ($relation) {
