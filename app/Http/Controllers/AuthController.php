@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -16,7 +18,7 @@ class AuthController extends Controller
             return redirect()->route('manage.index');
         }
 
-        return view('portals');
+        return view('auth.login');
     }
 
     public function login(Request $request)
@@ -35,6 +37,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        $this->issueTemporaryLoginToken($request);
 
         return redirect()->intended(route('manage.index'));
     }
@@ -65,17 +68,42 @@ class AuthController extends Controller
 
         Auth::login($user);
         $request->session()->regenerate();
+        $this->issueTemporaryLoginToken($request);
 
         return redirect()->route('manage.index');
     }
 
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            $user->forceFill([
+                'login_token_hash' => null,
+                'login_token_expires_at' => null,
+            ])->save();
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->with('success', 'Vous etes deconnecte.');
+    }
+
+    private function issueTemporaryLoginToken(Request $request): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return;
+        }
+
+        $plainToken = Str::random(64);
+        $user->forceFill([
+            'login_token_hash' => hash('sha256', $plainToken),
+            'login_token_expires_at' => Carbon::now()->addHours(8),
+        ])->save();
+
+        $request->session()->put('login_temp_token', $plainToken);
     }
 }

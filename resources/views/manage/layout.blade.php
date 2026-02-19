@@ -387,7 +387,7 @@
                     </div>
 
                     <div class="sidebar-bottom">
-                        <a class="back-portals-link" href="{{ url('/portals') }}">Retour</a>
+                        <a class="back-portals-link" href="{{ route('login') }}">Retour</a>
                     </div>
                 </aside>
                 <section class="main">

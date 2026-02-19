@@ -34,7 +34,7 @@
         <main class="panel">
             <h1>Portail du Recit</h1>
             <p>Page de recit (placeholder).</p>
-            <a href="{{ url('/portals') }}">Retour aux portails</a>
+            <a href="{{ route('login') }}">Retour à la connexion</a>
         </main>
     </body>
 </html>

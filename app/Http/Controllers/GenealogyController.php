@@ -173,6 +173,8 @@ class GenealogyController extends Controller
             }
         }
 
+        $levels = $this->enforceGenerationalLevels($levels, $characters, $couplePairs);
+
         // Build sibling links as a chain per sibling group to keep graph readable.
         $includedIds = $levels->keys()->map(fn ($id) => (int) $id)->all();
         $included = $characters->whereIn('id', $includedIds);
@@ -266,6 +268,85 @@ class GenealogyController extends Controller
             ->values();
 
         return [$nodes, $edges];
+    }
+
+    private function enforceGenerationalLevels(Collection $levels, Collection $characters, Collection $couplePairs): Collection
+    {
+        if ($levels->isEmpty()) {
+            return $levels;
+        }
+
+        $normalized = collect();
+        foreach ($levels as $id => $level) {
+            $normalized->put((int) $id, (int) $level);
+        }
+
+        $includedIds = $normalized->keys()->map(fn ($id) => (int) $id)->all();
+        $includedSet = array_flip($includedIds);
+        $includedCharacters = $characters->whereIn('id', $includedIds);
+        $maxIterations = max(1, count($includedIds) * 5);
+
+        for ($iteration = 0; $iteration < $maxIterations; $iteration++) {
+            $changed = false;
+
+            foreach ($includedCharacters as $character) {
+                $childId = (int) $character->id;
+                if (!$normalized->has($childId)) {
+                    continue;
+                }
+
+                $parentIds = collect([(int) ($character->father_id ?? 0), (int) ($character->mother_id ?? 0)])
+                    ->filter(fn ($id) => $id > 0 && isset($includedSet[$id]) && $normalized->has($id))
+                    ->values();
+
+                if ($parentIds->isEmpty()) {
+                    continue;
+                }
+
+                $highestParentLevel = $parentIds
+                    ->map(fn ($id) => (int) $normalized->get($id))
+                    ->max();
+
+                $requiredChildLevel = $highestParentLevel + 1;
+                $currentChildLevel = (int) $normalized->get($childId);
+                if ($currentChildLevel < $requiredChildLevel) {
+                    $normalized->put($childId, $requiredChildLevel);
+                    $changed = true;
+                }
+            }
+
+            foreach ($couplePairs as $pair) {
+                $leftId = (int) ($pair['a'] ?? 0);
+                $rightId = (int) ($pair['b'] ?? 0);
+                if (!$normalized->has($leftId) || !$normalized->has($rightId)) {
+                    continue;
+                }
+
+                $leftLevel = (int) $normalized->get($leftId);
+                $rightLevel = (int) $normalized->get($rightId);
+                if ($leftLevel === $rightLevel) {
+                    continue;
+                }
+
+                // Keep generational constraints stable: never pull a node upward toward its children.
+                // For couples, align both partners to the deeper (max) level.
+                $targetLevel = max($leftLevel, $rightLevel);
+                if ($leftLevel !== $targetLevel) {
+                    $normalized->put($leftId, $targetLevel);
+                    $changed = true;
+                }
+                if ($rightLevel !== $targetLevel) {
+                    $normalized->put($rightId, $targetLevel);
+                    $changed = true;
+                }
+            }
+
+            if (!$changed) {
+                break;
+            }
+        }
+
+        return $normalized;
     }
 
     private function buildLayout(Collection $nodes): array

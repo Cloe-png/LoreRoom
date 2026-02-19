@@ -510,7 +510,7 @@
                 <h1>LoreRoom</h1>
                 <div class="title-ornament"><span>*</span></div>
                 <nav class="menu" aria-label="Menu principal">
-                    <a id="startBtn" href="{{ url('/portals') }}"><span>Start</span></a>
+                    <a id="startBtn" href="{{ route('login') }}"><span>Start</span></a>
                 </nav>
                 <div class="version">v0.1</div>
             </main>

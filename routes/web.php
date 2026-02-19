@@ -28,8 +28,8 @@ Route::get('/', function () {
     return view('start');
 });
 
-Route::get('/portals', [AuthController::class, 'showLogin'])->name('login');
-Route::get('/login', function () {
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::get('/portals', function () {
     return redirect()->route('login');
 });
 Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
@@ -44,7 +44,7 @@ Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.show');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'temp.token'])->group(function () {
     Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
     Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');
     Route::get('manage/arbre-genealogique', [GenealogyController::class, 'index'])->name('manage.genealogy.index');

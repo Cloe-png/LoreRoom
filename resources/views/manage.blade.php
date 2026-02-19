@@ -334,7 +334,7 @@
 
                         <article class="paper">
                             <div class="actions">
-                                <a class="btn" href="{{ url('/portals') }}">Retour aux portails</a>
+                                <a class="btn" href="{{ route('login') }}">Retour à la connexion</a>
                                 <a class="btn secondary" href="{{ url('/story') }}">Ouvrir le portail recit</a>
                             </div>
                             <div class="warning">Section atelier en version prototype. Certaines actions de gestion seront activees ensuite.</div>

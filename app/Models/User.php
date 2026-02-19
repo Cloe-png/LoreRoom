@@ -22,6 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'login_token_hash',
+        'login_token_expires_at',
     ];
 
     /**
@@ -41,5 +43,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'login_token_expires_at' => 'datetime',
     ];
 }
