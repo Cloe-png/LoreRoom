@@ -164,7 +164,7 @@
 
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children') ? 'checked' : '' }}> Enfants (oui/non)</label>
-                <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frere / soeur (oui/non)</label>
+                <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frère / sœur (oui/non)</label>
             </div>
 
             <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -204,11 +204,11 @@
                     $selectedHalfSiblings = collect($selectedHalfSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
                 @endphp
                 @if($characters->isEmpty())
-                    <p class="muted">Aucun personnage cree pour le moment.</p>
+                    <p class="muted">Aucun personnage créé pour le moment.</p>
                 @else
                     <div class="grid-4">
                         <div class="field" style="grid-column: span 4;">
-                            <label>Zone frere / soeur</label>
+                            <label>Zone frère / sœur</label>
                             <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
                                 @foreach($characters as $siblingCandidate)
                                     <label>
@@ -230,7 +230,7 @@
                             </div>
                         </div>
                         <div class="field" style="grid-column: span 4;">
-                            <label>Zone demi-frere / demi-soeur</label>
+                            <label>Zone demi-frère / demi-sœur</label>
                             <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
                                 @foreach($characters as $siblingCandidate)
                                     <label>
@@ -249,7 +249,7 @@
 
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power') ? 'checked' : '' }}> Pouvoir actif</label>
-                <label><input type="checkbox" name="secrets_is_private" value="1" {{ old('secrets_is_private', 1) ? 'checked' : '' }}> Secrets prives</label>
+                <label><input type="checkbox" id="has_private_secret" name="secrets_is_private" value="1" {{ old('secrets_is_private', 0) ? 'checked' : '' }}> Secret privé</label>
             </div>
 
             <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -276,8 +276,8 @@
                 </div>
             </div>
 
-            <div class="field">
-                <label>Secrets</label>
+            <div class="field" id="secret-panel" style="display:none;">
+                <label>Secret privé</label>
                 <textarea name="secrets">{{ old('secrets') }}</textarea>
             </div>
 
@@ -374,7 +374,7 @@
                     <div class="panel" data-relation-row style="margin-top:10px; padding:10px;">
                         <div class="grid-4">
                             <div class="field" style="grid-column: span 2;">
-                                <label>Lie a</label>
+                                <label>Lié à</label>
                                 <select name="relations[{{ $i }}][to_character_id]">
                                     <option value="">Aucun</option>
                                     @foreach($characters as $linkedCharacter)
@@ -446,7 +446,7 @@
         <div class="panel" data-relation-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
                 <div class="field" style="grid-column: span 2;">
-                    <label>Lie a</label>
+                    <label>Lié à</label>
                     <select data-field="to_character_id">
                         <option value="">Aucun</option>
                         @foreach($characters as $linkedCharacter)
@@ -533,6 +533,8 @@
             const siblingsPanel = document.getElementById('siblings-panel');
             const hasPower = document.getElementById('has_power');
             const powerPanel = document.getElementById('power-panel');
+            const hasPrivateSecret = document.getElementById('has_private_secret');
+            const secretPanel = document.getElementById('secret-panel');
 
             function toggleChildrenPanel() {
                 if (!hasChildren || !childrenPanel) return;
@@ -546,14 +548,21 @@
                 if (!hasBroSis || !siblingsPanel) return;
                 siblingsPanel.style.display = hasBroSis.checked ? 'block' : 'none';
             }
+            function toggleSecretPanel() {
+                if (!hasPrivateSecret || !secretPanel) return;
+                secretPanel.style.display = hasPrivateSecret.checked ? 'block' : 'none';
+            }
 
             toggleChildrenPanel();
             toggleSiblingsPanel();
             togglePowerPanel();
+            toggleSecretPanel();
             if (hasChildren) hasChildren.addEventListener('change', toggleChildrenPanel);
             if (hasBroSis) hasBroSis.addEventListener('change', toggleSiblingsPanel);
             if (hasPower) hasPower.addEventListener('change', togglePowerPanel);
+            if (hasPrivateSecret) hasPrivateSecret.addEventListener('change', toggleSecretPanel);
         })();
     </script>
 @endsection
+
 

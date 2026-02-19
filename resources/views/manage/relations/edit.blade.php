@@ -34,9 +34,9 @@
                         $isChildType = in_array($currentType, ['fils', 'fille', 'fils/fille'], true);
                     @endphp
                     <select name="relation_type" required>
-                        <option value="">Selectionner</option>
+                        <option value="">Sélectionner</option>
                         @foreach($baseTypes as $type)
-                            <option value="{{ $type }}" {{ $currentType === $type ? 'selected' : '' }}>{{ ucfirst($type) }}</option>
+                            <option value="{{ $type }}" {{ $currentType === $type ? 'selected' : '' }}>{{ str_replace(['pere','mere','frere','soeur','demi-frere','demi-soeur','allie'], ['père','mère','frère','sœur','demi-frère','demi-sœur','allié'], ucfirst($type)) }}</option>
                         @endforeach
                         <option data-child-role="1" value="{{ $currentType === 'fille' ? 'fille' : 'fils' }}" {{ $isChildType ? 'selected' : '' }}>
                             {{ $currentType === 'fille' ? 'Fille' : 'Fils' }}

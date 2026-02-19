@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -290,9 +290,10 @@
             </form>
 
             <div class="help">
-                Nouveau sur LoreRoom ? <a href="{{ route('register') }}">Creer un compte</a>
+                Nouveau sur LoreRoom ? <a href="{{ route('register') }}">Cr?er un compte</a>
             </div>
         </section>
     </main>
 </body>
 </html>
+

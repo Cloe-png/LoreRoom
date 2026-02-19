@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Character;
 use App\Models\CharacterEvent;
 use App\Models\Chronicle;
+use App\Models\Place;
 use App\Models\World;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\Rule;
 
 class ChronicleController extends Controller
 {
@@ -42,6 +42,7 @@ class ChronicleController extends Controller
         $chronicleEvents = Chronicle::query()
             ->with([
                 'world:id,name',
+                'eventPlace:id,name,region',
                 'linkedCharacters:id,name,first_name,last_name,preferred_color,image_path',
             ])
             ->get()
@@ -52,6 +53,8 @@ class ChronicleController extends Controller
 
                 return [
                     'date' => $chronicle->event_date,
+                    'end_date' => $chronicle->end_date,
+                    'location' => optional($chronicle->eventPlace)->name ?: $chronicle->event_location,
                     'title' => $chronicle->title,
                     'description' => $chronicle->summary,
                     'type' => 'chronicle',
@@ -76,6 +79,8 @@ class ChronicleController extends Controller
 
                 return [
                     'date' => $event->event_date,
+                    'end_date' => null,
+                    'location' => null,
                     'title' => $event->title,
                     'description' => $event->details,
                     'type' => 'character_event',
@@ -103,6 +108,8 @@ class ChronicleController extends Controller
                 if ($character->birth_date) {
                     $events[] = [
                         'date' => $character->birth_date,
+                        'end_date' => null,
+                        'location' => null,
                         'title' => 'Naissance de ' . $character->display_name,
                         'description' => null,
                         'type' => 'birth',
@@ -120,7 +127,9 @@ class ChronicleController extends Controller
                 if ($character->death_date) {
                     $events[] = [
                         'date' => $character->death_date,
-                        'title' => 'Deces de ' . $character->display_name,
+                        'end_date' => null,
+                        'location' => null,
+                        'title' => 'Décès de ' . $character->display_name,
                         'description' => null,
                         'type' => 'death',
                         'source_name' => $character->display_name,
@@ -177,6 +186,8 @@ class ChronicleController extends Controller
             ->map(function (CharacterEvent $event) use ($character) {
                 return [
                     'date' => $event->event_date,
+                    'end_date' => null,
+                    'location' => null,
                     'title' => $event->title,
                     'description' => $event->details,
                     'type' => 'character_event',
@@ -192,11 +203,13 @@ class ChronicleController extends Controller
             });
 
         $chronicleEntries = $character->chronicles()
-            ->with('world:id,name')
+            ->with(['world:id,name', 'eventPlace:id,name,region'])
             ->get()
             ->map(function (Chronicle $chronicle) use ($character) {
                 return [
                     'date' => $chronicle->event_date,
+                    'end_date' => $chronicle->end_date,
+                    'location' => optional($chronicle->eventPlace)->name ?: $chronicle->event_location,
                     'title' => $chronicle->title,
                     'description' => $chronicle->summary,
                     'type' => 'chronicle',
@@ -217,6 +230,8 @@ class ChronicleController extends Controller
         if ($character->birth_date) {
             $lifeEntries->push([
                 'date' => $character->birth_date,
+                'end_date' => null,
+                'location' => null,
                 'title' => 'Naissance',
                 'description' => null,
                 'type' => 'birth',
@@ -234,7 +249,9 @@ class ChronicleController extends Controller
         if ($character->death_date) {
             $lifeEntries->push([
                 'date' => $character->death_date,
-                'title' => 'Deces',
+                'end_date' => null,
+                'location' => null,
+                'title' => 'Décès',
                 'description' => null,
                 'type' => 'death',
                 'source_name' => $character->display_name,
@@ -292,44 +309,54 @@ class ChronicleController extends Controller
     public function create()
     {
         $defaultWorld = World::query()->orderBy('id')->first();
+        $places = Place::query()
+            ->select(['id', 'name', 'region'])
+            ->orderBy('name')
+            ->get();
         $characters = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date'])
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'image_path'])
             ->orderByRaw('birth_date IS NULL, birth_date ASC')
             ->orderBy('name')
             ->get();
 
-        return view('manage.chronicles.create', compact('defaultWorld', 'characters'));
+        return view('manage.chronicles.create', compact('defaultWorld', 'characters', 'places'));
     }
 
     public function store(Request $request)
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
             'event_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:event_date'],
+            'event_place_id' => ['nullable', 'integer', 'exists:places,id'],
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
-            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
             'linked_character_ids' => ['nullable', 'array'],
             'linked_character_ids.*' => ['integer', 'exists:characters,id'],
         ]);
         $data['world_id'] = $defaultWorldId;
+        $selectedPlaceName = null;
+        if (!empty($data['event_place_id'])) {
+            $selectedPlaceName = Place::query()->whereKey($data['event_place_id'])->value('name');
+        }
+        $data['event_location'] = $selectedPlaceName;
         $linkedCharacterIds = array_values(array_unique(array_map('intval', $data['linked_character_ids'] ?? [])));
         unset($data['linked_character_ids']);
 
         $chronicle = Chronicle::create($data);
         $chronicle->linkedCharacters()->sync($linkedCharacterIds);
 
-        return redirect()->route('manage.chronicles.index')->with('success', 'Chronique creee.');
+        return redirect()->route('manage.chronicles.index')->with('success', 'Chronique créée.');
     }
 
     public function show(Chronicle $chronicle)
     {
-        $chronicle->load('world');
+        $chronicle->load(['world', 'eventPlace']);
 
         return view('manage.chronicles.show', compact('chronicle'));
     }
@@ -338,32 +365,42 @@ class ChronicleController extends Controller
     {
         $chronicle->load('linkedCharacters:id');
         $defaultWorld = World::query()->orderBy('id')->first();
+        $places = Place::query()
+            ->select(['id', 'name', 'region'])
+            ->orderBy('name')
+            ->get();
         $characters = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date'])
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'image_path'])
             ->orderByRaw('birth_date IS NULL, birth_date ASC')
             ->orderBy('name')
             ->get();
 
-        return view('manage.chronicles.edit', compact('chronicle', 'defaultWorld', 'characters'));
+        return view('manage.chronicles.edit', compact('chronicle', 'defaultWorld', 'characters', 'places'));
     }
 
     public function update(Request $request, Chronicle $chronicle)
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
             'event_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:event_date'],
+            'event_place_id' => ['nullable', 'integer', 'exists:places,id'],
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
-            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
             'linked_character_ids' => ['nullable', 'array'],
             'linked_character_ids.*' => ['integer', 'exists:characters,id'],
         ]);
         $data['world_id'] = $defaultWorldId;
+        $selectedPlaceName = null;
+        if (!empty($data['event_place_id'])) {
+            $selectedPlaceName = Place::query()->whereKey($data['event_place_id'])->value('name');
+        }
+        $data['event_location'] = $selectedPlaceName;
         $linkedCharacterIds = array_values(array_unique(array_map('intval', $data['linked_character_ids'] ?? [])));
         unset($data['linked_character_ids']);
 
@@ -380,3 +417,4 @@ class ChronicleController extends Controller
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique supprimée.');
     }
 }
+

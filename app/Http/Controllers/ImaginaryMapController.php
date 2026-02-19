@@ -27,7 +27,7 @@ class ImaginaryMapController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -41,7 +41,7 @@ class ImaginaryMapController extends Controller
 
         ImaginaryMap::create($data);
 
-        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire creee.');
+        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire créée.');
     }
 
     public function show(ImaginaryMap $map)
@@ -62,7 +62,7 @@ class ImaginaryMapController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -86,3 +86,4 @@ class ImaginaryMapController extends Controller
         return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire supprimée.');
     }
 }
+

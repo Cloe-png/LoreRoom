@@ -26,7 +26,7 @@ class PlaceController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -38,7 +38,7 @@ class PlaceController extends Controller
 
         Place::create($data);
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu cree.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu créé.');
     }
 
     public function show(Place $place)
@@ -59,7 +59,7 @@ class PlaceController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d’abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -81,3 +81,4 @@ class PlaceController extends Controller
         return redirect()->route('manage.places.index')->with('success', 'Lieu supprimé.');
     }
 }
+

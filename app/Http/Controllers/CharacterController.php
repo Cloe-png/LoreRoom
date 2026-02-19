@@ -103,7 +103,7 @@ class CharacterController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d\'abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -172,7 +172,7 @@ class CharacterController extends Controller
         $data['has_children'] = $request->boolean('has_children');
         $data['has_brother_sister'] = $request->boolean('has_brother_sister');
         $data['has_power'] = $request->boolean('has_power');
-        $data['secrets_is_private'] = $request->boolean('secrets_is_private', true);
+        $data['secrets_is_private'] = $request->boolean('secrets_is_private');
         $data['name'] = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
         $data['family_name'] = trim((string) ($data['family_name'] ?? '')) !== ''
             ? trim((string) $data['family_name'])
@@ -218,7 +218,7 @@ class CharacterController extends Controller
             ]));
         });
 
-        return redirect()->route('manage.characters.index')->with('success', 'Personnage cree avec ses relations.');
+        return redirect()->route('manage.characters.index')->with('success', 'Personnage créé avec ses relations.');
     }
 
     public function show(Character $character)
@@ -398,7 +398,7 @@ class CharacterController extends Controller
     {
         $defaultWorldId = World::query()->value('id');
         if (!$defaultWorldId) {
-            return back()->withErrors(['world' => 'Créez d\'abord un monde.'])->withInput();
+            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
         $data = $request->validate([
@@ -469,7 +469,7 @@ class CharacterController extends Controller
         $data['has_children'] = $request->boolean('has_children');
         $data['has_brother_sister'] = $request->boolean('has_brother_sister');
         $data['has_power'] = $request->boolean('has_power');
-        $data['secrets_is_private'] = $request->boolean('secrets_is_private', true);
+        $data['secrets_is_private'] = $request->boolean('secrets_is_private');
         $data['name'] = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
         $data['family_name'] = trim((string) ($data['family_name'] ?? '')) !== ''
             ? trim((string) $data['family_name'])
@@ -1045,4 +1045,5 @@ class CharacterController extends Controller
         return strtoupper($color);
     }
 }
+
 

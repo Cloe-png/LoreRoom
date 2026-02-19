@@ -118,7 +118,7 @@ class CharacterRelationController extends Controller
 
         CharacterRelation::create($data);
 
-        return redirect()->route('manage.relations.index')->with('success', 'Relation creee.');
+        return redirect()->route('manage.relations.index')->with('success', 'Relation créée.');
     }
 
     public function show(CharacterRelation $relation)
@@ -267,3 +267,4 @@ class CharacterRelationController extends Controller
         return [$category, $siblingKind];
     }
 }
+

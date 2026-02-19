@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
     <head>
         <meta charset="utf-8">
@@ -327,7 +327,7 @@
                                 <section class="module">
                                     <span class="tag">Chroniques</span>
                                     <h4>Ligne du temps</h4>
-                                    <p>Evenements majeurs, periodes charnieres et repercussions.</p>
+                                    <p>Événements majeurs, périodes charnières et répercussions.</p>
                                 </section>
                             </div>
                         </article>
@@ -345,3 +345,4 @@
         </div>
     </body>
 </html>
+

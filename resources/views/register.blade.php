@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -231,7 +231,7 @@
             </div>
 
             <div class="actions">
-                <button class="btn primary" type="submit">Creer le compte</button>
+                <button class="btn primary" type="submit">Cr?er le compte</button>
                 <a class="btn secondary" href="{{ route('login') }}">Deja inscrit ? Connexion</a>
             </div>
         </form>
@@ -242,3 +242,4 @@
     </main>
 </body>
 </html>
+

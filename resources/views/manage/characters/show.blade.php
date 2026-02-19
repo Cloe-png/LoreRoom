@@ -77,10 +77,10 @@
                 <p>{{ $character->power_description ?: '-' }}</p>
             </div>
             <div class="card" style="grid-column: span 3;">
-                <strong>Objectifs et secrets</strong>
+                <strong>Objectifs et secret privé</strong>
                 <p><strong>Court terme:</strong> {{ $character->short_term_goal ?: '-' }}</p>
                 <p><strong>Long terme:</strong> {{ $character->long_term_goal ?: '-' }}</p>
-                <p><strong>Secrets:</strong>
+                <p><strong>Secret privé:</strong>
                     @if($character->secrets_is_private && trim((string) $character->secrets) !== '')
                         (masqués)
                     @else
@@ -239,3 +239,4 @@
         </script>
     @endif
 @endsection
+

@@ -62,7 +62,7 @@
     <p><span class="label">Description:</span> {{ $character->power_description ?: '-' }}</p>
     <p><span class="label">Objectif court terme:</span> {{ $character->short_term_goal ?: '-' }}</p>
     <p><span class="label">Objectif long terme:</span> {{ $character->long_term_goal ?: '-' }}</p>
-    <p><span class="label">Secrets:</span>
+    <p><span class="label">Secret privé:</span>
         @if($character->secrets_is_private && trim((string)$character->secrets) !== '')
             (masqués)
         @else
@@ -143,3 +143,4 @@
 
 </body>
 </html>
+

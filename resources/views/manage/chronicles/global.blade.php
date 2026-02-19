@@ -1,4 +1,4 @@
-@extends('manage.layout')
+﻿@extends('manage.layout')
 
 @section('title', 'Gestion - Chroniques globales')
 @section('header', 'Chroniques')
@@ -69,6 +69,16 @@
             border-radius: 22px;
             padding: 11px 14px;
             box-shadow: 0 10px 20px rgba(0,0,0,.09);
+            overflow: hidden;
+        }
+        .poster-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(220px 60px at 96% 10%, rgba(255,255,255,.55), transparent 70%),
+                repeating-linear-gradient(135deg, rgba(132,103,66,.03) 0px, rgba(132,103,66,.03) 2px, transparent 2px, transparent 8px);
+            pointer-events: none;
         }
         .poster-switch {
             --switch-bg: #2f9f65;
@@ -116,18 +126,26 @@
         .poster-year-marker {
             position: absolute;
             left: 50%;
-            top: 8px;
+            top: 0;
             width: calc(var(--line-width) - 12px);
-            height: calc(var(--year-span, 1) * 176px - 18px);
+            height: calc(var(--year-span, 1) * 176px);
             min-height: 120px;
             transform: translateX(-50%);
-            border-radius: 14px;
+            border-radius: 0;
             background: var(--year-color, #d71920);
             box-shadow: inset 0 0 0 1px rgba(255,255,255,.22), 0 8px 18px rgba(0,0,0,.14);
             z-index: 1;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .poster-year-marker.year-first {
+            border-top-left-radius: 14px;
+            border-top-right-radius: 14px;
+        }
+        .poster-year-marker.year-last {
+            border-bottom-left-radius: 14px;
+            border-bottom-right-radius: 14px;
         }
         .poster-year-line {
             font-size: 2.2rem;
@@ -167,20 +185,111 @@
             line-height: 1.2;
             color: #1f1a14;
         }
-        .poster-photo {
+        .poster-body {
             margin-top: 8px;
-            width: 74px;
-            height: 74px;
-            border-radius: 10px;
-            object-fit: cover;
-            border: 1px solid rgba(111,81,46,.28);
-            box-shadow: 0 4px 10px rgba(0,0,0,.12);
+        }
+        .poster-shell {
+            border: 1px solid rgba(78,58,33,.22);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,.45);
+        }
+        .poster-hero {
+            position: relative;
+            height: 86px;
+            background:
+                linear-gradient(180deg, rgba(37,31,22,.38), rgba(37,31,22,.2)),
+                var(--hero-image, linear-gradient(120deg, #d7c2a2, #b99261));
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid rgba(70,50,29,.3);
+        }
+        .poster-hero-label {
+            position: absolute;
+            left: 10px;
+            bottom: 8px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: .68rem;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            color: #f8efe0;
+            background: rgba(21,17,13,.46);
+            border: 1px solid rgba(255,255,255,.22);
+        }
+        .poster-middle {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) 88px;
+            gap: 10px;
+            padding: 11px 11px 8px;
+            border-bottom: 1px solid rgba(70,50,29,.18);
         }
         .poster-desc {
             margin-top: 7px;
             color: #463827;
             font-size: .92rem;
             line-height: 1.35;
+        }
+        .poster-portrait {
+            width: 88px;
+            height: 88px;
+            border-radius: 22px;
+            object-fit: cover;
+            border: 2px solid rgba(84,63,38,.35);
+            box-shadow: 0 5px 12px rgba(0,0,0,.16);
+            background: #efe5d5;
+        }
+        .poster-portrait-fallback {
+            width: 88px;
+            height: 88px;
+            border-radius: 22px;
+            border: 2px solid rgba(84,63,38,.35);
+            background: linear-gradient(180deg, #f2eadf, #e4d6c1);
+            color: #5f4422;
+            font-size: 1.6rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 12px rgba(0,0,0,.12);
+        }
+        .poster-foot {
+            position: relative;
+            padding: 8px 11px 10px;
+            background: rgba(255,255,255,.72);
+        }
+        .poster-foot::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,.74), rgba(255,255,255,.84)),
+                var(--hero-image, linear-gradient(120deg, #ddc8aa, #c09a69));
+            background-size: cover;
+            background-position: center bottom;
+            opacity: .35;
+            pointer-events: none;
+        }
+        .poster-foot > * {
+            position: relative;
+            z-index: 1;
+        }
+        .poster-stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+        .poster-stat {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: .72rem;
+            border: 1px solid rgba(80,61,36,.24);
+            background: rgba(255,255,255,.72);
+            color: #4a3721;
         }
         .poster-meta {
             margin-top: 7px;
@@ -242,7 +351,7 @@
         <div class="poster-head">
             <div>
                 <h3 class="poster-title">Frise globale</h3>
-                <p class="poster-sub">Evenements alternes a gauche et a droite de la ligne centrale.</p>
+                <p class="poster-sub">Événements alternés à gauche et à droite de la ligne centrale.</p>
             </div>
             <div class="stack">
                 <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
@@ -255,7 +364,7 @@
                 'chronicle' => 'Chronique',
                 'character_event' => 'Personnage',
                 'birth' => 'Naissance',
-                'death' => 'Deces',
+                'death' => 'Décès',
             ];
             $yearPalette = [
                 '#7FA8A4', '#A8B79A', '#B39BC8', '#C7A58A', '#8FA7C9',
@@ -264,6 +373,12 @@
             $yearColorMap = [];
             $yearIdx = 0;
             $lastYear = null;
+            $yearOrder = $timelineEvents
+                ->map(function ($event) {
+                    return $event['date'] ? $event['date']->format('Y') : '----';
+                })
+                ->unique()
+                ->values();
             $yearCounts = $timelineEvents
                 ->groupBy(function ($event) {
                     return $event['date'] ? $event['date']->format('Y') : '----';
@@ -273,13 +388,17 @@
         @endphp
 
         @if($timelineEvents->isEmpty())
-            <p class="poster-empty muted">Aucun evenement a afficher.</p>
+            <p class="poster-empty muted">Aucun événement à afficher.</p>
         @else
             <div class="poster-timeline">
                 @foreach($timelineEvents as $event)
                     @php
                         $eventColor = $event['accent_color'] ?? null;
                         $year = $event['date'] ? $event['date']->format('Y') : '----';
+                        $dateLabel = $event['date'] ? $event['date']->format('d/m/Y') : 'Date inconnue';
+                        if (!empty($event['end_date'])) {
+                            $dateLabel .= ' -> ' . $event['end_date']->format('d/m/Y');
+                        }
                         if (!array_key_exists($year, $yearColorMap)) {
                             $yearColorMap[$year] = $year === '----'
                                 ? '#7E7E7E'
@@ -288,60 +407,72 @@
                         $yearColor = $yearColorMap[$year];
                         $showYear = $year !== $lastYear;
                         $lastYear = $year;
+                        $isFirstYear = $year === $yearOrder->first();
+                        $isLastYear = $year === $yearOrder->last();
                         $side = ($loop->index % 2 === 0) ? 'left' : 'right';
-                        $relatedPeople = collect($event['related_people'] ?? [])->filter()->values();
                         $cardId = 'timeline-card-global-' . $loop->index;
+                        $photoUrl = !empty($event['photo_path']) ? route('media.show', ['path' => $event['photo_path']]) : null;
+                        $portraitInitial = mb_strtoupper(mb_substr((string) ($event['source_name'] ?? $event['title'] ?? 'E'), 0, 1));
                     @endphp
                     <article class="poster-item {{ $side }}" style="{{ $eventColor ? '--event-color:' . $eventColor . ';' : '' }} --year-color: {{ $yearColor }};">
                         @if($showYear)
-                            <span class="poster-year-marker" aria-hidden="true" style="--year-span: {{ (int) ($yearCounts[$year] ?? 1) }};">
+                            <span class="poster-year-marker {{ $isFirstYear ? 'year-first' : '' }} {{ $isLastYear ? 'year-last' : '' }}" data-year-marker="1" aria-hidden="true" style="--year-span: {{ (int) ($yearCounts[$year] ?? 1) }};">
                                 <span class="poster-year-line">{{ $year }}</span>
                             </span>
                         @endif
                         <div class="poster-card" id="{{ $cardId }}">
                             <div class="poster-top">
                                 <div class="poster-top-left">
-                                    <span class="poster-date">{{ $event['date'] ? $event['date']->format('Y-m-d') : 'Date inconnue' }}</span>
-                                    <span class="poster-badge">{{ $typeLabels[$event['type']] ?? 'Evenement' }}</span>
+                                    <span class="poster-date">{{ $dateLabel }}</span>
+                                    <span class="poster-badge">{{ $typeLabels[$event['type']] ?? 'Événement' }}</span>
                                 </div>
-                                <button class="poster-switch" type="button" data-target="{{ $cardId }}" aria-expanded="true" aria-label="Masquer l'evenement" title="Masquer l'evenement">
+                                <button class="poster-switch" type="button" data-target="{{ $cardId }}" aria-expanded="true" aria-label="Masquer l'événement" title="Masquer l'événement">
                                     <span class="poster-switch-dot"></span>
                                     <span class="poster-switch-text">ON</span>
                                 </button>
                             </div>
 
-                            <h4 class="poster-event-title">{{ $event['title'] }}</h4>
                             <div class="poster-body">
-                            @if(!empty($event['photo_path']))
-                                <img class="poster-photo" src="{{ route('media.show', ['path' => $event['photo_path']]) }}" alt="Photo evenement">
-                            @endif
+                            <div class="poster-shell" style="{{ $photoUrl ? "--hero-image:url('{$photoUrl}');" : '' }}">
+                                <div class="poster-hero">
+                                    <span class="poster-hero-label">{{ $typeLabels[$event['type']] ?? 'Événement' }}</span>
+                                </div>
 
-                            @if(!empty($event['description']))
-                                <div class="poster-desc">{{ $event['description'] }}</div>
-                            @endif
+                                <div class="poster-middle">
+                                    <div>
+                                        <h4 class="poster-event-title">{{ $event['title'] }}</h4>
+                                        @if(!empty($event['location']))
+                                            <div class="poster-meta">Lieu: {{ $event['location'] }}</div>
+                                        @endif
+                                        @if(!empty($event['description']))
+                                            <div class="poster-desc">{{ $event['description'] }}</div>
+                                        @else
+                                            <div class="poster-desc muted">Aucune description.</div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        @if($photoUrl)
+                                            <img class="poster-portrait" src="{{ $photoUrl }}" alt="Photo événement">
+                                        @else
+                                            <div class="poster-portrait-fallback">{{ $portraitInitial }}</div>
+                                        @endif
+                                    </div>
+                                </div>
 
-                            @if(!empty($event['source_name']))
-                                <div class="poster-meta">Source: {{ $event['source_name'] }}</div>
-                            @endif
-
-                            @if($relatedPeople->isNotEmpty())
-                                <div class="poster-related">Personnes liees: {{ $relatedPeople->join(', ') }}</div>
-                            @endif
-
-                            <div class="poster-actions">
-                                @if(!empty($event['link']))
-                                    <a class="poster-open" href="{{ $event['link'] }}">Ouvrir</a>
-                                @endif
-                                @if(!empty($event['can_manage']) && !empty($event['edit_link']))
-                                    <a class="poster-open" href="{{ $event['edit_link'] }}">Modifier</a>
-                                @endif
-                                @if(!empty($event['can_manage']) && !empty($event['delete_link']))
-                                    <form method="POST" action="{{ $event['delete_link'] }}" onsubmit="return confirm('Supprimer cet evenement ?');" style="margin:0;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="poster-delete" type="submit">Supprimer</button>
-                                    </form>
-                                @endif
+                                <div class="poster-foot">
+                                    <div class="poster-actions">
+                                        @if(!empty($event['can_manage']) && !empty($event['edit_link']))
+                                            <a class="poster-open" href="{{ $event['edit_link'] }}">Modifier</a>
+                                        @endif
+                                        @if(!empty($event['can_manage']) && !empty($event['delete_link']))
+                                            <form method="POST" action="{{ $event['delete_link'] }}" onsubmit="return confirm('Supprimer cet événement ?');" style="margin:0;">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button class="poster-delete" type="submit">Supprimer</button>
+                                            </form>
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
                             </div>
                         </div>
@@ -352,6 +483,23 @@
     </section>
     <script>
         (function () {
+            const timeline = document.querySelector('.poster-timeline');
+            const relayoutYearMarkers = () => {
+                if (!timeline) return;
+                const markers = Array.from(timeline.querySelectorAll('[data-year-marker="1"]'));
+                if (!markers.length) return;
+
+                markers.forEach((marker, idx) => {
+                    const article = marker.closest('.poster-item');
+                    if (!article) return;
+                    const top = article.offsetTop;
+                    const nextArticle = idx < markers.length - 1 ? markers[idx + 1].closest('.poster-item') : null;
+                    const nextTop = nextArticle ? nextArticle.offsetTop : timeline.scrollHeight;
+                    const h = Math.max(120, nextTop - top);
+                    marker.style.height = `${h}px`;
+                });
+            };
+
             const buttons = document.querySelectorAll('.poster-switch[data-target]');
             if (!buttons.length) return;
 
@@ -364,17 +512,21 @@
                 button.addEventListener('click', function () {
                     const collapsed = !article.classList.contains('is-collapsed');
                     article.classList.toggle('is-collapsed', collapsed);
-                    card.hidden = collapsed;
                     button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-                    button.setAttribute('aria-label', collapsed ? 'Afficher l\'evenement' : 'Masquer l\'evenement');
-                    button.setAttribute('title', collapsed ? 'Afficher l\'evenement' : 'Masquer l\'evenement');
+                    button.setAttribute('aria-label', collapsed ? 'Afficher l\'événement' : 'Masquer l\'événement');
+                    button.setAttribute('title', collapsed ? 'Afficher l\'événement' : 'Masquer l\'événement');
 
                     const text = button.querySelector('.poster-switch-text');
                     if (text) {
                         text.textContent = collapsed ? 'OFF' : 'ON';
                     }
+                    relayoutYearMarkers();
                 });
             });
+
+            relayoutYearMarkers();
+            window.addEventListener('resize', relayoutYearMarkers);
         })();
     </script>
 @endsection
+

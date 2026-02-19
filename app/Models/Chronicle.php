@@ -13,6 +13,9 @@ class Chronicle extends Model
         'world_id',
         'title',
         'event_date',
+        'end_date',
+        'event_place_id',
+        'event_location',
         'summary',
         'content',
         'status',
@@ -20,6 +23,7 @@ class Chronicle extends Model
 
     protected $casts = [
         'event_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function world()
@@ -32,6 +36,11 @@ class Chronicle extends Model
         return $this->belongsToMany(Character::class, 'chronicle_character', 'chronicle_id', 'character_id')
             ->withTimestamps()
             ->orderBy('name');
+    }
+
+    public function eventPlace()
+    {
+        return $this->belongsTo(Place::class, 'event_place_id');
     }
 }
 

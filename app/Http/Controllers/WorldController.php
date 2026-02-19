@@ -40,7 +40,7 @@ class WorldController extends Controller
 
         World::create($data);
 
-        return redirect()->route('manage.worlds.index')->with('success', 'Monde cree.');
+        return redirect()->route('manage.worlds.index')->with('success', 'Monde créé.');
     }
 
     public function show(World $world)
@@ -111,3 +111,4 @@ class WorldController extends Controller
         return $slug;
     }
 }
+
