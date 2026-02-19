@@ -72,15 +72,6 @@
                     <label>Alias / surnoms</label>
                     <input type="text" name="aliases" value="{{ old('aliases') }}">
                 </div>
-                <div class="field">
-                    <label>Statut</label>
-                    <select name="status" required>
-                        <option value="vivant" {{ old('status', 'vivant') === 'vivant' ? 'selected' : '' }}>Vivant</option>
-                        <option value="mort" {{ old('status') === 'mort' ? 'selected' : '' }}>Mort</option>
-                        <option value="disparu" {{ old('status') === 'disparu' ? 'selected' : '' }}>Disparu</option>
-                        <option value="inconnu" {{ old('status') === 'inconnu' ? 'selected' : '' }}>Inconnu</option>
-                    </select>
-                </div>
             </div>
 
             <div class="grid-4">
@@ -95,7 +86,11 @@
                 </div>
                 <div class="field">
                     <label>Rôle</label>
-                    <input type="text" name="role" value="{{ old('role') }}">
+                    <select name="role" required>
+                        @foreach($roleOptions as $roleOption)
+                            <option value="{{ $roleOption }}" {{ old('role', 'Personnage secondaire') === $roleOption ? 'selected' : '' }}>{{ $roleOption }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="field">
                     <label>Date de naissance</label>
@@ -299,7 +294,8 @@
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities') }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws') }}</textarea></div>
-                    <div class="field"><label>Voix</label><textarea name="voice_tics">{{ old('voice_tics') }}</textarea></div>
+                    <div class="field"><label>Voix (audio upload)</label><input type="file" name="voice_audio" accept="audio/*"></div>
+                    <div class="field"><label>Lien YouTube (à la place de l'audio)</label><input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url') }}" placeholder="https://www.youtube.com/watch?v=..."></div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary') }}</textarea></div>
                 </div>
             </details>

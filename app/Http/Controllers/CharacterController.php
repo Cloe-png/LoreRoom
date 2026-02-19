@@ -19,6 +19,14 @@ class CharacterController extends Controller
 {
     private const AUTO_FAMILY_TAG = '[AUTO_FAMILY]';
     private const AUTO_SIBLING_TAG = '[AUTO_SIBLING]';
+    private const CHARACTER_ROLES = [
+        'Personnage principal',
+        'Personnage secondaire',
+        'Antagoniste',
+        'Allié',
+        'Mentor',
+        'Figure historique',
+    ];
 
     public function index()
     {
@@ -81,6 +89,7 @@ class CharacterController extends Controller
         $selectedFullSiblingIds = old('sibling_ids_full', []);
         $selectedTwinSiblingIds = old('sibling_ids_twin', []);
         $selectedHalfSiblingIds = old('sibling_ids_half', []);
+        $roleOptions = self::CHARACTER_ROLES;
 
         return view('manage.characters.create', compact(
             'defaultWorld',
@@ -95,7 +104,8 @@ class CharacterController extends Controller
             'selectedChildrenIds',
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
-            'selectedHalfSiblingIds'
+            'selectedHalfSiblingIds',
+            'roleOptions'
         ));
     }
 
@@ -114,13 +124,12 @@ class CharacterController extends Controller
             'gender' => ['nullable', Rule::in(['homme', 'femme', 'autre'])],
             'birth_date' => ['nullable', 'date'],
             'death_date' => ['nullable', 'date', 'after_or_equal:birth_date'],
-            'status' => ['required', Rule::in(['vivant', 'mort', 'disparu', 'inconnu'])],
             'father_id' => ['nullable', 'exists:characters,id'],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id'],
             'spouse_id' => ['nullable', 'exists:characters,id', 'different:father_id', 'different:mother_id'],
             'birth_place_id' => ['nullable', 'exists:places,id'],
             'residence_place_id' => ['nullable', 'exists:places,id'],
-            'role' => ['nullable', 'string', 'max:120'],
+            'role' => ['required', Rule::in(self::CHARACTER_ROLES)],
             'short_term_goal' => ['nullable', 'string', 'max:3000'],
             'long_term_goal' => ['nullable', 'string', 'max:3000'],
             'secrets' => ['nullable', 'string', 'max:5000'],
@@ -137,6 +146,8 @@ class CharacterController extends Controller
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
+            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -184,6 +195,20 @@ class CharacterController extends Controller
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('characters', 'public');
+        }
+        $voiceYoutubeUrl = $this->normalizeYoutubeUrl($data['voice_youtube_url'] ?? null);
+        $hasVoiceAudio = $request->hasFile('voice_audio');
+        if ($hasVoiceAudio && $voiceYoutubeUrl) {
+            return back()->withErrors([
+                'voice_audio' => 'Choisis soit un fichier audio, soit un lien YouTube.',
+                'voice_youtube_url' => 'Choisis soit un fichier audio, soit un lien YouTube.',
+            ])->withInput();
+        }
+        if ($request->hasFile('voice_audio')) {
+            $data['voice_audio_path'] = $request->file('voice_audio')->store('characters/voices', 'public');
+            $data['voice_youtube_url'] = null;
+        } else {
+            $data['voice_youtube_url'] = $voiceYoutubeUrl;
         }
 
         $relationRows = $data['relations'] ?? [];
@@ -379,6 +404,7 @@ class CharacterController extends Controller
         }
 
         $existingGallery = $character->galleryImages()->get();
+        $roleOptions = self::CHARACTER_ROLES;
 
         return view('manage.characters.edit', compact(
             'character',
@@ -395,7 +421,8 @@ class CharacterController extends Controller
             'selectedChildrenIds',
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
-            'selectedHalfSiblingIds'
+            'selectedHalfSiblingIds',
+            'roleOptions'
         ));
     }
 
@@ -414,13 +441,12 @@ class CharacterController extends Controller
             'gender' => ['nullable', Rule::in(['homme', 'femme', 'autre'])],
             'birth_date' => ['nullable', 'date'],
             'death_date' => ['nullable', 'date', 'after_or_equal:birth_date'],
-            'status' => ['required', Rule::in(['vivant', 'mort', 'disparu', 'inconnu'])],
             'father_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id', Rule::notIn([$character->id])],
             'spouse_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id]), 'different:father_id', 'different:mother_id'],
             'birth_place_id' => ['nullable', 'exists:places,id'],
             'residence_place_id' => ['nullable', 'exists:places,id'],
-            'role' => ['nullable', 'string', 'max:120'],
+            'role' => ['required', Rule::in(self::CHARACTER_ROLES)],
             'short_term_goal' => ['nullable', 'string', 'max:3000'],
             'long_term_goal' => ['nullable', 'string', 'max:3000'],
             'secrets' => ['nullable', 'string', 'max:5000'],
@@ -437,6 +463,8 @@ class CharacterController extends Controller
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
+            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'image' => ['nullable', 'image', 'max:4096'],
@@ -490,6 +518,27 @@ class CharacterController extends Controller
             }
             $data['image_path'] = $request->file('image')->store('characters', 'public');
         }
+        $voiceYoutubeUrl = $this->normalizeYoutubeUrl($data['voice_youtube_url'] ?? null);
+        $hasVoiceAudio = $request->hasFile('voice_audio');
+        if ($hasVoiceAudio && $voiceYoutubeUrl) {
+            return back()->withErrors([
+                'voice_audio' => 'Choisis soit un fichier audio, soit un lien YouTube.',
+                'voice_youtube_url' => 'Choisis soit un fichier audio, soit un lien YouTube.',
+            ])->withInput();
+        }
+        if ($request->hasFile('voice_audio')) {
+            if ($character->voice_audio_path) {
+                Storage::disk('public')->delete($character->voice_audio_path);
+            }
+            $data['voice_audio_path'] = $request->file('voice_audio')->store('characters/voices', 'public');
+            $data['voice_youtube_url'] = null;
+        } else {
+            $data['voice_youtube_url'] = $voiceYoutubeUrl;
+            if ($voiceYoutubeUrl && $character->voice_audio_path) {
+                Storage::disk('public')->delete($character->voice_audio_path);
+                $data['voice_audio_path'] = null;
+            }
+        }
 
         $relationRows = $data['relations'] ?? [];
         $itemRows = $data['items'] ?? [];
@@ -540,6 +589,9 @@ class CharacterController extends Controller
     {
         if ($character->image_path) {
             Storage::disk('public')->delete($character->image_path);
+        }
+        if ($character->voice_audio_path) {
+            Storage::disk('public')->delete($character->voice_audio_path);
         }
 
         $galleryPaths = $character->galleryImages()->pluck('image_path')->all();
@@ -1048,6 +1100,24 @@ class CharacterController extends Controller
         }
 
         return strtoupper($color);
+    }
+
+    private function normalizeYoutubeUrl(?string $value): ?string
+    {
+        $url = trim((string) $value);
+        if ($url === '') {
+            return null;
+        }
+
+        if (!preg_match('#^https?://#i', $url)) {
+            $url = 'https://' . $url;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return null;
+        }
+
+        return $url;
     }
 }
 

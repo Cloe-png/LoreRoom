@@ -3,12 +3,20 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Character extends Model
 {
     use HasFactory;
+
+    protected static function booted()
+    {
+        static::saving(function (self $character) {
+            $character->status = $character->resolveAutoStatus();
+        });
+    }
 
     protected $fillable = [
         'world_id',
@@ -50,6 +58,8 @@ class Character extends Model
         'flaws',
         'psychology_notes',
         'voice_tics',
+        'voice_audio_path',
+        'voice_youtube_url',
         'summary',
     ];
 
@@ -191,5 +201,25 @@ class Character extends Model
         $endDate = $this->death_date ?: Carbon::today();
 
         return $this->birth_date->diffInYears($endDate);
+    }
+
+    private function resolveAutoStatus(): string
+    {
+        if (!$this->death_date) {
+            return 'vivant';
+        }
+
+        $deathDate = $this->death_date;
+        if (!$deathDate instanceof CarbonInterface) {
+            try {
+                $deathDate = Carbon::parse((string) $deathDate);
+            } catch (\Throwable $e) {
+                return 'vivant';
+            }
+        }
+
+        return $deathDate->copy()->startOfDay()->lessThanOrEqualTo(Carbon::today())
+            ? 'mort'
+            : 'vivant';
     }
 }

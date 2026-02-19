@@ -67,15 +67,6 @@
                 <div class="field"><label>Prénom</label><input type="text" name="first_name" value="{{ old('first_name', $character->first_name ?: $character->name) }}" required></div>
                 <div class="field"><label>Nom</label><input type="text" name="last_name" value="{{ old('last_name', $character->last_name) }}"></div>
                 <div class="field"><label>Alias / surnoms</label><input type="text" name="aliases" value="{{ old('aliases', $character->aliases) }}"></div>
-                <div class="field">
-                    <label>Statut</label>
-                    <select name="status" required>
-                        <option value="vivant" {{ old('status', $character->status) === 'vivant' ? 'selected' : '' }}>Vivant</option>
-                        <option value="mort" {{ old('status', $character->status) === 'mort' ? 'selected' : '' }}>Mort</option>
-                        <option value="disparu" {{ old('status', $character->status) === 'disparu' ? 'selected' : '' }}>Disparu</option>
-                        <option value="inconnu" {{ old('status', $character->status) === 'inconnu' ? 'selected' : '' }}>Inconnu</option>
-                    </select>
-                </div>
             </div>
 
             <div class="grid-4">
@@ -88,7 +79,20 @@
                         <option value="autre" {{ old('gender', $character->gender) === 'autre' ? 'selected' : '' }}>Autre</option>
                     </select>
                 </div>
-                <div class="field"><label>Rôle</label><input type="text" name="role" value="{{ old('role', $character->role) }}"></div>
+                <div class="field">
+                    <label>Rôle</label>
+                    @php
+                        $selectedRole = old('role', $character->role ?: 'Personnage secondaire');
+                    @endphp
+                    <select name="role" required>
+                        @if($selectedRole && !in_array($selectedRole, $roleOptions, true))
+                            <option value="{{ $selectedRole }}" selected>{{ $selectedRole }}</option>
+                        @endif
+                        @foreach($roleOptions as $roleOption)
+                            <option value="{{ $roleOption }}" {{ $selectedRole === $roleOption ? 'selected' : '' }}>{{ $roleOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="field"><label>Date de naissance</label><input type="date" name="birth_date" value="{{ old('birth_date', optional($character->birth_date)->format('Y-m-d')) }}"></div>
                 <div class="field"><label>Date de mort</label><input type="date" name="death_date" value="{{ old('death_date', optional($character->death_date)->format('Y-m-d')) }}"></div>
             </div>
@@ -269,7 +273,19 @@
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities', $character->qualities) }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws', $character->flaws) }}</textarea></div>
-                    <div class="field"><label>Voix</label><textarea name="voice_tics">{{ old('voice_tics', $character->voice_tics) }}</textarea></div>
+                    <div class="field">
+                        <label>Voix (audio upload)</label>
+                        <input type="file" name="voice_audio" accept="audio/*">
+                        @if($character->voice_audio_path)
+                            <audio controls preload="none" style="margin-top:8px; width:100%;">
+                                <source src="{{ route('media.show', ['path' => $character->voice_audio_path]) }}">
+                            </audio>
+                        @endif
+                    </div>
+                    <div class="field">
+                        <label>Lien YouTube (à la place de l'audio)</label>
+                        <input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url', $character->voice_youtube_url) }}" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary', $character->summary) }}</textarea></div>
                 </div>
             </details>
