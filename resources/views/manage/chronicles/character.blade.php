@@ -6,7 +6,8 @@
 @section('content')
     <style>
         .poster-page {
-            --line-x: 86px;
+            --line-width: 78px;
+            --line-half: 39px;
             --line-color: #d71920;
             --line-glow: rgba(215, 25, 32, .2);
         }
@@ -34,63 +35,120 @@
             left: 50%;
             top: 0;
             bottom: 0;
-            width: 12px;
+            width: var(--line-width);
             transform: translateX(-50%);
             border-radius: 999px;
-            background: linear-gradient(180deg, #ff4046 0%, var(--line-color) 20%, #c2141a 100%);
-            box-shadow: 0 0 0 1px rgba(130, 18, 21, .35), 0 0 24px var(--line-glow);
+            background: linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(245,236,220,.45) 100%);
+            box-shadow: 0 0 0 1px rgba(130, 18, 21, .1), 0 0 24px rgba(0,0,0,.05);
         }
         .poster-item {
             position: relative;
             width: 100%;
             display: flex;
             margin: 0 0 14px;
+            min-height: 162px;
         }
         .poster-item.left { justify-content: flex-start; }
         .poster-item.right { justify-content: flex-end; }
-        .poster-card {
-            width: min(360px, calc(50% - 34px));
-            position: relative;
-            background: linear-gradient(180deg, #fffcf8 0%, #f8efe2 100%);
-            border: 1px solid rgba(113, 81, 46, .22);
-            border-left: 6px solid var(--event-color, #8f6b3c);
-            border-radius: 12px;
-            padding: 10px 12px;
-            box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        .poster-item.is-collapsed {
+            min-height: 86px;
+            margin-bottom: 8px;
         }
-        .poster-dot {
+        .poster-item.is-collapsed .poster-body {
+            display: none;
+        }
+        .poster-item.is-collapsed .poster-card {
+            opacity: .93;
+        }
+        .poster-card {
+            width: min(360px, calc(50% - var(--line-half) - 22px));
+            position: relative;
+            background: linear-gradient(180deg, #fffefb 0%, #f8efe2 100%);
+            border: 2px solid rgba(51, 37, 20, .26);
+            border-left: 6px solid var(--event-color, #8f6b3c);
+            border-radius: 22px;
+            padding: 11px 14px;
+            box-shadow: 0 10px 20px rgba(0,0,0,.09);
+        }
+        .poster-switch {
+            --switch-bg: #2f9f65;
+            border: 1px solid rgba(25, 76, 46, .25);
+            background: color-mix(in srgb, var(--switch-bg) 18%, #ffffff 82%);
+            border-radius: 999px;
+            padding: 3px 8px 3px 4px;
+            min-width: 66px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 7px;
+            color: #1d4d32;
+            font-size: .7rem;
+            font-weight: 900;
+            letter-spacing: .04em;
+            cursor: pointer;
+            transition: background .18s ease, color .18s ease, border-color .18s ease;
+        }
+        .poster-switch:hover {
+            filter: brightness(1.02);
+        }
+        .poster-switch:focus-visible {
+            outline: 2px solid #084f86;
+            outline-offset: 2px;
+        }
+        .poster-switch-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid rgba(0,0,0,.2);
+            box-shadow: 0 1px 3px rgba(0,0,0,.25);
+            transition: transform .2s ease;
+        }
+        .poster-switch-text { line-height: 1; }
+        .poster-item.is-collapsed .poster-switch {
+            --switch-bg: #8f97a3;
+            color: #3e4651;
+            border-color: rgba(54, 63, 75, .25);
+        }
+        .poster-item.is-collapsed .poster-switch .poster-switch-dot {
+            transform: translateX(36px);
+        }
+        .poster-year-marker {
             position: absolute;
             left: 50%;
-            top: 18px;
-            width: 14px;
-            height: 14px;
+            top: 8px;
+            width: calc(var(--line-width) - 12px);
+            height: calc(var(--year-span, 1) * 176px - 18px);
+            min-height: 120px;
             transform: translateX(-50%);
-            border-radius: 50%;
-            background: #fff;
-            border: 4px solid var(--event-color, #8f6b3c);
-            box-shadow: 0 0 0 4px rgba(255,255,255,.8), 0 4px 8px rgba(0,0,0,.18);
-            z-index: 2;
+            border-radius: 14px;
+            background: var(--year-color, #d71920);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.22), 0 8px 18px rgba(0,0,0,.14);
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .poster-year-line {
-            position: absolute;
-            left: 50%;
-            top: 42px;
-            transform: translateX(-50%);
-            font-size: 1.15rem;
+            font-size: 2.2rem;
             font-weight: 900;
             line-height: 1;
-            padding: 2px 6px;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, .82);
-            color: color-mix(in srgb, var(--event-color, #8f6b3c) 88%, #ffffff 12%);
-            box-shadow: 0 1px 4px rgba(0,0,0,.12);
-            z-index: 2;
+            letter-spacing: .02em;
+            color: rgba(255, 248, 241, .97);
+            text-shadow: 0 1px 3px rgba(77, 7, 10, .6);
         }
         .poster-top {
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+            gap: 10px;
             margin-bottom: 6px;
+        }
+        .poster-top-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
         }
         .poster-date { font-weight: 800; color: #5f4220; }
         .poster-badge {
@@ -168,11 +226,15 @@
         }
         @media (max-width: 860px) {
             .poster-head { flex-direction: column; align-items: flex-start; }
-            .poster-timeline::before { left: 26px; transform: none; }
+            .poster-page {
+                --line-width: 66px;
+                --line-half: 33px;
+            }
+            .poster-timeline::before { left: 40px; transform: none; }
             .poster-item { justify-content: flex-end !important; }
-            .poster-card { width: calc(100% - 58px); }
-            .poster-dot { left: 32px; transform: none; }
-            .poster-year-line { left: 32px; transform: translateX(-50%); }
+            .poster-card { width: calc(100% - 102px); }
+            .poster-year-marker { left: 40px; transform: translateX(-50%); }
+            .poster-year-line { font-size: 1.8rem; }
         }
     </style>
 
@@ -196,6 +258,19 @@
                 'birth' => 'Naissance',
                 'death' => 'Deces',
             ];
+            $yearPalette = [
+                '#7FA8A4', '#A8B79A', '#B39BC8', '#C7A58A', '#8FA7C9',
+                '#C2B38D', '#9DB5AE', '#B7A7C8', '#B8B1A1', '#90A9A0',
+            ];
+            $yearColorMap = [];
+            $yearIdx = 0;
+            $lastYear = null;
+            $yearCounts = $timelineEvents
+                ->groupBy(function ($event) {
+                    return $event['date'] ? $event['date']->format('Y') : '----';
+                })
+                ->map
+                ->count();
         @endphp
 
         @if($timelineEvents->isEmpty())
@@ -206,20 +281,38 @@
                     @php
                         $eventColor = $event['accent_color'] ?? null;
                         $year = $event['date'] ? $event['date']->format('Y') : '----';
+                        if (!array_key_exists($year, $yearColorMap)) {
+                            $yearColorMap[$year] = $year === '----'
+                                ? '#7E7E7E'
+                                : $yearPalette[$yearIdx++ % count($yearPalette)];
+                        }
+                        $yearColor = $yearColorMap[$year];
+                        $showYear = $year !== $lastYear;
+                        $lastYear = $year;
                         $side = ($loop->index % 2 === 0) ? 'left' : 'right';
                         $relatedPeople = collect($event['related_people'] ?? [])->filter()->values();
+                        $cardId = 'timeline-card-character-' . $loop->index;
                     @endphp
-                    <article class="poster-item {{ $side }}" style="{{ $eventColor ? '--event-color:' . $eventColor . ';' : '' }}">
-                        <span class="poster-dot"></span>
-                        <span class="poster-year-line">{{ $year }}</span>
-                        <div class="poster-card">
+                    <article class="poster-item {{ $side }}" style="{{ $eventColor ? '--event-color:' . $eventColor . ';' : '' }} --year-color: {{ $yearColor }};">
+                        @if($showYear)
+                            <span class="poster-year-marker" aria-hidden="true" style="--year-span: {{ (int) ($yearCounts[$year] ?? 1) }};">
+                                <span class="poster-year-line">{{ $year }}</span>
+                            </span>
+                        @endif
+                        <div class="poster-card" id="{{ $cardId }}">
                             <div class="poster-top">
-                                <span class="poster-date">{{ $event['date'] ? $event['date']->format('Y-m-d') : 'Date inconnue' }}</span>
-                                <span class="poster-badge">{{ $typeLabels[$event['type']] ?? 'Evenement' }}</span>
+                                <div class="poster-top-left">
+                                    <span class="poster-date">{{ $event['date'] ? $event['date']->format('Y-m-d') : 'Date inconnue' }}</span>
+                                    <span class="poster-badge">{{ $typeLabels[$event['type']] ?? 'Evenement' }}</span>
+                                </div>
+                                <button class="poster-switch" type="button" data-target="{{ $cardId }}" aria-expanded="true" aria-label="Masquer l'evenement" title="Masquer l'evenement">
+                                    <span class="poster-switch-dot"></span>
+                                    <span class="poster-switch-text">ON</span>
+                                </button>
                             </div>
 
                             <h4 class="poster-event-title">{{ $event['title'] }}</h4>
-
+                            <div class="poster-body">
                             @if(!empty($event['photo_path']))
                                 <img class="poster-photo" src="{{ route('media.show', ['path' => $event['photo_path']]) }}" alt="Photo evenement">
                             @endif
@@ -251,10 +344,38 @@
                                     </form>
                                 @endif
                             </div>
+                            </div>
                         </div>
                     </article>
                 @endforeach
             </div>
         @endif
     </section>
+    <script>
+        (function () {
+            const buttons = document.querySelectorAll('.poster-switch[data-target]');
+            if (!buttons.length) return;
+
+            buttons.forEach(function (button) {
+                const cardId = button.getAttribute('data-target');
+                const article = button.closest('.poster-item');
+                const card = article ? article.querySelector('#' + cardId) : null;
+                if (!article || !card) return;
+
+                button.addEventListener('click', function () {
+                    const collapsed = !article.classList.contains('is-collapsed');
+                    article.classList.toggle('is-collapsed', collapsed);
+                    card.hidden = collapsed;
+                    button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                    button.setAttribute('aria-label', collapsed ? 'Afficher l\'evenement' : 'Masquer l\'evenement');
+                    button.setAttribute('title', collapsed ? 'Afficher l\'evenement' : 'Masquer l\'evenement');
+
+                    const text = button.querySelector('.poster-switch-text');
+                    if (text) {
+                        text.textContent = collapsed ? 'OFF' : 'ON';
+                    }
+                });
+            });
+        })();
+    </script>
 @endsection
