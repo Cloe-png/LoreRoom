@@ -235,6 +235,7 @@
                 <p class="dl-row"><strong>Père:</strong> {{ optional($character->father)->display_name ?: 'Inconnu' }}</p>
                 <p class="dl-row"><strong>Mère:</strong> {{ optional($character->mother)->display_name ?: 'Inconnue' }}</p>
                 <p class="dl-row"><strong>Conjoint:</strong> {{ optional($character->spouse)->display_name ?: '-' }}</p>
+                <p class="dl-row"><strong>Ex:</strong> {{ $character->exes->isEmpty() ? '-' : $character->exes->pluck('display_name')->join(', ') }}</p>
                 @if($children->isNotEmpty())
                     <p class="dl-row"><strong>Enfants:</strong> {{ $children->pluck('display_name')->join(', ') }}</p>
                 @endif

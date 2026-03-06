@@ -17,9 +17,9 @@
             <div class="field" style="margin:0; min-width:180px;">
                 <label>Source</label>
                 <select name="source">
-                    <option value="all" @selected($source === 'all')>Tout</option>
-                    <option value="portrait" @selected($source === 'portrait')>Portraits</option>
-                    <option value="gallery" @selected($source === 'gallery')>Galerie</option>
+                    <option value="all" {{ $source === 'all' ? 'selected' : '' }}>Tout</option>
+                    <option value="portrait" {{ $source === 'portrait' ? 'selected' : '' }}>Portraits</option>
+                    <option value="gallery" {{ $source === 'gallery' ? 'selected' : '' }}>Galerie</option>
                 </select>
             </div>
             <button class="btn" type="submit">Filtrer</button>

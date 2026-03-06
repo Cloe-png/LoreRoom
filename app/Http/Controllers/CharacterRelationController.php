@@ -6,6 +6,7 @@ use App\Models\Character;
 use App\Models\CharacterRelation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class CharacterRelationController extends Controller
 {
@@ -13,12 +14,19 @@ class CharacterRelationController extends Controller
     {
         $q = trim(request('q', ''));
         $selectedCharacterId = (int) request('character_id', 0);
+        $worldId = $this->requireCurrentWorldId();
         $characters = Character::orderBy('name')->get(['id', 'name', 'first_name', 'last_name']);
 
         $relations = CharacterRelation::with([
                 'fromCharacter.primaryGalleryImage',
                 'toCharacter.primaryGalleryImage',
             ])
+            ->whereHas('fromCharacter', function ($query) use ($worldId) {
+                $query->where('world_id', $worldId);
+            })
+            ->whereHas('toCharacter', function ($query) use ($worldId) {
+                $query->where('world_id', $worldId);
+            })
             ->when($selectedCharacterId > 0, function ($query) use ($selectedCharacterId) {
                 $query->where(function ($sub) use ($selectedCharacterId) {
                     $sub->where('from_character_id', $selectedCharacterId)
@@ -57,6 +65,12 @@ class CharacterRelationController extends Controller
                 'fromCharacter.primaryGalleryImage',
                 'toCharacter.primaryGalleryImage',
             ])
+            ->whereHas('fromCharacter', function ($query) use ($worldId) {
+                $query->where('world_id', $worldId);
+            })
+            ->whereHas('toCharacter', function ($query) use ($worldId) {
+                $query->where('world_id', $worldId);
+            })
             ->when($selectedCharacterId > 0, function ($query) use ($selectedCharacterId) {
                 $query->where(function ($sub) use ($selectedCharacterId) {
                     $sub->where('from_character_id', $selectedCharacterId)
@@ -104,9 +118,10 @@ class CharacterRelationController extends Controller
 
     public function store(Request $request)
     {
+        $worldId = $this->requireCurrentWorldId();
         $data = $request->validate([
-            'from_character_id' => ['required', 'exists:characters,id', 'different:to_character_id'],
-            'to_character_id' => ['required', 'exists:characters,id'],
+            'from_character_id' => ['required', Rule::exists('characters', 'id')->where('world_id', $worldId), 'different:to_character_id'],
+            'to_character_id' => ['required', Rule::exists('characters', 'id')->where('world_id', $worldId)],
             'relation_type' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:3000'],
             'is_bidirectional' => ['nullable', 'boolean'],
@@ -123,6 +138,11 @@ class CharacterRelationController extends Controller
 
     public function show(CharacterRelation $relation)
     {
+        $worldId = $this->requireCurrentWorldId();
+        if (!$relation->fromCharacter()->where('world_id', $worldId)->exists() || !$relation->toCharacter()->where('world_id', $worldId)->exists()) {
+            abort(404);
+        }
+
         $relation->load(['fromCharacter.primaryGalleryImage', 'toCharacter.primaryGalleryImage']);
         $relation->display_type = $this->resolveDisplayRelationType($relation);
         $relation->from_photo = $this->resolveCharacterPhotoPath($relation->fromCharacter);
@@ -133,6 +153,11 @@ class CharacterRelationController extends Controller
 
     public function edit(CharacterRelation $relation)
     {
+        $worldId = $this->requireCurrentWorldId();
+        if (!$relation->fromCharacter()->where('world_id', $worldId)->exists() || !$relation->toCharacter()->where('world_id', $worldId)->exists()) {
+            abort(404);
+        }
+
         $characters = Character::orderBy('name')->get();
 
         return view('manage.relations.edit', compact('relation', 'characters'));
@@ -140,9 +165,14 @@ class CharacterRelationController extends Controller
 
     public function update(Request $request, CharacterRelation $relation)
     {
+        $worldId = $this->requireCurrentWorldId();
+        if (!$relation->fromCharacter()->where('world_id', $worldId)->exists() || !$relation->toCharacter()->where('world_id', $worldId)->exists()) {
+            abort(404);
+        }
+
         $data = $request->validate([
-            'from_character_id' => ['required', 'exists:characters,id', 'different:to_character_id'],
-            'to_character_id' => ['required', 'exists:characters,id'],
+            'from_character_id' => ['required', Rule::exists('characters', 'id')->where('world_id', $worldId), 'different:to_character_id'],
+            'to_character_id' => ['required', Rule::exists('characters', 'id')->where('world_id', $worldId)],
             'relation_type' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:3000'],
             'is_bidirectional' => ['nullable', 'boolean'],
@@ -159,6 +189,11 @@ class CharacterRelationController extends Controller
 
     public function destroy(CharacterRelation $relation)
     {
+        $worldId = $this->requireCurrentWorldId();
+        if (!$relation->fromCharacter()->where('world_id', $worldId)->exists() || !$relation->toCharacter()->where('world_id', $worldId)->exists()) {
+            abort(404);
+        }
+
         $relation->delete();
 
         return redirect()->route('manage.relations.index')->with('success', 'Relation supprimée.');

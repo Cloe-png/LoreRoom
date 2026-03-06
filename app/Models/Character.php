@@ -13,6 +13,22 @@ class Character extends Model
 
     protected static function booted()
     {
+        static::addGlobalScope('selected_world', function ($query) {
+            if (app()->runningInConsole() || !app()->bound('request')) {
+                return;
+            }
+
+            $request = app('request');
+            if (!$request->is('manage*')) {
+                return;
+            }
+
+            $worldId = (int) $request->session()->get('selected_world_id', 0);
+            if ($worldId > 0) {
+                $query->where($query->qualifyColumn('world_id'), $worldId);
+            }
+        });
+
         static::saving(function (self $character) {
             $character->status = $character->resolveAutoStatus();
         });
@@ -90,6 +106,13 @@ class Character extends Model
     public function spouse()
     {
         return $this->belongsTo(self::class, 'spouse_id');
+    }
+
+    public function exes()
+    {
+        return $this->belongsToMany(self::class, 'character_exes', 'character_id', 'ex_character_id')
+            ->withTimestamps()
+            ->orderBy('name');
     }
 
     public function birthPlace()

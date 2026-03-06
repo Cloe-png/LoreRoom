@@ -6,9 +6,9 @@ use App\Models\Character;
 use App\Models\CharacterEvent;
 use App\Models\Chronicle;
 use App\Models\Place;
-use App\Models\World;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\Rule;
 
 class ChronicleController extends Controller
 {
@@ -72,6 +72,7 @@ class ChronicleController extends Controller
             });
 
         $characterEvents = CharacterEvent::query()
+            ->whereHas('character')
             ->with('character:id,name,first_name,last_name,birth_date,death_date,preferred_color,image_path')
             ->get()
             ->map(function (CharacterEvent $event) {
@@ -308,7 +309,7 @@ class ChronicleController extends Controller
 
     public function create()
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
         $places = Place::query()
             ->select(['id', 'name', 'region'])
             ->orderBy('name')
@@ -324,7 +325,7 @@ class ChronicleController extends Controller
 
     public function store(Request $request)
     {
-        $defaultWorldId = World::query()->value('id');
+        $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
@@ -333,11 +334,11 @@ class ChronicleController extends Controller
             'title' => ['required', 'string', 'max:160'],
             'event_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:event_date'],
-            'event_place_id' => ['nullable', 'integer', 'exists:places,id'],
+            'event_place_id' => ['nullable', 'integer', Rule::exists('places', 'id')->where('world_id', $defaultWorldId)],
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
             'linked_character_ids' => ['nullable', 'array'],
-            'linked_character_ids.*' => ['integer', 'exists:characters,id'],
+            'linked_character_ids.*' => ['integer', Rule::exists('characters', 'id')->where('world_id', $defaultWorldId)],
         ]);
         $data['world_id'] = $defaultWorldId;
         $selectedPlaceName = null;
@@ -364,7 +365,7 @@ class ChronicleController extends Controller
     public function edit(Chronicle $chronicle)
     {
         $chronicle->load('linkedCharacters:id');
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
         $places = Place::query()
             ->select(['id', 'name', 'region'])
             ->orderBy('name')
@@ -380,7 +381,7 @@ class ChronicleController extends Controller
 
     public function update(Request $request, Chronicle $chronicle)
     {
-        $defaultWorldId = World::query()->value('id');
+        $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
@@ -389,11 +390,11 @@ class ChronicleController extends Controller
             'title' => ['required', 'string', 'max:160'],
             'event_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:event_date'],
-            'event_place_id' => ['nullable', 'integer', 'exists:places,id'],
+            'event_place_id' => ['nullable', 'integer', Rule::exists('places', 'id')->where('world_id', $defaultWorldId)],
             'summary' => ['nullable', 'string', 'max:2000'],
             'content' => ['nullable', 'string'],
             'linked_character_ids' => ['nullable', 'array'],
-            'linked_character_ids.*' => ['integer', 'exists:characters,id'],
+            'linked_character_ids.*' => ['integer', Rule::exists('characters', 'id')->where('world_id', $defaultWorldId)],
         ]);
         $data['world_id'] = $defaultWorldId;
         $selectedPlaceName = null;

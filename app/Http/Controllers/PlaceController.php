@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Place;
-use App\Models\World;
 use Illuminate\Http\Request;
 
 class PlaceController extends Controller
@@ -17,17 +16,14 @@ class PlaceController extends Controller
 
     public function create()
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
 
         return view('manage.places.create', compact('defaultWorld'));
     }
 
     public function store(Request $request)
     {
-        $defaultWorldId = World::query()->value('id');
-        if (!$defaultWorldId) {
-            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
-        }
+        $defaultWorldId = $this->requireCurrentWorldId();
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -38,11 +34,12 @@ class PlaceController extends Controller
 
         Place::create($data);
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu créé.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu cree.');
     }
 
     public function show(Place $place)
     {
+        $this->abortIfOutsideCurrentWorld((int) $place->world_id);
         $place->load('world');
 
         return view('manage.places.show', compact('place'));
@@ -50,17 +47,16 @@ class PlaceController extends Controller
 
     public function edit(Place $place)
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $this->abortIfOutsideCurrentWorld((int) $place->world_id);
+        $defaultWorld = $this->currentWorld();
 
         return view('manage.places.edit', compact('place', 'defaultWorld'));
     }
 
     public function update(Request $request, Place $place)
     {
-        $defaultWorldId = World::query()->value('id');
-        if (!$defaultWorldId) {
-            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
-        }
+        $this->abortIfOutsideCurrentWorld((int) $place->world_id);
+        $defaultWorldId = $this->requireCurrentWorldId();
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -71,14 +67,14 @@ class PlaceController extends Controller
 
         $place->update($data);
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu mis à jour.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu mis a jour.');
     }
 
     public function destroy(Place $place)
     {
+        $this->abortIfOutsideCurrentWorld((int) $place->world_id);
         $place->delete();
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu supprimé.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu supprime.');
     }
 }
-

@@ -6,7 +6,6 @@ use App\Models\Character;
 use App\Models\Chronicle;
 use App\Models\ImaginaryMap;
 use App\Models\Place;
-use App\Models\World;
 use Carbon\Carbon;
 
 class ManageController extends Controller
@@ -14,9 +13,10 @@ class ManageController extends Controller
     public function index()
     {
         $today = Carbon::today();
+        $user = request()->user();
 
         return view('manage.index', [
-            'worldsCount' => World::count(),
+            'worldsCount' => $user ? $user->worlds()->count() : 0,
             'charactersCount' => Character::count(),
             'placesCount' => Place::count(),
             'chroniclesCount' => Chronicle::count(),
@@ -38,7 +38,9 @@ class ManageController extends Controller
                 ->orderBy('title')
                 ->get(),
             'recentChronicles' => Chronicle::with('world')->latest()->take(5)->get(),
-            'recentWorlds' => World::latest()->take(5)->get(),
+            'recentWorlds' => $user
+                ? $user->worlds()->latest('created_at')->take(5)->get()
+                : collect(),
             'recentMaps' => ImaginaryMap::with('world')->latest()->take(5)->get(),
         ]);
     }

@@ -207,6 +207,13 @@
                 font-family:"Segoe Print","Comic Sans MS",cursive;
                 padding:5px 8px 6px;
             }
+            button.back-portals-link {
+                width: 100%;
+                text-align: left;
+                border: 0;
+                background: transparent;
+                cursor: pointer;
+            }
             .back-portals-link:hover {
                 text-decoration:underline;
                 text-decoration-thickness:1px;
@@ -387,7 +394,10 @@
                     </div>
 
                     <div class="sidebar-bottom">
-                        <a class="back-portals-link" href="{{ route('login') }}">Retour</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="back-portals-link">Déconnexion</button>
+                        </form>
                     </div>
                 </aside>
                 <section class="main">
@@ -396,7 +406,14 @@
                             <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Afficher ou cacher la navigation">&#9664;</button>
                             <h1 class="title">@yield('header', 'Gestion LoreRoom')</h1>
                         </div>
-                        <div class="topline">Carnet de notes du musée</div>
+                        <div class="topline">
+                            @if(!empty($activeWorld))
+                                Monde actif: {{ $activeWorld->name }} ·
+                                <a href="{{ route('manage.worlds.index') }}" style="color:#f6e8cb;">Changer</a>
+                            @else
+                                Carnet de notes du musée
+                            @endif
+                        </div>
                     </header>
                     <main class="content">
                         @if (session('success'))

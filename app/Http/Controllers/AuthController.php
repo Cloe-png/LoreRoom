@@ -64,6 +64,7 @@ class AuthController extends Controller
             'email' => mb_strtolower(trim((string) $data['email'])),
             'password' => Hash::make((string) $data['password']),
             'role' => 'utilisateur',
+            'current_world_id' => null,
         ]);
 
         Auth::login($user);
@@ -88,7 +89,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Vous etes deconnecte.');
+        return redirect()->route('login')->with('success', 'Vous êtes déconnecté.');
     }
 
     private function issueTemporaryLoginToken(Request $request): void

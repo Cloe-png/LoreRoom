@@ -175,40 +175,6 @@ class GenealogyController extends Controller
 
         $levels = $this->enforceGenerationalLevels($levels, $characters, $couplePairs);
 
-        // Build sibling links as a chain per sibling group to keep graph readable.
-        $includedIds = $levels->keys()->map(fn ($id) => (int) $id)->all();
-        $included = $characters->whereIn('id', $includedIds);
-        $siblingGroups = [];
-        foreach ($included as $character) {
-            $fatherId = (int) ($character->father_id ?? 0);
-            $motherId = (int) ($character->mother_id ?? 0);
-            if ($fatherId <= 0 && $motherId <= 0) {
-                continue;
-            }
-            $key = $fatherId . '-' . $motherId;
-            $siblingGroups[$key][] = $character;
-        }
-
-        foreach ($siblingGroups as $group) {
-            if (count($group) < 2) {
-                continue;
-            }
-
-            usort($group, fn (Character $a, Character $b) => $this->compareByBirthThenName($a, $b));
-
-            for ($i = 0; $i < count($group) - 1; $i++) {
-                $left = $group[$i];
-                $right = $group[$i + 1];
-                $edges->push([
-                    'from' => (int) $left->id,
-                    'to' => (int) $right->id,
-                    'label' => '',
-                    'sibling_kind' => $this->resolveSiblingKind($left, $right),
-                    'kind' => 'sibling',
-                ]);
-            }
-        }
-
         $nodes = $levels
             ->map(function ($level, $id) use ($byId) {
                 $character = $byId->get((int) $id);
@@ -408,6 +374,8 @@ class GenealogyController extends Controller
             ->filter();
 
         $relationPairs = CharacterRelation::query()
+            ->whereHas('fromCharacter')
+            ->whereHas('toCharacter')
             ->whereIn('from_character_id', $ids)
             ->whereIn('to_character_id', $ids)
             ->where(function ($query) {

@@ -13,17 +13,6 @@ use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\GenealogyController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
-
 Route::get('/', function () {
     return view('start');
 });
@@ -44,11 +33,12 @@ Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.show');
 
-Route::middleware(['auth', 'temp.token'])->group(function () {
+Route::middleware(['auth', 'temp.token', 'world.selected'])->group(function () {
     Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
     Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');
     Route::get('manage/arbre-genealogique', [GenealogyController::class, 'index'])->name('manage.genealogy.index');
     Route::get('manage/characters/{character}/export-pdf', [CharacterController::class, 'exportPdf'])->name('manage.characters.export-pdf');
+    Route::post('manage/worlds/{world}/switch', [WorldController::class, 'switch'])->name('manage.worlds.switch');
     Route::resource('manage/worlds', WorldController::class)->names('manage.worlds');
     Route::resource('manage/characters', CharacterController::class)->names('manage.characters');
     Route::resource('manage/places', PlaceController::class)->names('manage.places');

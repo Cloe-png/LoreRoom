@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ImaginaryMap;
-use App\Models\World;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -18,17 +17,14 @@ class ImaginaryMapController extends Controller
 
     public function create()
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
 
         return view('manage.maps.create', compact('defaultWorld'));
     }
 
     public function store(Request $request)
     {
-        $defaultWorldId = World::query()->value('id');
-        if (!$defaultWorldId) {
-            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
-        }
+        $defaultWorldId = $this->requireCurrentWorldId();
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
@@ -41,11 +37,12 @@ class ImaginaryMapController extends Controller
 
         ImaginaryMap::create($data);
 
-        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire créée.');
+        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire creee.');
     }
 
     public function show(ImaginaryMap $map)
     {
+        $this->abortIfOutsideCurrentWorld((int) $map->world_id);
         $map->load('world');
 
         return view('manage.maps.show', compact('map'));
@@ -53,17 +50,16 @@ class ImaginaryMapController extends Controller
 
     public function edit(ImaginaryMap $map)
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $this->abortIfOutsideCurrentWorld((int) $map->world_id);
+        $defaultWorld = $this->currentWorld();
 
         return view('manage.maps.edit', compact('map', 'defaultWorld'));
     }
 
     public function update(Request $request, ImaginaryMap $map)
     {
-        $defaultWorldId = World::query()->value('id');
-        if (!$defaultWorldId) {
-            return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
-        }
+        $this->abortIfOutsideCurrentWorld((int) $map->world_id);
+        $defaultWorldId = $this->requireCurrentWorldId();
 
         $data = $request->validate([
             'title' => ['required', 'string', 'max:160'],
@@ -76,14 +72,14 @@ class ImaginaryMapController extends Controller
 
         $map->update($data);
 
-        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire mise à jour.');
+        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire mise a jour.');
     }
 
     public function destroy(ImaginaryMap $map)
     {
+        $this->abortIfOutsideCurrentWorld((int) $map->world_id);
         $map->delete();
 
-        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire supprimée.');
+        return redirect()->route('manage.maps.index')->with('success', 'Carte imaginaire supprimee.');
     }
 }
-

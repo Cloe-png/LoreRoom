@@ -133,6 +133,18 @@
                     </select>
                 </div>
                 <div class="field">
+                    <label>Ex (un ou plusieurs)</label>
+                    @php
+                        $selectedEx = collect($selectedExIds ?? [])->map(fn ($id) => (int) $id)->all();
+                    @endphp
+                    <select name="ex_character_ids[]" multiple size="5">
+                        @foreach($spouses as $spouse)
+                            <option value="{{ $spouse->id }}" {{ in_array((int) $spouse->id, $selectedEx, true) ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
+                        @endforeach
+                    </select>
+                    <p class="muted">Maintiens Ctrl (ou Cmd) pour selectionner plusieurs ex.</p>
+                </div>
+                <div class="field">
                     <label>Lieu de naissance</label>
                     <select name="birth_place_id">
                         <option value="">Inconnu</option>

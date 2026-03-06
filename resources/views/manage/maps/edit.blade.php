@@ -27,7 +27,7 @@
                 <label>Statut</label>
                 <select name="status">
                     @foreach(['draft','published','archived'] as $status)
-                        <option value="{{ $status }}" @selected(old('status', $map->status) === $status)>{{ $status }}</option>
+                        <option value="{{ $status }}" {{ old('status', $map->status) === $status ? 'selected' : '' }}>{{ $status }}</option>
                     @endforeach
                 </select>
             </div>

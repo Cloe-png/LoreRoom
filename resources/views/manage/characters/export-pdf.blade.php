@@ -49,6 +49,8 @@
                 <p><span class="label">Lieu de naissance:</span> {{ optional($character->birthPlace)->name ?: '-' }}</p>
                 <p><span class="label">Résidence:</span> {{ optional($character->residencePlace)->name ?: '-' }}</p>
                 <p><span class="label">Parents:</span> {{ optional($character->father)->display_name ?: 'Inconnu' }} / {{ optional($character->mother)->display_name ?: 'Inconnue' }}</p>
+                <p><span class="label">Conjoint:</span> {{ optional($character->spouse)->display_name ?: '-' }}</p>
+                <p><span class="label">Ex:</span> {{ $character->exes->isEmpty() ? 'Aucun' : $character->exes->pluck('display_name')->join(', ') }}</p>
                 <p><span class="label">Enfants:</span> {{ $children->isEmpty() ? 'Aucun' : $children->pluck('display_name')->join(', ') }}</p>
             </div>
         </td>

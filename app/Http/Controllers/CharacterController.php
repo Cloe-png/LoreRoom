@@ -8,7 +8,6 @@ use App\Models\CharacterItem;
 use App\Models\CharacterJob;
 use App\Models\CharacterRelation;
 use App\Models\Place;
-use App\Models\World;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,11 +69,12 @@ class CharacterController extends Controller
 
     public function create()
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
         $places = Place::orderBy('name')->get();
         $parents = Character::orderBy('name')->get();
         $spouses = Character::orderBy('name')->get();
         $characters = Character::orderBy('name')->get();
+        $selectedExIds = old('ex_character_ids', []);
         $relationRows = old('relations', [
             ['to_character_id' => '', 'relation_type' => '', 'is_bidirectional' => '1', 'description' => ''],
         ]);
@@ -96,6 +96,7 @@ class CharacterController extends Controller
             'places',
             'parents',
             'spouses',
+            'selectedExIds',
             'characters',
             'relationRows',
             'itemRows',
@@ -111,7 +112,7 @@ class CharacterController extends Controller
 
     public function store(Request $request)
     {
-        $defaultWorldId = World::query()->value('id');
+        $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
@@ -127,6 +128,8 @@ class CharacterController extends Controller
             'father_id' => ['nullable', 'exists:characters,id'],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id'],
             'spouse_id' => ['nullable', 'exists:characters,id', 'different:father_id', 'different:mother_id'],
+            'ex_character_ids' => ['nullable', 'array'],
+            'ex_character_ids.*' => ['nullable', 'exists:characters,id'],
             'birth_place_id' => ['nullable', 'exists:places,id'],
             'residence_place_id' => ['nullable', 'exists:places,id'],
             'role' => ['required', Rule::in(self::CHARACTER_ROLES)],
@@ -191,7 +194,9 @@ class CharacterController extends Controller
         $data['world_id'] = $defaultWorldId;
         $data['preferred_color'] = $this->normalizeHexColor($data['preferred_color'] ?? null);
         $spouseId = isset($data['spouse_id']) && $data['spouse_id'] !== '' ? (int) $data['spouse_id'] : null;
+        $selectedExIds = collect($data['ex_character_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['spouse_id']);
+        unset($data['ex_character_ids']);
 
         if ($request->hasFile('image')) {
             $data['image_path'] = $request->file('image')->store('characters', 'public');
@@ -226,9 +231,10 @@ class CharacterController extends Controller
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
+        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
+            $this->syncExPartners($character, $selectedExIds);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
@@ -253,6 +259,7 @@ class CharacterController extends Controller
             'father',
             'mother',
             'spouse',
+            'exes',
             'birthPlace',
             'residencePlace',
             'childrenFromFather',
@@ -272,6 +279,7 @@ class CharacterController extends Controller
             'father',
             'mother',
             'spouse',
+            'exes',
             'birthPlace',
             'residencePlace',
             'childrenFromFather',
@@ -298,11 +306,12 @@ class CharacterController extends Controller
 
     public function edit(Character $character)
     {
-        $defaultWorld = World::query()->orderBy('id')->first();
+        $defaultWorld = $this->currentWorld();
         $places = Place::orderBy('name')->get();
         $parents = Character::where('id', '!=', $character->id)->orderBy('name')->get();
         $spouses = Character::where('id', '!=', $character->id)->orderBy('name')->get(); 
         $characters = Character::where('id', '!=', $character->id)->orderBy('name')->get();
+        $selectedExIds = old('ex_character_ids', $character->exes()->pluck('characters.id')->all());
         $fatherChildrenIds = Character::where('father_id', $character->id)->pluck('id')->all();
         $motherChildrenIds = Character::where('mother_id', $character->id)->pluck('id')->all();
 
@@ -412,6 +421,7 @@ class CharacterController extends Controller
             'places',
             'parents',
             'spouses',
+            'selectedExIds',
             'characters',
             'relationRows',
             'itemRows',
@@ -428,7 +438,7 @@ class CharacterController extends Controller
 
     public function update(Request $request, Character $character)
     {
-        $defaultWorldId = World::query()->value('id');
+        $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
@@ -444,6 +454,8 @@ class CharacterController extends Controller
             'father_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id', Rule::notIn([$character->id])],
             'spouse_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id]), 'different:father_id', 'different:mother_id'],
+            'ex_character_ids' => ['nullable', 'array'],
+            'ex_character_ids.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'birth_place_id' => ['nullable', 'exists:places,id'],
             'residence_place_id' => ['nullable', 'exists:places,id'],
             'role' => ['required', Rule::in(self::CHARACTER_ROLES)],
@@ -510,7 +522,9 @@ class CharacterController extends Controller
         $data['world_id'] = $defaultWorldId;
         $data['preferred_color'] = $this->normalizeHexColor($data['preferred_color'] ?? null);
         $spouseId = isset($data['spouse_id']) && $data['spouse_id'] !== '' ? (int) $data['spouse_id'] : null;
+        $selectedExIds = collect($data['ex_character_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['spouse_id']);
+        unset($data['ex_character_ids']);
 
         if ($request->hasFile('image')) {
             if ($character->image_path) {
@@ -560,9 +574,10 @@ class CharacterController extends Controller
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
+            $this->syncExPartners($character, $selectedExIds);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
@@ -773,6 +788,53 @@ class CharacterController extends Controller
         $impacted->push((int) $spouse->id);
 
         return $impacted->unique()->values()->all();
+    }
+
+    private function syncExPartners(Character $character, array $selectedExIds): void
+    {
+        $characterId = (int) $character->id;
+        $currentSpouseId = (int) ($character->spouse_id ?? 0);
+
+        $normalizedIds = collect($selectedExIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0 && $id !== $characterId && $id !== $currentSpouseId)
+            ->unique()
+            ->values();
+
+        $validExIds = Character::query()
+            ->whereIn('id', $normalizedIds->all())
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        DB::table('character_exes')
+            ->where('character_id', $characterId)
+            ->orWhere('ex_character_id', $characterId)
+            ->delete();
+
+        if (empty($validExIds)) {
+            return;
+        }
+
+        $now = now();
+        $rows = [];
+        foreach ($validExIds as $exId) {
+            $rows[] = [
+                'character_id' => $characterId,
+                'ex_character_id' => $exId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+            $rows[] = [
+                'character_id' => $exId,
+                'ex_character_id' => $characterId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        DB::table('character_exes')->insert($rows);
     }
 
     private function syncAutoFamilyRelationsForCharacters(array $characterIds): void

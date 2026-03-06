@@ -35,6 +35,7 @@ class GalleryController extends Controller
             });
 
         $galleryImages = CharacterGalleryImage::query()
+            ->whereHas('character')
             ->with('character:id,name,first_name,last_name,preferred_color')
             ->get(['id', 'character_id', 'image_path', 'caption', 'created_at'])
             ->map(function (CharacterGalleryImage $image) {
