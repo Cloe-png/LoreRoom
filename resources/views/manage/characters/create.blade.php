@@ -306,7 +306,7 @@
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities') }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws') }}</textarea></div>
-                    <div class="field"><label>Voix (audio upload)</label><input type="file" name="voice_audio" accept="audio/*"></div>
+                    <div class="field"><label>Voix (audio téléversé)</label><input type="file" name="voice_audio" accept="audio/*"></div>
                     <div class="field"><label>Lien YouTube (à la place de l'audio)</label><input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url') }}" placeholder="https://www.youtube.com/watch?v=..."></div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary') }}</textarea></div>
                 </div>

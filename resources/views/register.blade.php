@@ -232,7 +232,7 @@
 
             <div class="actions">
                 <button class="btn primary" type="submit">Cr?er le compte</button>
-                <a class="btn secondary" href="{{ route('login') }}">Deja inscrit ? Connexion</a>
+                <a class="btn secondary" href="{{ route('login') }}">Déjà inscrit ? Connexion</a>
             </div>
         </form>
 

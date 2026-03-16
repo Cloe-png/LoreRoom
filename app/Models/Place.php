@@ -31,13 +31,35 @@ class Place extends Model
     protected $fillable = [
         'world_id',
         'name',
+        'type',
         'region',
         'summary',
+        'image_path',
     ];
 
     public function world()
     {
         return $this->belongsTo(World::class);
+    }
+
+    public function eventChronicles()
+    {
+        return $this->hasMany(Chronicle::class, 'event_place_id');
+    }
+
+    public function birthCharacters()
+    {
+        return $this->hasMany(Character::class, 'birth_place_id');
+    }
+
+    public function residentCharacters()
+    {
+        return $this->hasMany(Character::class, 'residence_place_id');
+    }
+
+    public function galleryImages()
+    {
+        return $this->hasMany(PlaceGalleryImage::class)->orderBy('sort_order')->orderBy('id');
     }
 }
 

@@ -5,29 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\World;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 
 class WorldController extends Controller
 {
-    private const WORLD_TYPES = [
-        'ile',
-        'ville',
-        'pays',
-        'continent',
-        'region',
-        'royaume',
-        'empire',
-        'federation',
-        'republique',
-        'colonie',
-        'planete',
-        'systeme',
-        'galaxie',
-        'dimension',
-    ];
-
     public function index()
     {
         $user = Auth::user();
@@ -51,18 +32,12 @@ class WorldController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'geography_type' => ['required', Rule::in(self::WORLD_TYPES)],
             'summary' => ['nullable', 'string', 'max:5000'],
-            'map' => ['nullable', 'image', 'max:6144'],
         ]);
 
         $data['slug'] = $this->uniqueSlug($data['name']);
         $data['status'] = 'active';
         $data['summary'] = trim((string) ($data['summary'] ?? '')) ?: null;
-
-        if ($request->hasFile('map')) {
-            $data['map_path'] = $request->file('map')->store('worlds', 'public');
-        }
 
         $user = Auth::user();
         $data['user_id'] = (int) $user->id;
@@ -117,21 +92,12 @@ class WorldController extends Controller
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'geography_type' => ['required', Rule::in(self::WORLD_TYPES)],
             'summary' => ['nullable', 'string', 'max:5000'],
-            'map' => ['nullable', 'image', 'max:6144'],
         ]);
 
         $data['slug'] = $this->uniqueSlug($data['name'], $world->id);
         $data['status'] = $world->status ?: 'active';
         $data['summary'] = trim((string) ($data['summary'] ?? '')) ?: null;
-
-        if ($request->hasFile('map')) {
-            if ($world->map_path) {
-                Storage::disk('public')->delete($world->map_path);
-            }
-            $data['map_path'] = $request->file('map')->store('worlds', 'public');
-        }
 
         $world->update($data);
 
@@ -146,10 +112,6 @@ class WorldController extends Controller
         }
 
         $nextWorldId = (int) ($user->worlds()->where('id', '!=', $world->id)->orderBy('id')->value('id') ?? 0);
-
-        if ($world->map_path) {
-            Storage::disk('public')->delete($world->map_path);
-        }
 
         $world->delete();
 

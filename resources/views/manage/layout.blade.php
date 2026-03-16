@@ -379,9 +379,6 @@
                         <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}">
                             <span class="nav-name">Frise chronologique</span>
                         </a>
-                        <a class="nav-link @if(request()->routeIs('manage.maps.*')) active @endif" href="{{ route('manage.maps.index') }}">
-                            <span class="nav-name">Cartes</span>
-                        </a>
                         <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}">
                             <span class="nav-name">Relations personnages</span>
                         </a>

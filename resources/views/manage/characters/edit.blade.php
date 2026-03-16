@@ -286,7 +286,7 @@
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities', $character->qualities) }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws', $character->flaws) }}</textarea></div>
                     <div class="field">
-                        <label>Voix (audio upload)</label>
+                        <label>Voix (audio téléversé)</label>
                         <input type="file" name="voice_audio" accept="audio/*">
                         @if($character->voice_audio_path)
                             <audio controls preload="none" style="margin-top:8px; width:100%;">

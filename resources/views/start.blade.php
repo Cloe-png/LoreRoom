@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>LoreRoom - Start</title>
+        <title>LoreRoom - Accueil</title>
         <style>
             :root {
                 --bg-abyss: #121018;
@@ -510,7 +510,7 @@
                 <h1>LoreRoom</h1>
                 <div class="title-ornament"><span>*</span></div>
                 <nav class="menu" aria-label="Menu principal">
-                    <a id="startBtn" href="{{ route('login') }}"><span>Start</span></a>
+                    <a id="startBtn" href="{{ route('login') }}"><span>Entrer</span></a>
                 </nav>
                 <div class="version">v0.1</div>
             </main>
@@ -528,10 +528,12 @@
             });
 
             const quitBtn = document.getElementById('quitBtn');
-            quitBtn.addEventListener('click', (event) => {
-                event.preventDefault();
-                window.close();
-            });
+            if (quitBtn) {
+                quitBtn.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    window.close();
+                });
+            }
 
             const menuLinks = Array.from(document.querySelectorAll('.menu a'));
             let selectedIndex = 0;

@@ -161,7 +161,7 @@
 
     @if($nodes->isEmpty())
         <section class="panel">
-            <p class="muted">Aucune donnee genealogique disponible.</p>
+            <p class="muted">Aucune donnee généalogique disponible.</p>
         </section>
     @else
         @php
@@ -208,7 +208,6 @@
         <div class="genealogy-legend-floating">
             <span class="item"><span class="line"></span> Enfant</span>
             <span class="item"><span class="line couple"></span> Couple</span>
-            <span class="item"><span class="line" style="border-top-style:dotted;"></span> Fratrie</span>
             <span class="item"><span class="dot vivant"></span> Vivant</span>
             <span class="item"><span class="dot mort"></span> Mort</span>
             <span class="item"><span class="dot disparu"></span> Disparu</span>

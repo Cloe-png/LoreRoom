@@ -4,7 +4,6 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterRelationController;
 use App\Http\Controllers\ChronicleController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ImaginaryMapController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PlaceController;
@@ -45,7 +44,6 @@ Route::middleware(['auth', 'temp.token', 'world.selected'])->group(function () {
     Route::get('manage/chronicles/global', [ChronicleController::class, 'globalTimeline'])->name('manage.chronicles.global');
     Route::get('manage/chronicles/characters/{character}', [ChronicleController::class, 'characterTimeline'])->name('manage.chronicles.character');
     Route::resource('manage/chronicles', ChronicleController::class)->names('manage.chronicles');
-    Route::resource('manage/maps', ImaginaryMapController::class)->names('manage.maps');
     Route::resource('manage/relations', CharacterRelationController::class)->names('manage.relations');
 });
 

@@ -355,7 +355,7 @@
             </div>
             <div class="stack">
                 <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
-                <a class="btn secondary" href="{{ route('manage.chronicles.global') }}">Global</a>
+                <a class="btn secondary" href="{{ route('manage.chronicles.global') }}">Vue globale</a>
                 <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
             </div>
         </div>

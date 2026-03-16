@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\Chronicle;
-use App\Models\ImaginaryMap;
 use App\Models\Place;
 use Carbon\Carbon;
 
@@ -20,7 +19,6 @@ class ManageController extends Controller
             'charactersCount' => Character::count(),
             'placesCount' => Place::count(),
             'chroniclesCount' => Chronicle::count(),
-            'mapsCount' => ImaginaryMap::count(),
             'today' => $today,
             'todayBirthdays' => Character::with('world')
                 ->whereMonth('birth_date', $today->month)
@@ -41,7 +39,6 @@ class ManageController extends Controller
             'recentWorlds' => $user
                 ? $user->worlds()->latest('created_at')->take(5)->get()
                 : collect(),
-            'recentMaps' => ImaginaryMap::with('world')->latest()->take(5)->get(),
         ]);
     }
 }

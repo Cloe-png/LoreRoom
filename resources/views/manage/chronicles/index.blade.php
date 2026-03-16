@@ -170,7 +170,7 @@
 
         <div class="select-panel">
             <div class="global-wrap">
-                <a class="mode-btn global-btn" href="{{ route('manage.chronicles.global') }}">Global</a>
+                <a class="mode-btn global-btn" href="{{ route('manage.chronicles.global') }}">Vue globale</a>
             </div>
 
             <div class="characters-tools">

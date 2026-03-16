@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="stack" style="justify-content: space-between;">
-        <p class="muted">Atlas des lieux et regions.</p>
+        <p class="muted">Atlas des lieux avec type, images et stats d'usage.</p>
         <a class="btn" href="{{ route('manage.places.create') }}">Nouveau lieu</a>
     </div>
 
@@ -14,6 +14,7 @@
             <thead>
                 <tr>
                     <th>Nom</th>
+                    <th>Type</th>
                     <th>Monde</th>
                     <th>Region</th>
                     <th>Actions</th>
@@ -23,8 +24,9 @@
             @forelse($places as $place)
                 <tr>
                     <td>{{ $place->name }}</td>
+                    <td>{{ $place->type ? ucfirst($place->type) : '-' }}</td>
                     <td>{{ optional($place->world)->name }}</td>
-                    <td>{{ $place->region }}</td>
+                    <td>{{ $place->region ?: '-' }}</td>
                     <td class="stack">
                         <a class="btn secondary" href="{{ route('manage.places.show', $place) }}">Voir</a>
                         <a class="btn secondary" href="{{ route('manage.places.edit', $place) }}">Éditer</a>
@@ -35,7 +37,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="muted">Aucun lieu.</td></tr>
+                <tr><td colspan="5" class="muted">Aucun lieu.</td></tr>
             @endforelse
             </tbody>
         </table>

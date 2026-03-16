@@ -66,12 +66,6 @@
             line-height: 1.1;
         }
 
-        .world-type {
-            color: #6b4f2f;
-            font-size: .9rem;
-            margin-top: 4px;
-        }
-
         .active-badge {
             border: 1px solid rgba(37, 106, 79, .42);
             border-radius: 999px;
@@ -138,9 +132,9 @@
     @if($worlds->count() === 0)
         <section class="first-world">
             <div>
-                <h2>Cree ton premier monde</h2>
+                <h2>Crée ton premier monde</h2>
                 <p>Tu dois avoir au moins un monde pour commencer a ajouter des personnages, lieux et chroniques.</p>
-                <a class="plus-btn" href="{{ route('manage.worlds.create') }}" aria-label="Creer un monde">+</a>
+                <a class="plus-btn" href="{{ route('manage.worlds.create') }}" aria-label="Créer un monde">+</a>
             </div>
         </section>
     @else
@@ -162,7 +156,6 @@
                         <div class="world-card-head">
                             <div>
                                 <h3 class="world-name">{{ $world->name }}</h3>
-                                <div class="world-type">Type: {{ ucfirst($world->geography_type ?? 'pays') }}</div>
                             </div>
                             @if($isActive)
                                 <span class="active-badge">Actif</span>
@@ -177,12 +170,8 @@
                                 </form>
                             @endif
 
-                            @if($world->map_path)
-                                <a class="btn secondary" href="{{ asset('storage/'.$world->map_path) }}" target="_blank" rel="noopener">Voir carte</a>
-                            @endif
-
                             <a class="btn secondary" href="{{ route('manage.worlds.show', $world) }}">Voir</a>
-                            <a class="btn secondary" href="{{ route('manage.worlds.edit', $world) }}">Editer</a>
+                            <a class="btn secondary" href="{{ route('manage.worlds.edit', $world) }}">Éditer</a>
 
                             <form class="inline" method="POST" action="{{ route('manage.worlds.destroy', $world) }}">
                                 @csrf @method('DELETE')

@@ -13,9 +13,7 @@ class World extends Model
     protected $fillable = [
         'user_id',
         'name',
-        'geography_type',
         'slug',
-        'map_path',
         'summary',
         'status',
     ];
@@ -33,11 +31,6 @@ class World extends Model
     public function chronicles()
     {
         return $this->hasMany(Chronicle::class);
-    }
-
-    public function maps()
-    {
-        return $this->hasMany(ImaginaryMap::class);
     }
 
     public function user(): BelongsTo
