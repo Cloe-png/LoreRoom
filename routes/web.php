@@ -4,12 +4,16 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterRelationController;
 use App\Http\Controllers\ChronicleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FactionController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\WorldController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\GenealogyController;
+use App\Http\Controllers\JobController;
+use App\Http\Controllers\LoreController;
+use App\Http\Controllers\SpeciesController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -40,6 +44,10 @@ Route::middleware(['auth', 'temp.token', 'world.selected'])->group(function () {
     Route::post('manage/worlds/{world}/switch', [WorldController::class, 'switch'])->name('manage.worlds.switch');
     Route::resource('manage/worlds', WorldController::class)->names('manage.worlds');
     Route::resource('manage/characters', CharacterController::class)->names('manage.characters');
+    Route::resource('manage/factions', FactionController::class)->names('manage.factions');
+    Route::resource('manage/jobs', JobController::class)->names('manage.jobs');
+    Route::resource('manage/lore', LoreController::class)->names('manage.lore');
+    Route::resource('manage/species', SpeciesController::class)->names('manage.species');
     Route::resource('manage/places', PlaceController::class)->names('manage.places');
     Route::get('manage/chronicles/global', [ChronicleController::class, 'globalTimeline'])->name('manage.chronicles.global');
     Route::get('manage/chronicles/characters/{character}', [ChronicleController::class, 'characterTimeline'])->name('manage.chronicles.character');

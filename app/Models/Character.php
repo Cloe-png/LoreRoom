@@ -208,6 +208,26 @@ class Character extends Model
             ->orderBy('id');
     }
 
+    public function factions()
+    {
+        return $this->belongsToMany(Faction::class, 'faction_memberships', 'character_id', 'faction_id')
+            ->withPivot(['role', 'grade', 'joined_at', 'status'])
+            ->withTimestamps()
+            ->orderBy('name');
+    }
+
+    public function educations()
+    {
+        return $this->hasMany(CharacterEducation::class)->orderBy('start_year')->orderBy('id');
+    }
+
+    public function species()
+    {
+        return $this->belongsToMany(Species::class, 'character_species', 'character_id', 'species_id')
+            ->withTimestamps()
+            ->orderBy('name');
+    }
+
     public function getDisplayNameAttribute()
     {
         $full = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));

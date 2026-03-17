@@ -296,6 +296,17 @@
                         <div class="field"><label>Cheveux</label><input type="text" name="hair_color" value="{{ old('hair_color') }}"></div>
                         <div class="field"><label>Yeux</label><input type="text" name="eye_color" value="{{ old('eye_color') }}"></div>
                     </div>
+                    <div class="field">
+                        <label>Espèces / races</label>
+                        <select name="species_ids[]" multiple size="5">
+                            @foreach($speciesOptions as $species)
+                                <option value="{{ $species->id }}" {{ in_array((int) $species->id, $selectedSpeciesIds ?? [], true) ? 'selected' : '' }}>
+                                    {{ $species->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <p class="muted">Maintiens Ctrl (ou Cmd) pour sélectionner plusieurs espèces.</p>
+                    </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks') }}</textarea></div>
                     <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style') }}</textarea></div>
                 </div>
@@ -345,7 +356,21 @@
                 @foreach(($jobRows ?? []) as $i => $job)
                     <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
                         <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;"><label>Métier</label><input type="text" name="jobs[{{ $i }}][job_name]" value="{{ $job['job_name'] ?? '' }}"></div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Métier (liste)</label>
+                                <select name="jobs[{{ $i }}][job_id]" data-job-select>
+                                    <option value="">-</option>
+                                    @foreach($jobOptions as $opt)
+                                        <option value="{{ $opt->id }}" {{ (string)($job['job_id'] ?? '') === (string)$opt->id ? 'selected' : '' }}>
+                                            {{ $opt->name }}{{ $opt->is_default ? ' · défaut' : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Métier (custom)</label>
+                                <input type="text" name="jobs[{{ $i }}][job_name]" value="{{ $job['job_name'] ?? '' }}" placeholder="Si non présent dans la liste" list="job-name-options">
+                            </div>
                             <div class="field"><label>Année début</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][start_year]" value="{{ $job['start_year'] ?? '' }}"></div>
                             <div class="field"><label>Année fin</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][end_year]" value="{{ $job['end_year'] ?? '' }}"></div>
                         </div>
@@ -355,6 +380,72 @@
                 @endforeach
             </div>
             <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-job-btn">Ajouter un métier</button></div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary>Parcours scolaire</summary>
+                <div class="accordion-body">
+            <div id="educations-list">
+                @foreach(($educationRows ?? []) as $i => $row)
+                    <div class="panel" data-education-row style="margin-top:10px; padding:10px;">
+                        <div class="grid-4">
+                            <div class="field" style="grid-column: span 2;">
+                                <label>École / Université</label>
+                                <select name="educations[{{ $i }}][faction_id]">
+                                    <option value="">Aucune</option>
+                                    @foreach($factions as $faction)
+                                        <option value="{{ $faction->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$faction->id ? 'selected' : '' }}>
+                                            {{ $faction->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Diplôme</label>
+                                <select name="educations[{{ $i }}][diploma_id]">
+                                    <option value="">Aucun</option>
+                                    @foreach($diplomas as $diploma)
+                                        @php
+                                            $label = $diploma->name;
+                                            $school = optional($diploma->faction)->name;
+                                            if ($school) {
+                                                $label .= ' (' . $school . ')';
+                                            }
+                                            if ($diploma->level) {
+                                                $label .= ' - ' . $diploma->level;
+                                            }
+                                        @endphp
+                                        <option value="{{ $diploma->id }}" {{ (string)($row['diploma_id'] ?? '') === (string)$diploma->id ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid-4">
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Spécialité / filière</label>
+                                <input type="text" name="educations[{{ $i }}][field]" value="{{ $row['field'] ?? '' }}">
+                            </div>
+                            <div class="field">
+                                <label>Année début</label>
+                                <input type="number" min="1" max="9999" name="educations[{{ $i }}][start_year]" value="{{ $row['start_year'] ?? '' }}">
+                            </div>
+                            <div class="field">
+                                <label>Année fin</label>
+                                <input type="number" min="1" max="9999" name="educations[{{ $i }}][end_year]" value="{{ $row['end_year'] ?? '' }}">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Notes</label>
+                            <textarea name="educations[{{ $i }}][notes]">{{ $row['notes'] ?? '' }}</textarea>
+                        </div>
+                        <button class="btn danger" type="button" data-remove-education>Retirer</button>
+                    </div>
+                @endforeach
+            </div>
+            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-education-btn">Ajouter un diplôme</button></div>
                 </div>
             </details>
 
@@ -431,7 +522,19 @@
     <template id="job-row-template">
         <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Métier</label><input type="text" data-field="job_name"></div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Métier (liste)</label>
+                    <select data-field="job_id" data-job-select>
+                        <option value="">-</option>
+                        @foreach($jobOptions as $opt)
+                            <option value="{{ $opt->id }}">{{ $opt->name }}{{ $opt->is_default ? ' · défaut' : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Métier (custom)</label>
+                    <input type="text" data-field="job_name" placeholder="Si non présent dans la liste" list="job-name-options">
+                </div>
                 <div class="field"><label>Année début</label><input type="number" min="1" max="9999" data-field="start_year"></div>
                 <div class="field"><label>Année fin</label><input type="number" min="1" max="9999" data-field="end_year"></div>
             </div>
@@ -439,6 +542,66 @@
             <button class="btn danger" type="button" data-remove-job>Retirer</button>
         </div>
     </template>
+
+    <template id="education-row-template">
+        <div class="panel" data-education-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>École / Université</label>
+                    <select data-field="faction_id">
+                        <option value="">Aucune</option>
+                        @foreach($factions as $faction)
+                            <option value="{{ $faction->id }}">{{ $faction->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Diplôme</label>
+                    <select data-field="diploma_id">
+                        <option value="">Aucun</option>
+                        @foreach($diplomas as $diploma)
+                            @php
+                                $label = $diploma->name;
+                                $school = optional($diploma->faction)->name;
+                                if ($school) {
+                                    $label .= ' (' . $school . ')';
+                                }
+                                if ($diploma->level) {
+                                    $label .= ' - ' . $diploma->level;
+                                }
+                            @endphp
+                            <option value="{{ $diploma->id }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Spécialité / filière</label>
+                    <input type="text" data-field="field">
+                </div>
+                <div class="field">
+                    <label>Année début</label>
+                    <input type="number" min="1" max="9999" data-field="start_year">
+                </div>
+                <div class="field">
+                    <label>Année fin</label>
+                    <input type="number" min="1" max="9999" data-field="end_year">
+                </div>
+            </div>
+            <div class="field">
+                <label>Notes</label>
+                <textarea data-field="notes"></textarea>
+            </div>
+            <button class="btn danger" type="button" data-remove-education>Retirer</button>
+        </div>
+    </template>
+
+    <datalist id="job-name-options">
+        @foreach($jobOptions as $opt)
+            <option value="{{ $opt->name }}"></option>
+        @endforeach
+    </datalist>
 
     <template id="gallery-row-template">
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
@@ -515,6 +678,18 @@
             bindCollection('relations-list', 'add-relation-btn', 'relation-row-template', 'data-relation-row', 'data-remove-relation', 'relations');
             bindCollection('items-list', 'add-item-btn', 'item-row-template', 'data-item-row', 'data-remove-item', 'items');
             bindCollection('jobs-list', 'add-job-btn', 'job-row-template', 'data-job-row', 'data-remove-job', 'jobs');
+            bindCollection('educations-list', 'add-education-btn', 'education-row-template', 'data-education-row', 'data-remove-education', 'educations');
+
+            document.addEventListener('change', function (event) {
+                const target = event.target;
+                if (!target || !target.matches('[data-job-select]')) return;
+                const panel = target.closest('.panel');
+                const nameInput = panel ? panel.querySelector('input[name*="[job_name]"], input[data-field="job_name"]') : null;
+                const label = target.options[target.selectedIndex]?.textContent || '';
+                if (nameInput && label && label !== '-') {
+                    nameInput.value = label.replace(' · défaut', '').trim();
+                }
+            });
             const galleryList = document.getElementById('gallery-list');
             const addGalleryBtn = document.getElementById('add-gallery-btn');
             const galleryTpl = document.getElementById('gallery-row-template');

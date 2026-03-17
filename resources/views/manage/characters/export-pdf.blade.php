@@ -77,6 +77,7 @@
     <h2>Apparence et psychologie</h2>
     <p><span class="label">Cheveux:</span> {{ $character->hair_color ?: $character->hair_eyes ?: '-' }}</p>
     <p><span class="label">Yeux:</span> {{ $character->eye_color ?: $character->hair_eyes ?: '-' }}</p>
+    <p><span class="label">Espèces / races:</span> {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}</p>
     <p><span class="label">Marques:</span> {{ $character->marks ?: '-' }}</p>
     <p><span class="label">Style:</span> {{ $character->clothing_style ?: '-' }}</p>
     <p><span class="label">Qualités:</span> {{ $character->qualities ?: '-' }}</p>
@@ -119,6 +120,29 @@
                     <td>{{ $job->start_year ?: '-' }}</td>
                     <td>{{ $job->end_year ?: '-' }}</td>
                     <td>{{ $job->notes ?: '-' }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    @endif
+</div>
+
+<div class="section">
+    <h2>Parcours scolaire</h2>
+    @if($character->educations->isEmpty())
+        <p class="muted">Aucune entrée scolaire.</p>
+    @else
+        <table class="tbl">
+            <thead><tr><th>École</th><th>Diplôme</th><th>Filière</th><th>Début</th><th>Fin</th><th>Notes</th></tr></thead>
+            <tbody>
+            @foreach($character->educations as $edu)
+                <tr>
+                    <td>{{ optional($edu->faction)->name ?: '-' }}</td>
+                    <td>{{ optional($edu->diploma)->name ?: '-' }}</td>
+                    <td>{{ $edu->field ?: '-' }}</td>
+                    <td>{{ $edu->start_year ?: '-' }}</td>
+                    <td>{{ $edu->end_year ?: '-' }}</td>
+                    <td>{{ $edu->notes ?: '-' }}</td>
                 </tr>
             @endforeach
             </tbody>

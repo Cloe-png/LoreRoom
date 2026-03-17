@@ -304,6 +304,9 @@
                 <p class="dl-row"><strong>Taille:</strong> {{ $character->height ?: '-' }}</p>
                 <p class="dl-row"><strong>Cheveux:</strong> {{ $character->hair_color ?: $character->hair_eyes ?: '-' }}</p>
                 <p class="dl-row"><strong>Yeux:</strong> {{ $character->eye_color ?: $character->hair_eyes ?: '-' }}</p>
+                <p class="dl-row"><strong>Espèces / races:</strong>
+                    {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}
+                </p>
                 <p class="dl-row"><strong>Marques:</strong> {{ $character->marks ?: '-' }}</p>
                 <p class="dl-row"><strong>Style vestimentaire:</strong> {{ $character->clothing_style ?: '-' }}</p>
             </article>
@@ -341,10 +344,41 @@
                             <tbody>
                                 @foreach($character->jobs as $job)
                                     <tr>
-                                        <td>{{ $job->job_name }}</td>
+                                        <td>
+                                            @if($job->job)
+                                                <a href="{{ route('manage.jobs.show', $job->job) }}">{{ $job->job_name }}</a>
+                                            @else
+                                                {{ $job->job_name }}
+                                            @endif
+                                        </td>
                                         <td>{{ $job->start_year ?: '-' }}</td>
                                         <td>{{ $job->end_year ?: '-' }}</td>
                                         <td>{{ $job->notes ?: '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </article>
+
+            <article class="section-card full-width">
+                <h3>Parcours scolaire</h3>
+                @if($character->educations->isEmpty())
+                    <p class="muted">Aucune entrée scolaire.</p>
+                @else
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>École</th><th>Diplôme</th><th>Filière</th><th>Début</th><th>Fin</th><th>Notes</th></tr></thead>
+                            <tbody>
+                                @foreach($character->educations as $edu)
+                                    <tr>
+                                        <td>{{ optional($edu->faction)->name ?: '-' }}</td>
+                                        <td>{{ optional($edu->diploma)->name ?: '-' }}</td>
+                                        <td>{{ $edu->field ?: '-' }}</td>
+                                        <td>{{ $edu->start_year ?: '-' }}</td>
+                                        <td>{{ $edu->end_year ?: '-' }}</td>
+                                        <td>{{ $edu->notes ?: '-' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

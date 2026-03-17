@@ -155,6 +155,72 @@
                 text-decoration-thickness: 2px;
                 text-underline-offset: 4px;
             }
+            .nav-accordion {
+                border: 1px dashed rgba(111, 86, 57, .35);
+                border-radius: 10px;
+                margin: 8px 6px 0;
+                background: rgba(255,255,255,.35);
+                overflow: hidden;
+                width: calc(100% - 12px);
+            }
+            .nav-accordion > summary {
+                cursor: pointer;
+                padding: 8px 10px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                font-size: .84rem;
+                letter-spacing: .08em;
+                text-transform: uppercase;
+                color: #5f4422;
+                font-family: "Cinzel","Times New Roman",serif;
+                list-style: none;
+                background: rgba(255,255,255,.32);
+                border-bottom: 1px dashed rgba(111, 86, 57, .25);
+            }
+            .nav-accordion > summary::after {
+                content: "▸";
+                font-size: .9rem;
+                color: #6b4b2a;
+                transition: transform 140ms ease;
+            }
+            .nav-accordion[open] > summary::after {
+                transform: rotate(90deg);
+            }
+            .nav-accordion > summary::-webkit-details-marker { display: none; }
+            .nav-accordion-body { padding: 8px 10px 10px; }
+            .nav-faction-item {
+                display: grid;
+                gap: 6px;
+                padding: 6px 0;
+                border-bottom: 1px dashed rgba(111, 86, 57, .25);
+            }
+            .nav-faction-item:last-child { border-bottom: 0; }
+            .nav-faction-name {
+                color: #2f2418;
+                text-decoration: none;
+                font-size: .9rem;
+            }
+            .nav-faction-name:hover { text-decoration: underline; }
+            .nav-faction-actions {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .btn-mini {
+                border: 1px solid rgba(89, 65, 37, .38);
+                background: rgba(255,255,255,.7);
+                color: #2f2418;
+                border-radius: 6px;
+                padding: 4px 8px;
+                font-size: .78rem;
+                font-family: "Segoe Print","Comic Sans MS",cursive;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn-mini.danger { background: rgba(236, 184, 184, .85); color:#4a1f1f; }
+            .btn-mini.secondary { background: rgba(189, 208, 237, .85); color:#1f2a3d; }
             .main { display:flex; flex-direction:column; min-width:0; }
             header {
                 padding:14px 18px;
@@ -331,6 +397,11 @@
                 padding:9px 10px;
                 font-family:inherit;
             }
+            .field input[type="color"] {
+                height:44px;
+                padding:4px;
+                cursor:pointer;
+            }
             .field textarea { min-height:120px; resize:vertical; }
             .flash {
                 margin-bottom:12px; padding:10px 12px; border-radius:8px;
@@ -373,6 +444,15 @@
                         <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}">
                             <span class="nav-name">Personnages</span>
                         </a>
+                        <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}">
+                            <span class="nav-name">Métiers</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.lore.*')) active @endif" href="{{ route('manage.lore.index') }}">
+                            <span class="nav-name">Lore</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.species.index') }}">
+                            <span class="nav-name">Espèces</span>
+                        </a>
                         <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}">
                             <span class="nav-name">Lieux</span>
                         </a>
@@ -388,6 +468,38 @@
                         <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}">
                             <span class="nav-name">Galerie</span>
                         </a>
+                    </div>
+                    <div class="nav-group">
+                        @php
+                            $factionsOpen = request()->routeIs('manage.factions.*') || (isset($sidebarFactions) && $sidebarFactions->isNotEmpty());
+                        @endphp
+                        <details class="nav-accordion" {{ $factionsOpen ? 'open' : '' }}>
+                            <summary>Factions / Organisations</summary>
+                            <div class="nav-accordion-body">
+                                <div class="nav-faction-actions" style="margin-bottom:6px;">
+                                    <a class="btn-mini secondary" href="{{ route('manage.factions.index') }}">Voir toutes</a>
+                                    <a class="btn-mini secondary" href="{{ route('manage.factions.create') }}">Créer</a>
+                                </div>
+                                @if(empty($sidebarFactions) || $sidebarFactions->isEmpty())
+                                    <p class="muted" style="margin:8px 0 0;">Aucune faction pour le moment.</p>
+                                @else
+                                    @foreach($sidebarFactions as $sidebarFaction)
+                                        <div class="nav-faction-item">
+                                            <a class="nav-faction-name" href="{{ route('manage.factions.show', $sidebarFaction) }}">
+                                                {{ $sidebarFaction->name }}
+                                            </a>
+                                            <div class="nav-faction-actions">
+                                                <a class="btn-mini secondary" href="{{ route('manage.factions.edit', $sidebarFaction) }}">Éditer</a>
+                                                <form class="inline" method="POST" action="{{ route('manage.factions.destroy', $sidebarFaction) }}">
+                                                    @csrf @method('DELETE')
+                                                    <button class="btn-mini danger" type="submit">Supprimer</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                        </details>
                     </div>
 
                     <div class="sidebar-bottom">

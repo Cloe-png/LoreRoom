@@ -5,14 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CharacterJob extends Model
+class CharacterEducation extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'character_id',
-        'job_id',
-        'job_name',
+        'faction_id',
+        'diploma_id',
+        'field',
         'start_year',
         'end_year',
         'notes',
@@ -23,9 +24,13 @@ class CharacterJob extends Model
         return $this->belongsTo(Character::class);
     }
 
-    public function job()
+    public function faction()
     {
-        return $this->belongsTo(Job::class);
+        return $this->belongsTo(Faction::class);
+    }
+
+    public function diploma()
+    {
+        return $this->belongsTo(Diploma::class);
     }
 }
-
