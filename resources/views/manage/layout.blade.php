@@ -136,6 +136,7 @@
                 background: transparent;
                 box-shadow: none;
                 transition: transform 140ms ease, filter 140ms ease;
+                align-items: flex-start;
             }
             .nav-name {
                 font-weight: 600;
@@ -177,6 +178,7 @@
                 width: 100%;
                 list-style: none;
                 background: transparent;
+                text-align: left;
             }
             .nav-accordion > summary.nav-link {
                 flex-direction: row;
@@ -445,16 +447,9 @@
                         <h1>LoreRoom</h1>
                     </div>
                     <div class="nav-group">
-                        <details class="nav-accordion" {{ request()->routeIs('manage.index') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Accueil</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.index') }}">Voir</a>
-                                </div>
-                            </div>
-                        </details>
+                        <a class="nav-link @if(request()->routeIs('manage.index')) active @endif" href="{{ route('manage.index') }}">
+                            <span class="nav-name">Accueil</span>
+                        </a>
                     </div>
                     <div class="nav-group">
                         <details class="nav-accordion" {{ request()->routeIs('manage.worlds.*') ? 'open' : '' }}>
