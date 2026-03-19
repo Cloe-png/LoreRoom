@@ -487,6 +487,9 @@
                         <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}">
                             <span class="nav-name">Factions / Organisations</span>
                         </a>
+                        <a class="nav-link @if(request()->routeIs('manage.suggestions.*')) active @endif" href="{{ route('manage.suggestions.index') }}">
+                            <span class="nav-name">Suggestions</span>
+                        </a>
                     </div>
 
                     <div class="sidebar-bottom">

@@ -8,6 +8,7 @@ use App\Http\Controllers\FactionController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PlaceController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\WorldController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\GenealogyController;
@@ -38,6 +39,7 @@ Route::get('/media/{path}', [MediaController::class, 'show'])
 
 Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
     Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
+    Route::get('manage/suggestions', [SuggestionController::class, 'index'])->name('manage.suggestions.index');
     Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');
     Route::get('manage/arbre-genealogique', [GenealogyController::class, 'index'])->name('manage.genealogy.index');
     Route::get('manage/characters/{character}/export-pdf', [CharacterController::class, 'exportPdf'])->name('manage.characters.export-pdf');
