@@ -36,7 +36,7 @@ Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.show');
 
-Route::middleware(['auth', 'temp.token', 'world.selected'])->group(function () {
+Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
     Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
     Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');
     Route::get('manage/arbre-genealogique', [GenealogyController::class, 'index'])->name('manage.genealogy.index');

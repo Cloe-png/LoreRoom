@@ -64,6 +64,7 @@ class Kernel extends HttpKernel
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'temp.token' => \App\Http\Middleware\EnsureTemporaryLoginToken::class,
+        'session.activity' => \App\Http\Middleware\EnsureSessionActivity::class,
         'world.selected' => \App\Http\Middleware\EnsureWorldSelected::class,
     ];
 }

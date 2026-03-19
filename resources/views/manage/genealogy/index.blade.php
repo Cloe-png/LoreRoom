@@ -137,10 +137,7 @@
             background: #ffffff;
         }
         .genealogy-legend-floating .dot.mort {
-            background: #eef2f6;
-        }
-        .genealogy-legend-floating .dot.disparu {
-            background: #fff3d6;
+            background: #f7dede;
         }
     </style>
     <section class="panel" style="margin-top:0;">
@@ -208,9 +205,9 @@
         <div class="genealogy-legend-floating">
             <span class="item"><span class="line"></span> Enfant</span>
             <span class="item"><span class="line couple"></span> Couple</span>
+            <span class="item"><span class="line couple" style="border-top-style:dotted; opacity:.55;"></span> Ex (fantôme)</span>
             <span class="item"><span class="dot vivant"></span> Vivant</span>
             <span class="item"><span class="dot mort"></span> Mort</span>
-            <span class="item"><span class="dot disparu"></span> Disparu</span>
             <span class="hint">Glisser: déplacer • Molette: zoom</span>
         </div>
     @endif
@@ -229,6 +226,7 @@
                     'spouse_id' => (int) ($node['spouse_id'] ?? 0),
                     'status' => (string) ($node['status'] ?? ''),
                     'is_dead' => (($node['status'] ?? '') === 'mort'),
+                    'is_ghost' => (bool) ($node['is_ghost'] ?? false),
                     'is_selected' => ((int) $node['id'] === (int) $selectedId),
                     'image' => !empty($node['image_path']) ? route('media.show', ['path' => $node['image_path']], false) : null,
                     'level' => (int) ($node['level'] ?? 0),
@@ -260,11 +258,26 @@
                     nodes.forEach(n=>{ if(n.spouse_id&&ids.has(n.spouse_id)) addPair(n.id,n.spouse_id); });
                     nodes.forEach(ch=>{ const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m) addPair(f,m); });
                     const partner=new Map(); cp.forEach(([a,b])=>{ if(!partner.has(a))partner.set(a,[]); if(!partner.has(b))partner.set(b,[]); partner.get(a).push(b); partner.get(b).push(a); });
+                    const exPairs=[];
+                    edges.forEach(e=>{
+                        if((e.kind||'')!=='ex') return;
+                        const a=Number(e.from||0), b=Number(e.to||0);
+                        if(!a || !b || a===b || !ids.has(a) || !ids.has(b)) return;
+                        const l=Math.min(a,b), r=Math.max(a,b);
+                        exPairs.push([l,r]);
+                    });
+                    const exPartner=new Map();
+                    exPairs.forEach(([a,b])=>{
+                        if(!exPartner.has(a)) exPartner.set(a,[]);
+                        if(!exPartner.has(b)) exPartner.set(b,[]);
+                        exPartner.get(a).push(b);
+                        exPartner.get(b).push(a);
+                    });
 
                     const W=200,H=92,DX=68,DXC=34,DY=186,PX=70,PY=40;
                     const levels=[...new Set(nodes.map(n=>n.level))].sort((a,b)=>a-b);
                     const pos=new Map();
-                    const unitWidth=(u)=>(u.length===2?(W*2+DXC):W);
+                    const unitWidth=(u)=>(W*u.length + DXC*(Math.max(0,u.length-1)));
                     const buildUnits=(lvl)=>{
                         const row=nodes
                             .filter(n=>n.level===lvl)
@@ -273,13 +286,24 @@
                         row.forEach(n=>{
                             if(used.has(n.id)) return;
                             const p=(partner.get(n.id)||[]).find(x=>!used.has(x)&&byId.get(x)&&byId.get(x).level===lvl);
+                            const ex=(exPartner.get(n.id)||[]).find(x=>!used.has(x)&&byId.get(x)&&byId.get(x).level===lvl && x!==p);
                             if(p){
                                 used.add(n.id); used.add(p);
-                                u.push([n.id,p]);
-                            } else {
-                                used.add(n.id);
-                                u.push([n.id]);
+                                if(ex){
+                                    used.add(ex);
+                                    u.push([p, n.id, ex]);
+                                } else {
+                                    u.push([n.id,p]);
+                                }
+                                return;
                             }
+                            if(ex){
+                                used.add(n.id); used.add(ex);
+                                u.push([n.id,ex]);
+                                return;
+                            }
+                            used.add(n.id);
+                            u.push([n.id]);
                         });
                         return u;
                     };
@@ -323,8 +347,8 @@
                             let x=(svgW-rw)/2;
                             ordered.forEach((item,idx)=>{
                                 const a=item.u;
-                                if(a.length===2){ pos.set(a[0],{x,y}); pos.set(a[1],{x:x+W+DXC,y}); x+=W*2+DXC; }
-                                else { pos.set(a[0],{x,y}); x+=W; }
+                                a.forEach((id, i)=>{ pos.set(id,{x:x + i*(W+DXC), y}); });
+                                x+=unitWidth(a);
                                 if(idx<ordered.length-1) x+=DX;
                             });
                             return;
@@ -335,9 +359,8 @@
                             const desired=Number.isFinite(item.pref)?(item.pref-item.w/2):cursor;
                             const left=Math.max(cursor, desired);
                             const a=item.u;
-                            if(a.length===2){ pos.set(a[0],{x:left,y}); pos.set(a[1],{x:left+W+DXC,y}); }
-                            else { pos.set(a[0],{x:left,y}); }
-                            cursor=left+item.w+DX;
+                            a.forEach((id, i)=>{ pos.set(id,{x:left + i*(W+DXC), y}); });
+                            cursor=left+unitWidth(a)+DX;
                         });
                     });
 
@@ -360,10 +383,10 @@
                     viewport.appendChild(ng);
                     svg.appendChild(viewport);
                     const drawLine=(x1,y1,x2,y2,kind)=>{
-                        const lineColor=kind==='couple' ? '#3d414a' : '#2a2d33';
-                        const lineOpacity=kind==='couple' ? '0.88' : '0.94';
-                        const lineWidth=kind==='couple' ? 2.8 : 2.4;
-                        const dash=kind==='couple' ? '10 7' : (kind==='sibling' ? '4 6' : '');
+                        const lineColor=kind==='couple' ? '#3d414a' : (kind==='ex' ? '#707783' : '#2a2d33');
+                        const lineOpacity=kind==='couple' ? '0.88' : (kind==='ex' ? '0.55' : '0.94');
+                        const lineWidth=kind==='couple' ? 2.8 : (kind==='ex' ? 2.2 : 2.4);
+                        const dash=kind==='couple' ? '10 7' : (kind==='ex' ? '2 6' : (kind==='sibling' ? '4 6' : ''));
                         eg.appendChild(S('line',{
                             x1,y1,x2,y2,
                             stroke:lineColor,
@@ -398,11 +421,16 @@
                         return `${a}${b}`.trim() || 'P';
                     };
                     const update=(id)=>{ const n=byId.get(Number(id)); if(!n)return; const l=life(n); if(focusName)focusName.textContent=n.label||'Personnage'; if(focusBirth)focusBirth.textContent=`Naissance: ${l.b}`; if(focusDeath)focusDeath.textContent=`Mort: ${l.d}`; };
-                    const statusFill=(status)=>{
+                    const statusFill=(status, isGhost)=>{
                         const s=String(status||'').toLowerCase();
-                        if(s==='mort') return '#eef2f6';
-                        if(s==='disparu') return '#fff3d6';
-                        return '#ffffff';
+                        if(s==='mort') return isGhost ? '#f3e3e3' : '#f7dede';
+                        return isGhost ? '#f4f4f6' : '#ffffff';
+                    };
+                    const statusStroke=(status, isFocused, isGhost)=>{
+                        if(isFocused) return '#2f5fa8';
+                        const s=String(status||'').toLowerCase();
+                        if(s==='mort') return isGhost ? '#b08a8a' : '#8b3d3d';
+                        return isGhost ? '#8a8f99' : '#2e3036';
                     };
                     const renderGraph=()=>{
                         eg.innerHTML='';
@@ -415,6 +443,15 @@
                             const L=A.x<=B.x?A:B,R=A.x<=B.x?B:A;
                             drawLine(L.x+W,L.y+H/2,R.x,R.y+H/2,'couple');
                         });
+                        edges
+                            .filter(e => (e.kind || '') === 'ex')
+                            .forEach(e => {
+                                const a=Number(e.from||0), b=Number(e.to||0);
+                                if(!visible.has(a) || !visible.has(b)) return;
+                                const A=pos.get(a),B=pos.get(b); if(!A||!B)return;
+                                const L=A.x<=B.x?A:B,R=A.x<=B.x?B:A;
+                                drawLine(L.x+W,L.y+H/2,R.x,R.y+H/2,'ex');
+                            });
 
                         fam.forEach(f=>{
                             const parents=(f.parents || []).filter(id=>visible.has(id));
@@ -463,8 +500,16 @@
                             if(!visible.has(n.id)) return;
                             const p=pos.get(n.id); if(!p)return;
                             const isFocused=n.id===currentFocusId;
+                            const isGhost=!!n.is_ghost;
                             const g=S('g',{style:'cursor:pointer', 'data-node':'1'});
-                            g.appendChild(S('rect',{x:p.x,y:p.y,width:W,height:H,rx:14,fill:statusFill(n.status),stroke:isFocused?'#2f5fa8':'#2e3036','stroke-width':isFocused?3:2}));
+                            g.setAttribute('opacity', isGhost ? (isFocused ? '0.85' : '0.55') : '1');
+                            g.appendChild(S('rect',{
+                                x:p.x,y:p.y,width:W,height:H,rx:14,
+                                fill:statusFill(n.status, isGhost),
+                                stroke:statusStroke(n.status, isFocused, isGhost),
+                                'stroke-width':isFocused?3:2,
+                                'stroke-dasharray':isGhost ? '6 6' : ''
+                            }));
                             const parts=toNameParts(String(n.label||'Personnage'));
                             const titleEl=S('title');
                             titleEl.textContent=`${parts.first || ''} ${parts.last || ''}`.trim();
@@ -480,7 +525,13 @@
                             defs.appendChild(clip);
                             defs.appendChild(textClip);
                             g.appendChild(defs);
-                            g.appendChild(S('circle',{cx,cy,r:r+1.5,fill:'#ffffff',stroke:isFocused?'#2f5fa8':'#7f8a99','stroke-width':isFocused?3:2}));
+                            g.appendChild(S('circle',{
+                                cx,cy,r:r+1.5,
+                                fill:'#ffffff',
+                                stroke:isFocused?'#2f5fa8':(isGhost ? '#9aa3ad' : '#7f8a99'),
+                                'stroke-width':isFocused?3:2,
+                                'stroke-dasharray':isGhost ? '5 5' : ''
+                            }));
                             if(n.image){
                                 const img=S('image',{
                                     href:n.image,
@@ -493,7 +544,7 @@
                                 });
                                 g.appendChild(img);
                             } else {
-                                g.appendChild(S('circle',{cx,cy,r,fill:n.is_dead?'#d8e0ea':'#e8edf5'}));
+                                g.appendChild(S('circle',{cx,cy,r,fill:n.is_dead?'#f0cfcf':'#e8edf5'}));
                                 const init=S('text',{x:cx,y:cy+5,'text-anchor':'middle','font-family':'Georgia, serif','font-size':'17',fill:'#3a4453','font-weight':'700'});
                                 init.textContent=initials(parts);
                                 g.appendChild(init);

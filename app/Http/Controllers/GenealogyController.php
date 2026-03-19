@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Character;
 use App\Models\CharacterRelation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class GenealogyController extends Controller
@@ -52,7 +53,8 @@ class GenealogyController extends Controller
         }
 
         $couplePairs = $this->loadCouplePairs($characters);
-        [$nodes, $edges] = $this->buildFamilyGraph($characters, $rootIds->all(), 10, $couplePairs);
+        $exPairs = $this->loadExPairs($characters);
+        [$nodes, $edges] = $this->buildFamilyGraph($characters, $rootIds->all(), 10, $couplePairs, $exPairs);
         $layout = $this->buildLayout($nodes);
 
         return view('manage.genealogy.index', [
@@ -64,7 +66,7 @@ class GenealogyController extends Controller
         ]);
     }
 
-    private function buildFamilyGraph(Collection $characters, array $rootIds, int $depth, Collection $couplePairs): array
+    private function buildFamilyGraph(Collection $characters, array $rootIds, int $depth, Collection $couplePairs, Collection $exPairs): array
     {
         $rootIds = collect($rootIds)->map(function ($id) {
             return (int) $id;
@@ -173,10 +175,48 @@ class GenealogyController extends Controller
             }
         }
 
-        $levels = $this->enforceGenerationalLevels($levels, $characters, $couplePairs);
+        $baseIncluded = $levels->keys()->map(fn ($id) => (int) $id)->flip();
+        $ghostIds = collect();
+
+        // Include ex partners (ghosted) for any visible character.
+        foreach ($exPairs as $pair) {
+            $leftId = (int) ($pair['a'] ?? 0);
+            $rightId = (int) ($pair['b'] ?? 0);
+            if ($leftId <= 0 || $rightId <= 0 || !$byId->has($leftId) || !$byId->has($rightId)) {
+                continue;
+            }
+
+            $leftIncluded = $levels->has($leftId);
+            $rightIncluded = $levels->has($rightId);
+            if (!$leftIncluded && !$rightIncluded) {
+                continue;
+            }
+
+            if (!$leftIncluded) {
+                $levels->put($leftId, (int) $levels->get($rightId, 0));
+                if (!isset($baseIncluded[$leftId])) {
+                    $ghostIds->push($leftId);
+                }
+            }
+            if (!$rightIncluded) {
+                $levels->put($rightId, (int) $levels->get($leftId, 0));
+                if (!isset($baseIncluded[$rightId])) {
+                    $ghostIds->push($rightId);
+                }
+            }
+
+            $edges->push([
+                'from' => $leftId,
+                'to' => $rightId,
+                'label' => 'ex',
+                'kind' => 'ex',
+            ]);
+        }
+
+        $levels = $this->enforceGenerationalLevels($levels, $characters, $couplePairs, $exPairs);
 
         $nodes = $levels
-            ->map(function ($level, $id) use ($byId) {
+            ->map(function ($level, $id) use ($byId, $ghostIds) {
                 $character = $byId->get((int) $id);
                 $birthDate = optional($character->birth_date)->format('Y-m-d');
                 $deathDate = optional($character->death_date)->format('Y-m-d');
@@ -186,6 +226,7 @@ class GenealogyController extends Controller
                     'name' => $character ? $character->display_name : ('#' . $id),
                     'gender' => $character->gender ?? null,
                     'status' => $character->status ?? null,
+                    'is_ghost' => $ghostIds->contains((int) $id),
                     'father_id' => $character ? (int) ($character->father_id ?? 0) : 0,
                     'mother_id' => $character ? (int) ($character->mother_id ?? 0) : 0,
                     'spouse_id' => $character ? (int) ($character->spouse_id ?? 0) : 0,
@@ -236,7 +277,7 @@ class GenealogyController extends Controller
         return [$nodes, $edges];
     }
 
-    private function enforceGenerationalLevels(Collection $levels, Collection $characters, Collection $couplePairs): Collection
+    private function enforceGenerationalLevels(Collection $levels, Collection $characters, Collection $couplePairs, Collection $exPairs): Collection
     {
         if ($levels->isEmpty()) {
             return $levels;
@@ -296,6 +337,30 @@ class GenealogyController extends Controller
 
                 // Keep generational constraints stable: never pull a node upward toward its children.
                 // For couples, align both partners to the deeper (max) level.
+                $targetLevel = max($leftLevel, $rightLevel);
+                if ($leftLevel !== $targetLevel) {
+                    $normalized->put($leftId, $targetLevel);
+                    $changed = true;
+                }
+                if ($rightLevel !== $targetLevel) {
+                    $normalized->put($rightId, $targetLevel);
+                    $changed = true;
+                }
+            }
+
+            foreach ($exPairs as $pair) {
+                $leftId = (int) ($pair['a'] ?? 0);
+                $rightId = (int) ($pair['b'] ?? 0);
+                if (!$normalized->has($leftId) || !$normalized->has($rightId)) {
+                    continue;
+                }
+
+                $leftLevel = (int) $normalized->get($leftId);
+                $rightLevel = (int) $normalized->get($rightId);
+                if ($leftLevel === $rightLevel) {
+                    continue;
+                }
+
                 $targetLevel = max($leftLevel, $rightLevel);
                 if ($leftLevel !== $targetLevel) {
                     $normalized->put($leftId, $targetLevel);
@@ -408,6 +473,35 @@ class GenealogyController extends Controller
 
         return $spousePairs
             ->merge($relationPairs)
+            ->unique(function (array $pair) {
+                return (int) $pair['a'] . '-' . (int) $pair['b'];
+            })
+            ->values();
+    }
+
+    private function loadExPairs(Collection $characters): Collection
+    {
+        $ids = $characters->pluck('id')->map(fn ($id) => (int) $id)->filter()->values();
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return DB::table('character_exes')
+            ->whereIn('character_id', $ids)
+            ->whereIn('ex_character_id', $ids)
+            ->get(['character_id', 'ex_character_id'])
+            ->map(function ($row) {
+                $left = (int) $row->character_id;
+                $right = (int) $row->ex_character_id;
+                if ($left <= 0 || $right <= 0 || $left === $right) {
+                    return null;
+                }
+                $a = min($left, $right);
+                $b = max($left, $right);
+
+                return ['a' => $a, 'b' => $b];
+            })
+            ->filter()
             ->unique(function (array $pair) {
                 return (int) $pair['a'] . '-' . (int) $pair['b'];
             })

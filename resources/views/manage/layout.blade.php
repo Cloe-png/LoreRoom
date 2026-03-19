@@ -156,6 +156,11 @@
                 text-decoration-thickness: 2px;
                 text-underline-offset: 4px;
             }
+            .nav-name-link {
+                color: inherit;
+                text-decoration: none;
+            }
+            .nav-name-link:hover { text-decoration: underline; }
             .nav-item-actions {
                 display: flex;
                 gap: 6px;
@@ -452,148 +457,36 @@
                         </a>
                     </div>
                     <div class="nav-group">
-                        <details class="nav-accordion" {{ request()->routeIs('manage.worlds.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Mondes</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.worlds.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.worlds.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.characters.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Personnages</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.characters.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.characters.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.jobs.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Métiers</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.jobs.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.jobs.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.lore.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Lore</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.lore.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.lore.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.species.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Espèces</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.species.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.species.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.places.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Lieux</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.places.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.places.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.chronicles.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Frise chronologique</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.chronicles.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.chronicles.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.relations.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Relations personnages</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.relations.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.relations.create') }}">Ajouter</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.genealogy.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Arbre généalogique</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.genealogy.index') }}">Voir</a>
-                                </div>
-                            </div>
-                        </details>
-                        <details class="nav-accordion" {{ request()->routeIs('manage.gallery.*') ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Galerie</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions">
-                                    <a class="btn-mini secondary" href="{{ route('manage.gallery.index') }}">Voir</a>
-                                </div>
-                            </div>
-                        </details>
-                    </div>
-                    <div class="nav-group">
-                        @php
-                            $factionsOpen = request()->routeIs('manage.factions.*') || (isset($sidebarFactions) && $sidebarFactions->isNotEmpty());
-                        @endphp
-                        <details class="nav-accordion" {{ $factionsOpen ? 'open' : '' }}>
-                            <summary class="nav-link">
-                                <span class="nav-name">Factions / Organisations</span>
-                            </summary>
-                            <div class="nav-accordion-body">
-                                <div class="nav-item-actions" style="margin-bottom:6px;">
-                                    <a class="btn-mini secondary" href="{{ route('manage.factions.index') }}">Voir</a>
-                                    <a class="btn-mini secondary" href="{{ route('manage.factions.create') }}">Ajouter</a>
-                                </div>
-                                @if(empty($sidebarFactions) || $sidebarFactions->isEmpty())
-                                    <p class="muted" style="margin:8px 0 0;">Aucune faction pour le moment.</p>
-                                @else
-                                    @foreach($sidebarFactions as $sidebarFaction)
-                                        <div class="nav-faction-item">
-                                            <a class="nav-faction-name" href="{{ route('manage.factions.show', $sidebarFaction) }}">
-                                                {{ $sidebarFaction->name }}
-                                            </a>
-                                            <div class="nav-faction-actions">
-                                                <a class="btn-mini secondary" href="{{ route('manage.factions.edit', $sidebarFaction) }}">Éditer</a>
-                                                <form class="inline" method="POST" action="{{ route('manage.factions.destroy', $sidebarFaction) }}">
-                                                    @csrf @method('DELETE')
-                                                    <button class="btn-mini danger" type="submit">Supprimer</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                @endif
-                            </div>
-                        </details>
+                        <a class="nav-link @if(request()->routeIs('manage.worlds.*')) active @endif" href="{{ route('manage.worlds.index') }}">
+                            <span class="nav-name">Mondes</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}">
+                            <span class="nav-name">Personnages</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}">
+                            <span class="nav-name">Métiers</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.lore.*') || request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.lore.index') }}">
+                            <span class="nav-name">Lore</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}">
+                            <span class="nav-name">Lieux</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}">
+                            <span class="nav-name">Frise chronologique</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}">
+                            <span class="nav-name">Relations personnages</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.genealogy.*')) active @endif" href="{{ route('manage.genealogy.index') }}">
+                            <span class="nav-name">Arbre généalogique</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}">
+                            <span class="nav-name">Galerie</span>
+                        </a>
+                        <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}">
+                            <span class="nav-name">Factions / Organisations</span>
+                        </a>
                     </div>
 
                     <div class="sidebar-bottom">
