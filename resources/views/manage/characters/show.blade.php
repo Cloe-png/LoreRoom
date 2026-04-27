@@ -304,7 +304,7 @@
                 <p class="dl-row"><strong>Taille:</strong> {{ $character->height ?: '-' }}</p>
                 <p class="dl-row"><strong>Cheveux:</strong> {{ $character->hair_color ?: $character->hair_eyes ?: '-' }}</p>
                 <p class="dl-row"><strong>Yeux:</strong> {{ $character->eye_color ?: $character->hair_eyes ?: '-' }}</p>
-                <p class="dl-row"><strong>Espèces / races:</strong>
+                <p class="dl-row"><strong>Espèces / Races :</strong>
                     {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}
                 </p>
                 <p class="dl-row"><strong>Marques:</strong> {{ $character->marks ?: '-' }}</p>

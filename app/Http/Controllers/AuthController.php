@@ -27,6 +27,7 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
+        $credentials['email'] = mb_strtolower(trim((string) $credentials['email']));
 
         $remember = $request->boolean('remember');
 
@@ -89,7 +90,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Vous êtes déconnecté.');
+        return redirect()->route('login')->with('success', 'Vous etes deconnecte.');
     }
 
     private function issueTemporaryLoginToken(Request $request): void

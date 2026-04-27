@@ -180,9 +180,6 @@
             $focusDeath = empty($focusDeathRaw) ? ($focusIsDead ? '--/--/----' : 'En vie') : $formatDate($focusDeathRaw);
         @endphp
         <section class="panel">
-            <p class="muted" style="margin-top:0;">
-                Arbre descendant classique: parents en haut, enfants et conjoints dessous, puis petits-enfants.
-            </p>
             <div class="genealogy-dates-focus">
                 <span id="focus-name-chip" class="chip">{{ $focusName }}</span>
                 <span id="focus-birth-chip" class="chip birth">Naissance: {{ $focusBirth }}</span>
@@ -205,7 +202,7 @@
         <div class="genealogy-legend-floating">
             <span class="item"><span class="line"></span> Enfant</span>
             <span class="item"><span class="line couple"></span> Couple</span>
-            <span class="item"><span class="line couple" style="border-top-style:dotted; opacity:.55;"></span> Ex (fantôme)</span>
+            <span class="item"><span class="line couple" style="border-top-style:dotted; opacity:.55;"></span> Ex </span>
             <span class="item"><span class="dot vivant"></span> Vivant</span>
             <span class="item"><span class="dot mort"></span> Mort</span>
             <span class="hint">Glisser: déplacer • Molette: zoom</span>
@@ -694,7 +691,7 @@
                                 const png=await exportAsPng();
                                 const jspdfNS=window.jspdf || {};
                                 const jsPDF=jspdfNS.jsPDF;
-                                if(!jsPDF){ throw new Error('Bibliotheque PDF indisponible.'); }
+                                if(!jsPDF){ throw new Error('Bibliothèque PDF indisponible.'); }
                                 const pdf=new jsPDF({orientation:'landscape', unit:'pt', format:'a4'});
                                 const pageW=pdf.internal.pageSize.getWidth();
                                 const pageH=pdf.internal.pageSize.getHeight();
@@ -715,7 +712,7 @@
                         if(ev.key==='-'){ ev.preventDefault(); zoomAt(0.9, root.clientWidth*0.5, root.clientHeight*0.5); }
                         if(ev.key==='0'){ ev.preventDefault(); if(zoomResetBtn) zoomResetBtn.click(); }
                     });
-                } catch(e){ showErr("Erreur JS dans l'arbre genealogique: " + (e&&e.message?e.message:'inconnue')); console.error(e); }
+                } catch(e){ showErr("Erreur JS dans l'arbre généalogique: " + (e&&e.message?e.message:'inconnue')); console.error(e); }
             })();
         </script>
     @endif

@@ -14,7 +14,10 @@ class JobController extends Controller
 
         $jobs = Job::with('world')
             ->when($worldId, function ($query) use ($worldId) {
-                $query->whereNull('world_id')->orWhere('world_id', $worldId);
+                $query->where(function ($scope) use ($worldId) {
+                    $scope->whereNull('world_id')
+                        ->orWhere('world_id', $worldId);
+                });
             }, function ($query) {
                 $query->whereNull('world_id');
             })

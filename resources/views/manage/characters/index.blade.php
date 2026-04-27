@@ -5,18 +5,26 @@
 
 @section('content')
     <div class="stack" style="justify-content: space-between;">
-        <p class="muted">Catalogue des personnages et de leur role narratif.</p>
+        <p class="muted">Catalogue des personnages</p>
         <a class="btn" href="{{ route('manage.characters.create') }}">Nouveau personnage</a>
     </div>
 
     <section class="panel" style="margin-top:8px;">
         <form method="GET" action="{{ route('manage.characters.index') }}" class="stack" style="align-items:flex-end;">
+            
             <div class="field" style="margin:0; min-width:min(420px, 100%);">
-                <label>Recherche personnage</label>
-                <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, prenom, role, monde, qualites...">
+                <label>Recherche avancée</label>
+                <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, prénom...">
+            </div>
+            <div class="stack" style="gap:6px;">
+                <button class="btn secondary" type="submit" name="sort" value="birth_date">Trier par date de naissance</button>
+                <button class="btn secondary" type="submit" name="sort" value="alpha">Trier par ordre alphabétique</button>
+                @if(!empty($sort))
+                    <a class="btn secondary" href="{{ route('manage.characters.index', array_filter(['name' => $name ?? '', 'birth_date' => $birthDate ?? '', 'q' => $q ?? ''])) }}">Tri par défaut</a>
+                @endif
             </div>
             <button class="btn" type="submit">Rechercher</button>
-            @if(!empty($q))
+            @if(!empty($q) || !empty($name) || !empty($birthDate))
                 <a class="btn secondary" href="{{ route('manage.characters.index') }}">Effacer</a>
             @endif
         </form>
@@ -105,8 +113,28 @@
             }
         </style>
 
-        @if(!empty($q))
-            <p class="muted" style="margin-top:0;">Resultats pour: <strong>{{ $q }}</strong></p>
+        @if(!empty($q) || !empty($name) || !empty($birthDate) || !empty($sort))
+            @php
+                $filters = [];
+                if (!empty($name)) {
+                    $filters[] = 'Nom "' . e($name) . '"';
+                }
+                if (!empty($birthDate)) {
+                    $filters[] = 'Date ' . e($birthDate);
+                }
+                if (!empty($q)) {
+                    $filters[] = 'Recherche "' . e($q) . '"';
+                }
+                if (!empty($sort)) {
+                    $filters[] = $sort === 'birth_date'
+                        ? 'Tri date de naissance'
+                        : 'Tri alphabétique';
+                }
+            @endphp
+            <p class="muted" style="margin-top:0;">
+                Resultats pour:
+                {!! collect($filters)->map(fn ($label) => '<strong>' . $label . '</strong>')->implode(' | ') !!}
+            </p>
         @endif
 
         @if($characters->isEmpty())

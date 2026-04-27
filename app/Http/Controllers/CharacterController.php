@@ -35,6 +35,9 @@ class CharacterController extends Controller
     public function index()
     {
         $q = trim(request('q', ''));
+        $name = trim(request('name', ''));
+        $birthDate = trim(request('birth_date', ''));
+        $sort = trim(request('sort', ''));
 
         $characters = Character::with(['world', 'father', 'mother'])
             ->when($q !== '', function ($query) use ($q) {
@@ -65,11 +68,40 @@ class CharacterController extends Controller
                         });
                 });
             })
-            ->latest()
+            ->when($name !== '', function ($query) use ($name) {
+                $query->where(function ($sub) use ($name) {
+                    $like = '%' . $name . '%';
+                    $sub->where('name', 'like', $like)
+                        ->orWhere('first_name', 'like', $like)
+                        ->orWhere('last_name', 'like', $like);
+                });
+            })
+            ->when($birthDate !== '', function ($query) use ($birthDate) {
+                $query->whereDate('birth_date', $birthDate);
+            })
+            ->when($sort === 'alpha', function ($query) {
+                $query->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->orderBy('name');
+            }, function ($query) use ($sort) {
+                if ($sort === 'birth_date') {
+                    $query->orderByRaw('birth_date IS NULL')
+                        ->orderBy('birth_date')
+                        ->orderBy('last_name')
+                        ->orderBy('first_name');
+                } else {
+                    $query->latest();
+                }
+            })
             ->paginate(10)
-            ->appends(['q' => $q]);
+            ->appends([
+                'q' => $q,
+                'name' => $name,
+                'birth_date' => $birthDate,
+                'sort' => $sort,
+            ]);
 
-        return view('manage.characters.index', compact('characters', 'q'));
+        return view('manage.characters.index', compact('characters', 'q', 'name', 'birthDate', 'sort'));
     }
 
     public function create()
@@ -293,7 +325,7 @@ class CharacterController extends Controller
             ]));
         });
 
-        return redirect()->route('manage.characters.index')->with('success', 'Personnage créé avec ses relations.');
+        return redirect()->route('manage.characters.index')->with('success', 'Personnage créé avec succès.');
     }
 
     public function show(Character $character)
