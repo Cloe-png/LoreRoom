@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Controller extends BaseController
@@ -54,6 +55,14 @@ class Controller extends BaseController
         $currentWorldId = $this->currentWorldId();
         if ($currentWorldId && $recordWorldId !== $currentWorldId) {
             throw new NotFoundHttpException();
+        }
+    }
+
+    protected function requireAdmin(): void
+    {
+        $user = Auth::user();
+        if (!$user || (string) ($user->role ?? '') !== 'admin') {
+            throw new AccessDeniedHttpException('Accès administrateur requis.');
         }
     }
 }

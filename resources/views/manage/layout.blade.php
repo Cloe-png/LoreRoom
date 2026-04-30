@@ -493,6 +493,11 @@
                     </div>
 
                     <div class="sidebar-bottom">
+                        @if((string) (auth()->user()->role ?? '') === 'admin')
+                            <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}">
+                                <span class="nav-name">Comptes</span>
+                            </a>
+                        @endif
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="back-portals-link">Déconnexion</button>

@@ -24,10 +24,10 @@ class EnsureWorldSelected
         $allowedMap = array_flip($allowedWorldIds);
 
         if ($worlds->isEmpty()) {
-            if (!$request->routeIs('manage.worlds.*')) {
+            if (!$request->routeIs('manage.worlds.*') && !$request->routeIs('manage.users.*')) {
                 return redirect()
                     ->route('manage.worlds.index')
-                    ->with('success', 'Bienvenue. Cree ton premier monde pour commencer.');
+                    ->with('success', 'Bienvenue. Crée ton premier monde pour commencer.');
             }
 
             $request->session()->forget('selected_world_id');
