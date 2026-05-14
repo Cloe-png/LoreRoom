@@ -27,6 +27,10 @@ class User extends Authenticatable
         'current_world_id',
         'login_token_hash',
         'login_token_expires_at',
+        'failed_login_attempts',
+        'last_failed_login_at',
+        'locked_at',
+        'password_reset_pending_at',
     ];
 
     /**
@@ -48,6 +52,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'current_world_id' => 'integer',
         'login_token_expires_at' => 'datetime',
+        'last_failed_login_at' => 'datetime',
+        'locked_at' => 'datetime',
+        'password_reset_pending_at' => 'datetime',
     ];
 
     public function worlds(): HasMany
@@ -58,5 +65,10 @@ class User extends Authenticatable
     public function currentWorld(): BelongsTo
     {
         return $this->belongsTo(World::class, 'current_world_id');
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(UserLog::class);
     }
 }

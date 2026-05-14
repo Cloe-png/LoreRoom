@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Faction extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected static function booted()
     {
@@ -32,6 +33,7 @@ class Faction extends Model
         'world_id',
         'name',
         'type',
+        'roles',
         'summary',
         'motto',
         'founded_at',
@@ -43,6 +45,7 @@ class Faction extends Model
     ];
 
     protected $casts = [
+        'roles' => 'array',
         'founded_at' => 'date',
     ];
 
@@ -72,6 +75,11 @@ class Faction extends Model
             ->withPivot(['role', 'grade', 'joined_at', 'status'])
             ->withTimestamps()
             ->orderBy('name');
+    }
+
+    public function memberships()
+    {
+        return $this->hasMany(FactionMembership::class)->orderBy('character_id')->orderBy('id');
     }
 
     public function outgoingRelations()

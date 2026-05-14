@@ -6,10 +6,11 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Character extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected static function booted()
     {
@@ -214,6 +215,11 @@ class Character extends Model
             ->withPivot(['role', 'grade', 'joined_at', 'status'])
             ->withTimestamps()
             ->orderBy('name');
+    }
+
+    public function factionMemberships()
+    {
+        return $this->hasMany(FactionMembership::class)->orderBy('faction_id')->orderBy('id');
     }
 
     public function educations()

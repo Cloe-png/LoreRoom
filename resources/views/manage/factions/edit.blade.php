@@ -22,6 +22,10 @@
         if (empty($diplomaRows)) {
             $diplomaRows = [['name' => '', 'level' => '', 'description' => '']];
         }
+        $roleRows = old('roles', $roleRows ?? []);
+        if (empty($roleRows)) {
+            $roleRows = [['name' => '']];
+        }
     @endphp
 
     <style>
@@ -146,6 +150,26 @@
             </div>
 
             <details class="accordion" open>
+                <summary>Rôles de la faction</summary>
+                <div class="accordion-body">
+                    <div id="roles-list">
+                        @foreach($roleRows as $i => $row)
+                            <div class="panel row-card" data-role-row>
+                                <div class="field">
+                                    <label>Nom du rôle</label>
+                                    <input type="text" name="roles[{{ $i }}][name]" value="{{ $row['name'] ?? '' }}" placeholder="Capitaine, vice-capitaine, soldat...">
+                                </div>
+                                <button class="btn danger" type="button" data-remove-role>Retirer</button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="stack" style="margin-bottom:10px;">
+                        <button class="btn secondary" type="button" id="add-role-btn">Ajouter un rôle</button>
+                    </div>
+                </div>
+            </details>
+
+            <details class="accordion" open>
                 <summary>Membres</summary>
                 <div class="accordion-body">
                     <div id="members-list">
@@ -165,7 +189,15 @@
                                     </div>
                                 <div class="field" style="grid-column: span 2;">
                                     <label>Rôle dans la faction</label>
-                                    <input type="text" name="members[{{ $i }}][role]" value="{{ $row['role'] ?? '' }}" placeholder="Chef, soldat, espion...">
+                                    <select name="members[{{ $i }}][role]" data-member-role-select>
+                                        <option value="">-</option>
+                                        @foreach($roleRows as $roleRow)
+                                            @php $roleName = trim((string) ($roleRow['name'] ?? '')); @endphp
+                                            @if($roleName !== '')
+                                                <option value="{{ $roleName }}" {{ ($row['role'] ?? '') === $roleName ? 'selected' : '' }}>{{ $roleName }}</option>
+                                            @endif
+                                        @endforeach
+                                    </select>
                                 </div>
                                 <div class="field">
                                     <label>Grade</label>
@@ -295,7 +327,9 @@
                 </div>
                 <div class="field" style="grid-column: span 2;">
                     <label>Rôle dans la faction</label>
-                    <input type="text" data-field="role" placeholder="Chef, soldat, espion...">
+                    <select data-field="role" data-member-role-select>
+                        <option value="">-</option>
+                    </select>
                 </div>
                 <div class="field">
                     <label>Grade</label>
@@ -375,6 +409,16 @@
         </div>
     </template>
 
+    <template id="role-row-template">
+        <div class="panel row-card" data-role-row>
+            <div class="field">
+                <label>Nom du rôle</label>
+                <input type="text" data-field="name" placeholder="Capitaine, vice-capitaine, soldat...">
+            </div>
+            <button class="btn danger" type="button" data-remove-role>Retirer</button>
+        </div>
+    </template>
+
     <script>
         (function () {
             function bindCollection(listId, addBtnId, tplId, rowAttr, removeAttr, baseName) {
@@ -415,9 +459,53 @@
                 bindRemove();
             }
 
+            bindCollection('roles-list', 'add-role-btn', 'role-row-template', 'data-role-row', 'data-remove-role', 'roles');
             bindCollection('members-list', 'add-member-btn', 'member-row-template', 'data-member-row', 'data-remove-member', 'members');
             bindCollection('relations-list', 'add-relation-btn', 'relation-row-template', 'data-relation-row', 'data-remove-relation', 'relations');
             bindCollection('diplomas-list', 'add-diploma-btn', 'diploma-row-template', 'data-diploma-row', 'data-remove-diploma', 'diplomas');
+
+            function refreshMemberRoleOptions() {
+                const roles = Array.from(document.querySelectorAll('#roles-list input[name$="[name]"], #roles-list input[data-field="name"]'))
+                    .map((input) => (input.value || '').trim())
+                    .filter(Boolean);
+
+                document.querySelectorAll('#members-list select[name$="[role]"], #members-list select[data-member-role-select]').forEach((select) => {
+                    const current = select.value || '';
+                    select.innerHTML = '<option value="">-</option>';
+                    roles.forEach((role) => {
+                        const option = document.createElement('option');
+                        option.value = role;
+                        option.textContent = role;
+                        if (role === current) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                    if (current && !roles.includes(current)) {
+                        const option = document.createElement('option');
+                        option.value = current;
+                        option.textContent = current + ' (existant)';
+                        option.selected = true;
+                        select.appendChild(option);
+                    }
+                });
+            }
+
+            document.addEventListener('input', function (event) {
+                if (event.target && event.target.closest('#roles-list')) {
+                    refreshMemberRoleOptions();
+                }
+            });
+
+            document.getElementById('add-role-btn')?.addEventListener('click', function () {
+                setTimeout(refreshMemberRoleOptions, 0);
+            });
+
+            document.getElementById('add-member-btn')?.addEventListener('click', function () {
+                setTimeout(refreshMemberRoleOptions, 0);
+            });
+
+            refreshMemberRoleOptions();
         })();
     </script>
 @endsection

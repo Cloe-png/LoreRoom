@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\UserLog;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class EnsureSessionActivity
         if ($lastActivity) {
             $last = $lastActivity instanceof Carbon ? $lastActivity : Carbon::parse($lastActivity);
             if ($last->diffInMinutes($now) >= $lifetimeMinutes) {
+                UserLog::logAction((int) Auth::id(), 'deconnexion');
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

@@ -16,7 +16,7 @@
                     <th>Nom</th>
                     <th>Type</th>
                     <th>Monde</th>
-                    <th>Region</th>
+                    <th>Région</th>
                     <th>Actions</th>
                 </tr>
             </thead>

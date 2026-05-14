@@ -13,7 +13,7 @@
             </div>
             <div class="field">
                 <label>Description du monde</label>
-                <textarea name="summary" rows="6" placeholder="Histoire, ambiance, regles, culture...">{{ old('summary') }}</textarea>
+                <textarea name="summary" rows="6" placeholder="Histoire, ambiance, règles, culture...">{{ old('summary') }}</textarea>
             </div>
             <div class="stack">
                 <button class="btn" type="submit">Créer</button>

@@ -106,4 +106,3 @@
         }
     </style>
 @endsection
-

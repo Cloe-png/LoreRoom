@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
     <head>
         <meta charset="utf-8">
@@ -286,25 +286,25 @@
                     <h1>Portail de Gestion</h1>
                     <span class="stamp">Mode Conservateur</span>
                 </header>
-                <p class="subtitle">Atelier de conception du lore: structures, chroniques et coherence du monde.</p>
+                <p class="subtitle">Atelier de conception du lore : structures, chroniques et cohérence du monde.</p>
 
                 <section class="layout">
                     <aside class="codex">
                         <h2>Codex</h2>
-                        <p>Controle editorial du monde et de ses archives.</p>
+                        <p>Contrôle éditorial du monde et de ses archives.</p>
                         <ul>
-                            <li>Chronologie maitresse</li>
+                            <li>Chronologie maîtresse</li>
                             <li>Index des personnages</li>
                             <li>Lieux, cartes et factions</li>
                             <li>Objets, reliques et savoirs</li>
-                            <li>Validation de coherence</li>
+                            <li>Validation de cohérence</li>
                         </ul>
                     </aside>
 
                     <div class="board">
                         <article class="paper">
                             <h3>Table de Rédaction</h3>
-                            <p>Une interface de travail inspiree des codex fantasy: lecture claire, priorites visibles, et modules de creation prets a l emploi.</p>
+                            <p>Une interface de travail inspirée des codex fantasy : lecture claire, priorités visibles et modules de création prêts à l'emploi.</p>
                         </article>
 
                         <article class="paper">
@@ -312,7 +312,7 @@
                                 <section class="module">
                                     <span class="tag">Monde</span>
                                     <h4>Panorama global</h4>
-                                    <p>Cadre de reference, eras, peuples et grandes tensions.</p>
+                                    <p>Cadre de référence, ères, peuples et grandes tensions.</p>
                                 </section>
                                 <section class="module">
                                     <span class="tag">Personnages</span>
@@ -322,7 +322,7 @@
                                 <section class="module">
                                     <span class="tag">Lieux</span>
                                     <h4>Atlas interne</h4>
-                                    <p>Regions, cites, points d interet et reperes visuels.</p>
+                                    <p>Régions, cités, points d'intérêt et repères visuels.</p>
                                 </section>
                                 <section class="module">
                                     <span class="tag">Chroniques</span>
@@ -335,9 +335,9 @@
                         <article class="paper">
                             <div class="actions">
                                 <a class="btn" href="{{ route('login') }}">Retour à la connexion</a>
-                                <a class="btn secondary" href="{{ url('/story') }}">Ouvrir le portail recit</a>
+                                <a class="btn secondary" href="{{ url('/story') }}">Ouvrir le portail récit</a>
                             </div>
-                            <div class="warning">Section atelier en version prototype. Certaines actions de gestion seront activees ensuite.</div>
+                            <div class="warning">Section atelier en version prototype. Certaines actions de gestion seront activées ensuite.</div>
                         </article>
                     </div>
                 </section>

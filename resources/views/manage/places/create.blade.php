@@ -18,14 +18,14 @@
             <div class="field">
                 <label>Type de lieu</label>
                 <select name="type">
-                    <option value="">Non defini</option>
+                    <option value="">Non défini</option>
                     @foreach($placeTypeOptions as $typeOption)
                         <option value="{{ $typeOption }}" {{ old('type') === $typeOption ? 'selected' : '' }}>{{ ucfirst($typeOption) }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="field">
-                <label>Region</label>
+                <label>Région</label>
                 <input type="text" name="region" value="{{ old('region') }}">
             </div>
 
@@ -35,7 +35,7 @@
             </div>
 
             <div class="field">
-                <label>Resume</label>
+                <label>Résumé</label>
                 <textarea name="summary">{{ old('summary') }}</textarea>
             </div>
 
@@ -46,7 +46,7 @@
                         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
                             <div class="grid-4">
                                 <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
-                                <div class="field" style="grid-column: span 2;"><label>Legende</label><input type="text" name="gallery_captions[]" value=""></div>
+                                <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
                             </div>
                             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
                         </div>
@@ -66,7 +66,7 @@
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
                 <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
-                <div class="field" style="grid-column: span 2;"><label>Legende</label><input type="text" name="gallery_captions[]" value=""></div>
+                <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
             </div>
             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
         </div>

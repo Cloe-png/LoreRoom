@@ -1,7 +1,7 @@
 ﻿@extends('manage.layout')
 
-@section('title', 'Gestion - Arbre genealogique')
-@section('header', 'Arbre genealogique')
+@section('title', 'Gestion - Arbre généalogique')
+@section('header', 'Arbre généalogique')
 
 @section('content')
     <style>
@@ -158,7 +158,7 @@
 
     @if($nodes->isEmpty())
         <section class="panel">
-            <p class="muted">Aucune donnee généalogique disponible.</p>
+            <p class="muted">Aucune donnée généalogique disponible.</p>
         </section>
     @else
         @php
@@ -717,4 +717,3 @@
         </script>
     @endif
 @endsection
-

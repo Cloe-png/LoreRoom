@@ -7,6 +7,8 @@ use App\Models\Faction;
 use App\Models\FactionRelation;
 use App\Models\Diploma;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 class FactionController extends Controller
@@ -36,7 +38,11 @@ class FactionController extends Controller
     public function index()
     {
         $factions = Faction::with('world')
-            ->withCount('members')
+            ->withCount([
+                'members as members_count' => function ($query) {
+                    $query->select(DB::raw('count(distinct characters.id)'));
+                },
+            ])
             ->withCount('outgoingRelations')
             ->withCount('incomingRelations')
             ->latest()
@@ -54,6 +60,7 @@ class FactionController extends Controller
         $typeOptions = self::FACTION_TYPES;
         $statusOptions = self::FACTION_STATUSES;
         $memberStatusOptions = self::MEMBER_STATUSES;
+        $roleRows = old('roles', [['name' => '']]);
 
         return view('manage.factions.create', compact(
             'defaultWorld',
@@ -61,7 +68,8 @@ class FactionController extends Controller
             'otherFactions',
             'typeOptions',
             'statusOptions',
-            'memberStatusOptions'
+            'memberStatusOptions',
+            'roleRows'
         ));
     }
 
@@ -77,10 +85,13 @@ class FactionController extends Controller
         }
 
         $membersRows = $data['members'] ?? [];
+        $roleRows = $data['roles'] ?? [];
         $relationsRows = $data['relations'] ?? [];
         $diplomaRows = $data['diplomas'] ?? [];
-        unset($data['members'], $data['relations']);
+        unset($data['members'], $data['roles'], $data['relations']);
         unset($data['diplomas']);
+        $data['roles'] = $this->normalizeRoles($roleRows);
+        $this->assertMemberRolesBelongToFactionRoles($membersRows, $data['roles']);
 
         $faction = Faction::create($data);
 
@@ -97,7 +108,7 @@ class FactionController extends Controller
 
         $faction->load([
             'world',
-            'members',
+            'memberships.character',
             'diplomas',
             'leader',
             'coLeader',
@@ -108,7 +119,7 @@ class FactionController extends Controller
 
         return view('manage.factions.show', [
             'faction' => $faction,
-            'membersCount' => $faction->members()->count(),
+            'membersCount' => $faction->members()->distinct('characters.id')->count('characters.id'),
             'relationsCount' => $faction->outgoingRelations()->count() + $faction->incomingRelations()->count(),
         ]);
     }
@@ -123,14 +134,20 @@ class FactionController extends Controller
         $typeOptions = self::FACTION_TYPES;
         $statusOptions = self::FACTION_STATUSES;
         $memberStatusOptions = self::MEMBER_STATUSES;
+        $roleRows = old('roles', collect($faction->roles ?? [])->map(fn ($name) => ['name' => $name])->values()->all());
+        if (empty($roleRows)) {
+            $roleRows = [['name' => '']];
+        }
 
-        $memberRows = $faction->members->map(function (Character $character) {
+        $faction->loadMissing('memberships.character');
+
+        $memberRows = $faction->memberships->map(function ($membership) {
             return [
-                'character_id' => $character->id,
-                'role' => $character->pivot->role,
-                'grade' => $character->pivot->grade,
-                'joined_at' => $character->pivot->joined_at,
-                'status' => $character->pivot->status,
+                'character_id' => $membership->character_id,
+                'role' => $membership->role,
+                'grade' => $membership->grade,
+                'joined_at' => optional($membership->joined_at)->format('Y-m-d'),
+                'status' => $membership->status,
             ];
         })->values();
 
@@ -159,6 +176,7 @@ class FactionController extends Controller
             'typeOptions',
             'statusOptions',
             'memberStatusOptions',
+            'roleRows',
             'memberRows',
             'relationRows',
             'diplomaRows'
@@ -181,10 +199,13 @@ class FactionController extends Controller
         }
 
         $membersRows = $data['members'] ?? [];
+        $roleRows = $data['roles'] ?? [];
         $relationsRows = $data['relations'] ?? [];
         $diplomaRows = $data['diplomas'] ?? [];
-        unset($data['members'], $data['relations']);
+        unset($data['members'], $data['roles'], $data['relations']);
         unset($data['diplomas']);
+        $data['roles'] = $this->normalizeRoles($roleRows);
+        $this->assertMemberRolesBelongToFactionRoles($membersRows, $data['roles']);
 
         $faction->update($data);
 
@@ -199,10 +220,6 @@ class FactionController extends Controller
     {
         $this->abortIfOutsideCurrentWorld((int) $faction->world_id);
 
-        if ($faction->logo_path) {
-            \Storage::disk('public')->delete($faction->logo_path);
-        }
-
         $faction->delete();
 
         return redirect()->route('manage.factions.index')->with('success', 'Faction supprimée.');
@@ -213,6 +230,8 @@ class FactionController extends Controller
         return $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'type' => ['nullable', Rule::in(self::FACTION_TYPES)],
+            'roles' => ['nullable', 'array'],
+            'roles.*.name' => ['nullable', 'string', 'max:120'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'motto' => ['nullable', 'string', 'max:200'],
             'founded_at' => ['nullable', 'date'],
@@ -242,6 +261,7 @@ class FactionController extends Controller
     private function syncMembers(Faction $faction, array $rows): void
     {
         $members = [];
+        $now = now();
 
         foreach ($rows as $row) {
             $characterId = (int) ($row['character_id'] ?? 0);
@@ -253,15 +273,55 @@ class FactionController extends Controller
             $grade = trim((string) ($row['grade'] ?? ''));
             $status = trim((string) ($row['status'] ?? ''));
             $joinedAt = isset($row['joined_at']) && $row['joined_at'] !== '' ? (string) $row['joined_at'] : null;
-            $members[$characterId] = [
+            $members[] = [
+                'faction_id' => $faction->id,
+                'character_id' => $characterId,
                 'role' => $role !== '' ? $role : null,
                 'grade' => $grade !== '' ? $grade : null,
                 'status' => $status !== '' ? $status : null,
                 'joined_at' => $joinedAt,
+                'created_at' => $now,
+                'updated_at' => $now,
             ];
         }
 
-        $faction->members()->sync($members);
+        $faction->members()->detach();
+
+        if (!empty($members)) {
+            DB::table('faction_memberships')->insert($members);
+        }
+    }
+
+    private function normalizeRoles(array $rows): array
+    {
+        return collect($rows)
+            ->map(fn ($row) => trim((string) ($row['name'] ?? '')))
+            ->filter()
+            ->unique(fn ($name) => mb_strtolower($name))
+            ->values()
+            ->all();
+    }
+
+    private function assertMemberRolesBelongToFactionRoles(array $memberRows, array $roles): void
+    {
+        $allowedRoles = collect($roles)
+            ->map(fn ($role) => mb_strtolower(trim((string) $role)))
+            ->filter()
+            ->values()
+            ->all();
+
+        foreach ($memberRows as $index => $row) {
+            $role = trim((string) ($row['role'] ?? ''));
+            if ($role === '') {
+                continue;
+            }
+
+            if (!in_array(mb_strtolower($role), $allowedRoles, true)) {
+                throw ValidationException::withMessages([
+                    "members.$index.role" => 'Ce rôle doit faire partie des rôles définis pour cette faction.',
+                ]);
+            }
+        }
     }
 
     private function syncRelations(Faction $faction, array $rows): void

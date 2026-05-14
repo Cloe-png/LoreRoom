@@ -11,18 +11,25 @@ use App\Models\CharacterRelation;
 use App\Models\Diploma;
 use App\Models\Faction;
 use App\Models\Job;
+use App\Models\LoreEntry;
 use App\Models\Place;
 use App\Models\Species;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 class CharacterController extends Controller
 {
     private const AUTO_FAMILY_TAG = '[AUTO_FAMILY]';
     private const AUTO_SIBLING_TAG = '[AUTO_SIBLING]';
+    private const FACTION_MEMBER_STATUSES = [
+        'actif',
+        'ancien membre',
+        'mort',
+    ];
     private const CHARACTER_ROLES = [
         'Personnage principal',
         'Personnage secondaire',
@@ -39,7 +46,7 @@ class CharacterController extends Controller
         $birthDate = trim(request('birth_date', ''));
         $sort = trim(request('sort', ''));
 
-        $characters = Character::with(['world', 'father', 'mother'])
+        $characters = Character::with(['world', 'father', 'mother', 'species:id,name'])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $like = '%' . $q . '%';
@@ -59,6 +66,9 @@ class CharacterController extends Controller
                         ->orWhere('clothing_style', 'like', $like)
                         ->orWhereHas('world', function ($worldQuery) use ($like) {
                             $worldQuery->where('name', 'like', $like);
+                        })
+                        ->orWhereHas('species', function ($speciesQuery) use ($like) {
+                            $speciesQuery->where('name', 'like', $like);
                         })
                         ->orWhereHas('birthPlace', function ($placeQuery) use ($like) {
                             $placeQuery->where('name', 'like', $like);
@@ -108,12 +118,25 @@ class CharacterController extends Controller
     {
         $defaultWorld = $this->currentWorld();
         $defaultWorldId = $this->currentWorldId();
+        $this->syncSpeciesFromLoreRaces($defaultWorldId);
         $places = Place::orderBy('name')->get();
         $parents = Character::orderBy('name')->get();
         $spouses = Character::orderBy('name')->get();
         $characters = Character::orderBy('name')->get();
-        $factions = Faction::orderBy('name')->get(['id', 'name']);
-        $diplomas = Diploma::with('faction')->orderBy('name')->get(['id', 'name', 'faction_id', 'level']);
+        $factionOptions = $this->characterFactionOptions($defaultWorldId);
+        $factionRoleMap = $factionOptions->mapWithKeys(function ($faction) {
+            return [(int) $faction->id => collect($faction->roles ?? [])->values()->all()];
+        })->all();
+        $factions = Faction::query()
+            ->whereIn('type', ['école', 'ecole'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $diplomas = Diploma::with('faction')
+            ->whereHas('faction', function ($query) {
+                $query->whereIn('type', ['école', 'ecole']);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'faction_id', 'level']);
         $speciesOptions = Species::orderBy('name')->get(['id', 'name']);
         $selectedExIds = old('ex_character_ids', []);
         $relationRows = old('relations', [
@@ -134,8 +157,12 @@ class CharacterController extends Controller
             ->orderByDesc('is_default')
             ->orderBy('name')
             ->get(['id', 'name', 'is_default']);
+        $customJobNameOptions = $this->customJobNameOptions($defaultWorldId);
         $educationRows = old('educations', [
             ['faction_id' => '', 'diploma_id' => '', 'field' => '', 'start_year' => '', 'end_year' => '', 'notes' => ''],
+        ]);
+        $factionRows = old('faction_memberships', [
+            ['faction_id' => '', 'role' => '', 'grade' => '', 'joined_at' => '', 'status' => ''],
         ]);
         $selectedSpeciesIds = old('species_ids', []);
         $childrenLinkType = old('children_link_type', 'father');
@@ -144,6 +171,7 @@ class CharacterController extends Controller
         $selectedTwinSiblingIds = old('sibling_ids_twin', []);
         $selectedHalfSiblingIds = old('sibling_ids_half', []);
         $roleOptions = self::CHARACTER_ROLES;
+        $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
 
         return view('manage.characters.create', compact(
             'defaultWorld',
@@ -152,6 +180,8 @@ class CharacterController extends Controller
             'spouses',
             'selectedExIds',
             'characters',
+            'factionOptions',
+            'factionRoleMap',
             'factions',
             'diplomas',
             'speciesOptions',
@@ -159,14 +189,17 @@ class CharacterController extends Controller
             'itemRows',
             'jobRows',
             'jobOptions',
+            'customJobNameOptions',
             'educationRows',
+            'factionRows',
             'selectedSpeciesIds',
             'childrenLinkType',
             'selectedChildrenIds',
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
-            'roleOptions'
+            'roleOptions',
+            'factionMemberStatusOptions'
         ));
     }
 
@@ -233,6 +266,12 @@ class CharacterController extends Controller
             'jobs.*.start_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.end_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.notes' => ['nullable', 'string', 'max:2000'],
+            'faction_memberships' => ['nullable', 'array'],
+            'faction_memberships.*.faction_id' => ['nullable', Rule::exists('factions', 'id')->where('world_id', $defaultWorldId)],
+            'faction_memberships.*.role' => ['nullable', 'string', 'max:120'],
+            'faction_memberships.*.grade' => ['nullable', 'string', 'max:120'],
+            'faction_memberships.*.joined_at' => ['nullable', 'date'],
+            'faction_memberships.*.status' => ['nullable', Rule::in(self::FACTION_MEMBER_STATUSES)],
             'educations' => ['nullable', 'array'],
             'educations.*.faction_id' => ['nullable', Rule::exists('factions', 'id')->where('world_id', $defaultWorldId)],
             'educations.*.diploma_id' => ['nullable', 'exists:diplomas,id'],
@@ -289,6 +328,7 @@ class CharacterController extends Controller
         $relationRows = $data['relations'] ?? [];
         $itemRows = $data['items'] ?? [];
         $jobRows = $data['jobs'] ?? [];
+        $factionRows = $data['faction_memberships'] ?? [];
         $educationRows = $data['educations'] ?? [];
         $speciesIds = collect($data['species_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $childrenLinkType = $data['children_link_type'] ?? 'father';
@@ -299,19 +339,21 @@ class CharacterController extends Controller
             'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
         ];
         unset($data['relations']);
-        unset($data['items'], $data['jobs']);
+        unset($data['items'], $data['jobs'], $data['faction_memberships']);
         unset($data['educations']);
         unset($data['species_ids']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
+        $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
+        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
+            $this->syncCharacterFactions($character, $factionRows);
             $this->syncCharacterEducations($character, $educationRows);
             $this->syncCharacterSpecies($character, $speciesIds);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
@@ -342,6 +384,7 @@ class CharacterController extends Controller
             'childrenFromMother',
             'items',
             'jobs.job',
+            'factionMemberships.faction',
             'educations.faction',
             'educations.diploma',
             'species',
@@ -365,6 +408,7 @@ class CharacterController extends Controller
             'childrenFromMother',
             'items',
             'jobs.job',
+            'factionMemberships.faction',
             'educations.faction',
             'educations.diploma',
             'species',
@@ -390,12 +434,25 @@ class CharacterController extends Controller
     {
         $defaultWorld = $this->currentWorld();
         $defaultWorldId = $this->currentWorldId();
+        $this->syncSpeciesFromLoreRaces($defaultWorldId);
         $places = Place::orderBy('name')->get();
         $parents = Character::where('id', '!=', $character->id)->orderBy('name')->get();
         $spouses = Character::where('id', '!=', $character->id)->orderBy('name')->get(); 
         $characters = Character::where('id', '!=', $character->id)->orderBy('name')->get();
-        $factions = Faction::orderBy('name')->get(['id', 'name']);
-        $diplomas = Diploma::with('faction')->orderBy('name')->get(['id', 'name', 'faction_id', 'level']);
+        $factionOptions = $this->characterFactionOptions($defaultWorldId);
+        $factionRoleMap = $factionOptions->mapWithKeys(function ($faction) {
+            return [(int) $faction->id => collect($faction->roles ?? [])->values()->all()];
+        })->all();
+        $factions = Faction::query()
+            ->whereIn('type', ['école', 'ecole'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $diplomas = Diploma::with('faction')
+            ->whereHas('faction', function ($query) {
+                $query->whereIn('type', ['école', 'ecole']);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'faction_id', 'level']);
         $speciesOptions = Species::orderBy('name')->get(['id', 'name']);
         $selectedExIds = old('ex_character_ids', $character->exes()->pluck('characters.id')->all());
         $selectedSpeciesIds = old('species_ids', $character->species()->pluck('species.id')->all());
@@ -482,6 +539,26 @@ class CharacterController extends Controller
             }
         }
 
+        if (old('faction_memberships') !== null) {
+            $factionRows = old('faction_memberships');
+        } else {
+            $character->loadMissing('factionMemberships.faction');
+            $factionRows = $character->factionMemberships
+                ->map(function ($membership) {
+                    return [
+                        'faction_id' => $membership->faction_id,
+                        'role' => $membership->role,
+                        'grade' => $membership->grade,
+                        'joined_at' => optional($membership->joined_at)->format('Y-m-d'),
+                        'status' => $membership->status,
+                    ];
+                })
+                ->all();
+            if (empty($factionRows)) {
+                $factionRows[] = ['faction_id' => '', 'role' => '', 'grade' => '', 'joined_at' => '', 'status' => ''];
+            }
+        }
+
         if (old('children_ids') !== null) {
             $selectedChildrenIds = old('children_ids', []);
             $childrenLinkType = old('children_link_type', 'father');
@@ -524,6 +601,7 @@ class CharacterController extends Controller
 
         $existingGallery = $character->galleryImages()->get();
         $roleOptions = self::CHARACTER_ROLES;
+        $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
         $jobOptions = Job::query()
             ->when($defaultWorldId, function ($query) use ($defaultWorldId) {
                 $query->whereNull('world_id')->orWhere('world_id', $defaultWorldId);
@@ -533,6 +611,7 @@ class CharacterController extends Controller
             ->orderByDesc('is_default')
             ->orderBy('name')
             ->get(['id', 'name', 'is_default']);
+        $customJobNameOptions = $this->customJobNameOptions($defaultWorldId);
 
         return view('manage.characters.edit', compact(
             'character',
@@ -542,13 +621,17 @@ class CharacterController extends Controller
             'spouses',
             'selectedExIds',
             'characters',
+            'factionOptions',
+            'factionRoleMap',
             'factions',
             'diplomas',
             'relationRows',
             'itemRows',
             'jobRows',
             'jobOptions',
+            'customJobNameOptions',
             'educationRows',
+            'factionRows',
             'speciesOptions',
             'selectedSpeciesIds',
             'existingGallery',
@@ -557,7 +640,8 @@ class CharacterController extends Controller
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
-            'roleOptions'
+            'roleOptions',
+            'factionMemberStatusOptions'
         ));
     }
 
@@ -626,6 +710,12 @@ class CharacterController extends Controller
             'jobs.*.start_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.end_year' => ['nullable', 'integer', 'min:1', 'max:9999'],
             'jobs.*.notes' => ['nullable', 'string', 'max:2000'],
+            'faction_memberships' => ['nullable', 'array'],
+            'faction_memberships.*.faction_id' => ['nullable', Rule::exists('factions', 'id')->where('world_id', $defaultWorldId)],
+            'faction_memberships.*.role' => ['nullable', 'string', 'max:120'],
+            'faction_memberships.*.grade' => ['nullable', 'string', 'max:120'],
+            'faction_memberships.*.joined_at' => ['nullable', 'date'],
+            'faction_memberships.*.status' => ['nullable', Rule::in(self::FACTION_MEMBER_STATUSES)],
             'educations' => ['nullable', 'array'],
             'educations.*.faction_id' => ['nullable', Rule::exists('factions', 'id')->where('world_id', $defaultWorldId)],
             'educations.*.diploma_id' => ['nullable', 'exists:diplomas,id'],
@@ -692,6 +782,7 @@ class CharacterController extends Controller
         $relationRows = $data['relations'] ?? [];
         $itemRows = $data['items'] ?? [];
         $jobRows = $data['jobs'] ?? [];
+        $factionRows = $data['faction_memberships'] ?? [];
         $educationRows = $data['educations'] ?? [];
         $speciesIds = collect($data['species_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $childrenLinkType = $data['children_link_type'] ?? 'father';
@@ -703,23 +794,25 @@ class CharacterController extends Controller
         ];
         $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
-        unset($data['items'], $data['jobs'], $data['remove_gallery_ids']);
+        unset($data['items'], $data['jobs'], $data['faction_memberships'], $data['remove_gallery_ids']);
         unset($data['educations']);
         unset($data['species_ids']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
+        $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
 
         $oldFatherId = $character->father_id;
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
             $this->syncOutgoingRelations($character, $relationRows);
             $this->syncCharacterItems($character, $itemRows);
             $this->syncCharacterJobs($character, $jobRows);
+            $this->syncCharacterFactions($character, $factionRows);
             $this->syncCharacterEducations($character, $educationRows);
             $this->syncCharacterSpecies($character, $speciesIds);
             $this->removeCharacterGalleryImages($character, $removeGalleryIds);
@@ -743,18 +836,6 @@ class CharacterController extends Controller
 
     public function destroy(Character $character)
     {
-        if ($character->image_path) {
-            Storage::disk('public')->delete($character->image_path);
-        }
-        if ($character->voice_audio_path) {
-            Storage::disk('public')->delete($character->voice_audio_path);
-        }
-
-        $galleryPaths = $character->galleryImages()->pluck('image_path')->all();
-        if (!empty($galleryPaths)) {
-            Storage::disk('public')->delete($galleryPaths);
-        }
-
         $character->delete();
 
         return redirect()->route('manage.characters.index')->with('success', 'Personnage supprimé.');
@@ -1260,6 +1341,161 @@ class CharacterController extends Controller
                 'end_year' => $endYear,
                 'notes' => trim((string) ($row['notes'] ?? '')) ?: null,
             ]);
+        }
+    }
+
+    private function customJobNameOptions(?int $worldId): array
+    {
+        return CharacterJob::query()
+            ->when($worldId, function ($query) use ($worldId) {
+                $query->whereHas('character', function ($characterQuery) use ($worldId) {
+                    $characterQuery->where('world_id', $worldId);
+                });
+            })
+            ->whereNotNull('job_name')
+            ->where('job_name', '!=', '')
+            ->orderBy('job_name')
+            ->pluck('job_name')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter()
+            ->unique(fn ($name) => mb_strtolower($name))
+            ->values()
+            ->all();
+    }
+
+    private function characterFactionOptions(?int $worldId)
+    {
+        return Faction::query()
+            ->when($worldId, function ($query) use ($worldId) {
+                $query->where('world_id', $worldId);
+            })
+            ->where(function ($query) {
+                $query->whereNull('type')
+                    ->orWhereNotIn('type', ['Ã©cole', 'ecole']);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'type', 'roles']);
+    }
+
+    private function syncCharacterFactions(Character $character, array $rows): void
+    {
+        $memberships = [];
+        $now = now();
+
+        foreach ($rows as $row) {
+            $factionId = (int) ($row['faction_id'] ?? 0);
+            if ($factionId <= 0) {
+                continue;
+            }
+
+            $role = trim((string) ($row['role'] ?? ''));
+            $grade = trim((string) ($row['grade'] ?? ''));
+            $status = trim((string) ($row['status'] ?? ''));
+            $joinedAt = isset($row['joined_at']) && $row['joined_at'] !== '' ? (string) $row['joined_at'] : null;
+
+            $memberships[] = [
+                'character_id' => $character->id,
+                'faction_id' => $factionId,
+                'role' => $role !== '' ? $role : null,
+                'grade' => $grade !== '' ? $grade : null,
+                'status' => $status !== '' ? $status : null,
+                'joined_at' => $joinedAt,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        $character->factions()->detach();
+
+        if (!empty($memberships)) {
+            DB::table('faction_memberships')->insert($memberships);
+        }
+    }
+
+    private function assertCharacterFactionRolesBelongToFactions(array $rows, ?int $worldId): void
+    {
+        $factionIds = collect($rows)
+            ->map(fn ($row) => (int) ($row['faction_id'] ?? 0))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($factionIds)) {
+            return;
+        }
+
+        $rolesByFaction = Faction::query()
+            ->when($worldId, fn ($query) => $query->where('world_id', $worldId))
+            ->whereIn('id', $factionIds)
+            ->get(['id', 'roles'])
+            ->mapWithKeys(function ($faction) {
+                return [
+                    (int) $faction->id => collect($faction->roles ?? [])
+                        ->map(fn ($role) => mb_strtolower(trim((string) $role)))
+                        ->filter()
+                        ->values()
+                        ->all(),
+                ];
+            });
+
+        foreach ($rows as $index => $row) {
+            $factionId = (int) ($row['faction_id'] ?? 0);
+            $role = trim((string) ($row['role'] ?? ''));
+            if ($factionId <= 0 || $role === '') {
+                continue;
+            }
+
+            $allowedRoles = $rolesByFaction->get($factionId, []);
+            if (!in_array(mb_strtolower($role), $allowedRoles, true)) {
+                throw ValidationException::withMessages([
+                    "faction_memberships.$index.role" => 'Ce rôle doit faire partie des rôles définis pour cette faction.',
+                ]);
+            }
+        }
+    }
+
+    private function syncSpeciesFromLoreRaces(?int $worldId): void
+    {
+        if (!$worldId) {
+            return;
+        }
+
+        $raceTitles = LoreEntry::query()
+            ->where('world_id', $worldId)
+            ->where('category', 'race')
+            ->pluck('title')
+            ->map(fn ($title) => trim((string) $title))
+            ->filter()
+            ->unique(fn ($title) => mb_strtolower($title))
+            ->values();
+
+        if ($raceTitles->isEmpty()) {
+            return;
+        }
+
+        $existingNames = Species::query()
+            ->where('world_id', $worldId)
+            ->pluck('name')
+            ->map(fn ($name) => mb_strtolower(trim((string) $name)))
+            ->filter()
+            ->values()
+            ->all();
+
+        $existingMap = array_fill_keys($existingNames, true);
+
+        foreach ($raceTitles as $raceTitle) {
+            $normalized = mb_strtolower($raceTitle);
+            if (isset($existingMap[$normalized])) {
+                continue;
+            }
+
+            Species::create([
+                'world_id' => $worldId,
+                'name' => $raceTitle,
+            ]);
+
+            $existingMap[$normalized] = true;
         }
     }
 

@@ -102,7 +102,7 @@
                 </div>
             </div>
 
-            <details class="accordion" open>
+            <details class="accordion">
                 <summary>Famille</summary>
                 <div class="accordion-body">
                     <div class="field">
@@ -288,7 +288,7 @@
                 <textarea name="secrets">{{ old('secrets') }}</textarea>
             </div>
 
-            <details class="accordion" open>
+            <details class="accordion">
                 <summary>Apparence</summary>
                 <div class="accordion-body">
                     <div class="grid-4">
@@ -297,7 +297,7 @@
                         <div class="field"><label>Yeux</label><input type="text" name="eye_color" value="{{ old('eye_color') }}"></div>
                     </div>
                     <div class="field">
-                        <label>Espèces / races</label>
+                        <label>Race du personnage</label>
                         <select name="species_ids[]" multiple size="5">
                             @foreach($speciesOptions as $species)
                                 <option value="{{ $species->id }}" {{ in_array((int) $species->id, $selectedSpeciesIds ?? [], true) ? 'selected' : '' }}>
@@ -305,14 +305,14 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="muted">Maintiens Ctrl (ou Cmd) pour sélectionner plusieurs espèces.</p>
+                        <p class="muted">Liste alimentée avec les races définies dans le Lore.</p>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks') }}</textarea></div>
                     <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style') }}</textarea></div>
                 </div>
             </details>
 
-            <details class="accordion" open>
+            <details class="accordion">
                 <summary>Psychologie</summary>
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities') }}</textarea></div>
@@ -357,7 +357,7 @@
                     <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
                         <div class="grid-4">
                             <div class="field" style="grid-column: span 2;">
-                                <label>Métier (liste)</label>
+                                <label>Métier existant</label>
                                 <select name="jobs[{{ $i }}][job_id]" data-job-select>
                                     <option value="">-</option>
                                     @foreach($jobOptions as $opt)
@@ -368,8 +368,9 @@
                                 </select>
                             </div>
                             <div class="field" style="grid-column: span 2;">
-                                <label>Métier (custom)</label>
+                                <label>Métier personnalisé</label>
                                 <input type="text" name="jobs[{{ $i }}][job_name]" value="{{ $job['job_name'] ?? '' }}" placeholder="Si non présent dans la liste" list="job-name-options">
+                                <p class="muted">Cette zone concerne uniquement le métier du personnage.</p>
                             </div>
                             <div class="field"><label>Année début</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][start_year]" value="{{ $job['start_year'] ?? '' }}"></div>
                             <div class="field"><label>Année fin</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][end_year]" value="{{ $job['end_year'] ?? '' }}"></div>
@@ -384,14 +385,69 @@
             </details>
 
             <details class="accordion">
-                <summary>Parcours scolaire</summary>
+                <summary>Factions / groupes</summary>
                 <div class="accordion-body">
+            <p class="muted">Lie ce personnage à une faction existante, par exemple "Héros".</p>
+            <div id="factions-list">
+                @foreach(($factionRows ?? []) as $i => $row)
+                    <div class="panel" data-faction-row style="margin-top:10px; padding:10px;">
+                        <div class="grid-4">
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Faction</label>
+                                <select name="faction_memberships[{{ $i }}][faction_id]">
+                                    <option value="">Aucune</option>
+                                    @foreach($factionOptions as $factionOption)
+                                        <option value="{{ $factionOption->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$factionOption->id ? 'selected' : '' }}>
+                                            {{ $factionOption->name }}{{ $factionOption->type ? ' · ' . $factionOption->type : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Rôle dans le groupe</label>
+                                <select name="faction_memberships[{{ $i }}][role]" data-faction-role-select>
+                                    <option value="">-</option>
+                                    @foreach(($factionRoleMap[(int) ($row['faction_id'] ?? 0)] ?? []) as $roleName)
+                                        <option value="{{ $roleName }}" {{ ($row['role'] ?? '') === $roleName ? 'selected' : '' }}>{{ $roleName }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Grade</label>
+                                <input type="text" name="faction_memberships[{{ $i }}][grade]" value="{{ $row['grade'] ?? '' }}">
+                            </div>
+                            <div class="field">
+                                <label>Date d'entrée</label>
+                                <input type="date" name="faction_memberships[{{ $i }}][joined_at]" value="{{ $row['joined_at'] ?? '' }}">
+                            </div>
+                            <div class="field">
+                                <label>Statut</label>
+                                <select name="faction_memberships[{{ $i }}][status]">
+                                    <option value="">-</option>
+                                    @foreach($factionMemberStatusOptions as $status)
+                                        <option value="{{ $status }}" {{ (string)($row['status'] ?? '') === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <button class="btn danger" type="button" data-remove-faction>Retirer</button>
+                    </div>
+                @endforeach
+            </div>
+            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-faction-btn">Ajouter une faction</button></div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary>Parcours scolaire / formation</summary>
+                <div class="accordion-body">
+            <p class="muted">Cette zone sert uniquement aux études, écoles, académies et diplômes.</p>
             <div id="educations-list">
                 @foreach(($educationRows ?? []) as $i => $row)
                     <div class="panel" data-education-row style="margin-top:10px; padding:10px;">
                         <div class="grid-4">
                             <div class="field" style="grid-column: span 2;">
-                                <label>École / Université</label>
+                                <label>Établissement scolaire</label>
                                 <select name="educations[{{ $i }}][faction_id]">
                                     <option value="">Aucune</option>
                                     @foreach($factions as $faction)
@@ -402,7 +458,7 @@
                                 </select>
                             </div>
                             <div class="field" style="grid-column: span 2;">
-                                <label>Diplôme</label>
+                                <label>Diplôme / certificat</label>
                                 <select name="educations[{{ $i }}][diploma_id]">
                                     <option value="">Aucun</option>
                                     @foreach($diplomas as $diploma)
@@ -425,7 +481,7 @@
                         </div>
                         <div class="grid-4">
                             <div class="field" style="grid-column: span 2;">
-                                <label>Spécialité / filière</label>
+                                <label>Spécialité / domaine d'étude</label>
                                 <input type="text" name="educations[{{ $i }}][field]" value="{{ $row['field'] ?? '' }}">
                             </div>
                             <div class="field">
@@ -445,7 +501,7 @@
                     </div>
                 @endforeach
             </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-education-btn">Ajouter un diplôme</button></div>
+            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-education-btn">Ajouter une formation</button></div>
                 </div>
             </details>
 
@@ -597,9 +653,52 @@
         </div>
     </template>
 
+    <template id="faction-row-template">
+        <div class="panel" data-faction-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Faction</label>
+                    <select data-field="faction_id">
+                        <option value="">Aucune</option>
+                        @foreach($factionOptions as $factionOption)
+                            <option value="{{ $factionOption->id }}">{{ $factionOption->name }}{{ $factionOption->type ? ' · ' . $factionOption->type : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Rôle dans le groupe</label>
+                    <select data-field="role" data-faction-role-select>
+                        <option value="">-</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Grade</label>
+                    <input type="text" data-field="grade">
+                </div>
+                <div class="field">
+                    <label>Date d'entrée</label>
+                    <input type="date" data-field="joined_at">
+                </div>
+                <div class="field">
+                    <label>Statut</label>
+                    <select data-field="status">
+                        <option value="">-</option>
+                        @foreach($factionMemberStatusOptions as $status)
+                            <option value="{{ $status }}">{{ ucfirst($status) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <button class="btn danger" type="button" data-remove-faction>Retirer</button>
+        </div>
+    </template>
+
     <datalist id="job-name-options">
         @foreach($jobOptions as $opt)
             <option value="{{ $opt->name }}"></option>
+        @endforeach
+        @foreach($customJobNameOptions ?? [] as $customJobName)
+            <option value="{{ $customJobName }}"></option>
         @endforeach
     </datalist>
 
@@ -678,7 +777,39 @@
             bindCollection('relations-list', 'add-relation-btn', 'relation-row-template', 'data-relation-row', 'data-remove-relation', 'relations');
             bindCollection('items-list', 'add-item-btn', 'item-row-template', 'data-item-row', 'data-remove-item', 'items');
             bindCollection('jobs-list', 'add-job-btn', 'job-row-template', 'data-job-row', 'data-remove-job', 'jobs');
+            bindCollection('factions-list', 'add-faction-btn', 'faction-row-template', 'data-faction-row', 'data-remove-faction', 'faction_memberships');
             bindCollection('educations-list', 'add-education-btn', 'education-row-template', 'data-education-row', 'data-remove-education', 'educations');
+
+            const factionRoleMap = @json($factionRoleMap ?? []);
+
+            function refreshFactionRoleOptions() {
+                document.querySelectorAll('#factions-list [data-faction-row]').forEach((row, index) => {
+                    const factionSelect = row.querySelector('select[name*="[faction_id]"], select[data-field="faction_id"]');
+                    const roleSelect = row.querySelector('select[name*="[role]"], select[data-faction-role-select]');
+                    if (!factionSelect || !roleSelect) return;
+
+                    const factionId = String(factionSelect.value || '');
+                    const roles = factionRoleMap[factionId] || factionRoleMap[Number(factionId)] || [];
+                    const current = roleSelect.value || '';
+                    roleSelect.innerHTML = '<option value="">-</option>';
+                    roles.forEach((role) => {
+                        const option = document.createElement('option');
+                        option.value = role;
+                        option.textContent = role;
+                        if (role === current) {
+                            option.selected = true;
+                        }
+                        roleSelect.appendChild(option);
+                    });
+                    if (current && !roles.includes(current)) {
+                        const option = document.createElement('option');
+                        option.value = current;
+                        option.textContent = current + ' (existant)';
+                        option.selected = true;
+                        roleSelect.appendChild(option);
+                    }
+                });
+            }
 
             document.addEventListener('change', function (event) {
                 const target = event.target;
@@ -688,6 +819,12 @@
                 const label = target.options[target.selectedIndex]?.textContent || '';
                 if (nameInput && label && label !== '-') {
                     nameInput.value = label.replace(' · défaut', '').trim();
+                }
+            });
+            document.addEventListener('change', function (event) {
+                const target = event.target;
+                if (target && target.matches('#factions-list select[name*="[faction_id]"], #factions-list select[data-field="faction_id"]')) {
+                    refreshFactionRoleOptions();
                 }
             });
             const galleryList = document.getElementById('gallery-list');
@@ -744,6 +881,7 @@
             if (hasBroSis) hasBroSis.addEventListener('change', toggleSiblingsPanel);
             if (hasPower) hasPower.addEventListener('change', togglePowerPanel);
             if (hasPrivateSecret) hasPrivateSecret.addEventListener('change', toggleSecretPanel);
+            refreshFactionRoleOptions();
         })();
     </script>
 @endsection

@@ -48,7 +48,7 @@ class WorldController extends Controller
             $request->session()->put('selected_world_id', (int) $world->id);
         }
 
-        return redirect()->route('manage.worlds.index')->with('success', 'Monde cree.');
+        return redirect()->route('manage.worlds.index')->with('success', 'Monde créé.');
     }
 
     public function switch(Request $request, World $world)
@@ -61,7 +61,7 @@ class WorldController extends Controller
         $user->forceFill(['current_world_id' => (int) $world->id])->save();
         $request->session()->put('selected_world_id', (int) $world->id);
 
-        return redirect()->route('manage.index')->with('success', 'Monde actif change.');
+        return redirect()->route('manage.index')->with('success', 'Monde actif changé.');
     }
 
     public function show(World $world)
@@ -101,7 +101,7 @@ class WorldController extends Controller
 
         $world->update($data);
 
-        return redirect()->route('manage.worlds.index')->with('success', 'Monde mis a jour.');
+        return redirect()->route('manage.worlds.index')->with('success', 'Monde mis à jour.');
     }
 
     public function destroy(World $world)
@@ -123,7 +123,7 @@ class WorldController extends Controller
             request()->session()->forget('selected_world_id');
         }
 
-        return redirect()->route('manage.worlds.index')->with('success', 'Monde supprime.');
+        return redirect()->route('manage.worlds.index')->with('success', 'Monde supprimé.');
     }
 
     private function uniqueSlug(string $name, ?int $ignoreId = null): string

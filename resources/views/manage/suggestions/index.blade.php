@@ -1,7 +1,7 @@
 @extends('manage.layout')
 
 @section('title', 'Gestion - Suggestions')
-@section('header', 'Boite a suggestions')
+@section('header', 'Boite à suggestions')
 
 @section('content')
     <style>

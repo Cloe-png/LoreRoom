@@ -168,6 +168,7 @@
         }
 
         .btn:hover { transform: translateY(-1px); }
+
         @media (max-width: 560px) {
             .shell {
                 padding: 20px 16px;
@@ -191,7 +192,8 @@
             <h1>Connexion</h1>
             <div class="meta">LoreRoom</div>
         </div>
-        <p class="muted">Accès sécurisé avec token temporaire de session.</p>
+
+        <p class="muted">Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>
@@ -224,10 +226,9 @@
 
             <div class="actions">
                 <button class="btn" type="submit">Se connecter</button>
-                <a class="btn secondary" href="{{ route('register') }}">Créer un compte</a>
+                <a class="btn secondary" href="{{ route('register') }}">Creer un compte</a>
             </div>
         </form>
     </main>
 </body>
 </html>
-

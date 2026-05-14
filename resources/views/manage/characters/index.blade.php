@@ -107,6 +107,13 @@
                 gap: 6px;
                 justify-content: center;
             }
+            .wanted-details {
+                margin-top: 10px;
+                text-align: center;
+                font-size: .9rem;
+                color: #5f4423;
+                line-height: 1.35;
+            }
             .wanted-empty {
                 text-align: center;
                 padding: 18px 10px;
@@ -163,6 +170,10 @@
                         <div class="wanted-meta">
                             <div class="wanted-last">{{ $lastName !== '' ? $lastName : '-' }}</div>
                             <div class="wanted-first">{{ $firstName !== '' ? $firstName : ($fallbackName !== '' ? $fallbackName : '-') }}</div>
+                        </div>
+                        <div class="wanted-details">
+                            <div><strong>Rôle :</strong> {{ $character->role ?: '-' }}</div>
+                            <div><strong>Espèces / races :</strong> {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}</div>
                         </div>
                         <div class="wanted-actions">
                             <a class="btn secondary" href="{{ route('manage.characters.show', $character) }}">Voir</a>

@@ -6,15 +6,15 @@
 @section('content')
     <section class="panel">
         <p><strong>Monde:</strong> {{ optional($place->world)->name }}</p>
-        <p><strong>Type:</strong> {{ $place->type ? ucfirst($place->type) : 'Non defini' }}</p>
-        <p><strong>Region:</strong> {{ $place->region ?: 'Non definie' }}</p>
+        <p><strong>Type:</strong> {{ $place->type ? ucfirst($place->type) : 'Non défini' }}</p>
+        <p><strong>Région:</strong> {{ $place->region ?: 'Non définie' }}</p>
 
         @if($place->image_path)
             <p><strong>Image principale:</strong></p>
             <img src="{{ route('media.show', ['path' => $place->image_path]) }}" alt="Image du lieu" style="max-width:360px; border-radius:10px; border:1px solid rgba(101,74,42,.3);">
         @endif
 
-        <p><strong>Resume:</strong><br>{{ $place->summary ?: 'Aucun resume.' }}</p>
+        <p><strong>Résumé :</strong><br>{{ $place->summary ?: 'Aucun résumé.' }}</p>
 
         <div class="panel" style="margin-top:14px;">
             <strong>Stats d'usage</strong>
@@ -25,7 +25,7 @@
             </p>
 
             @if($place->eventChronicles->isNotEmpty())
-                <p><strong>Dernieres chroniques:</strong></p>
+                <p><strong>Dernières chroniques :</strong></p>
                 <ul>
                     @foreach($place->eventChronicles as $chronicle)
                         <li>

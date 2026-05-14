@@ -13,7 +13,7 @@
             </div>
             <div class="field">
                 <label>Description du monde</label>
-                <textarea name="summary" rows="6" placeholder="Histoire, ambiance, regles, culture...">{{ old('summary', $world->summary) }}</textarea>
+                <textarea name="summary" rows="6" placeholder="Histoire, ambiance, règles, culture...">{{ old('summary', $world->summary) }}</textarea>
             </div>
             <div class="stack">
                 <button class="btn" type="submit">Enregistrer</button>

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\UserLog;
+use App\Support\PasswordRules;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,17 +30,36 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
         $credentials['email'] = mb_strtolower(trim((string) $credentials['email']));
+        $user = User::where('email', $credentials['email'])->first();
 
         $remember = $request->boolean('remember');
 
+        if ($user && $user->locked_at) {
+            UserLog::logAction((int) $user->id, 'account_locked', 'login', 'login');
+
+            throw ValidationException::withMessages([
+                'email' => 'Ce compte est bloque. Veuillez contacter loreroomapp@gmail.com.',
+            ]);
+        }
+
         if (!Auth::attempt($credentials, $remember)) {
+            $this->registerFailedLogin($user);
+
+            if ($user && $user->fresh() && $user->locked_at) {
+                throw ValidationException::withMessages([
+                    'email' => 'Ce compte est bloque. Veuillez contacter loreroomapp@gmail.com.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'email' => 'Email ou mot de passe incorrect.',
             ]);
         }
 
         $request->session()->regenerate();
+        $this->clearFailedLoginState(Auth::user());
         $this->issueTemporaryLoginToken($request);
+        UserLog::logAction((int) Auth::id(), 'connexion');
 
         return redirect()->intended(route('manage.index'));
     }
@@ -57,7 +78,11 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:180', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => PasswordRules::defaultsWithConfirmation(),
+        ], [
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caracteres.',
+            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractere special.',
+            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
         $user = User::create([
@@ -71,6 +96,7 @@ class AuthController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
         $this->issueTemporaryLoginToken($request);
+        UserLog::logAction((int) $user->id, 'connexion');
 
         return redirect()->route('manage.index');
     }
@@ -79,6 +105,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         if ($user) {
+            UserLog::logAction((int) $user->id, 'deconnexion');
             $user->forceFill([
                 'login_token_hash' => null,
                 'login_token_expires_at' => null,
@@ -107,5 +134,40 @@ class AuthController extends Controller
         ])->save();
 
         $request->session()->put('login_temp_token', $plainToken);
+    }
+
+    private function registerFailedLogin(?User $user): void
+    {
+        if (!$user) {
+            return;
+        }
+
+        $attempts = (int) $user->failed_login_attempts + 1;
+
+        $user->forceFill([
+            'failed_login_attempts' => $attempts,
+            'last_failed_login_at' => Carbon::now(),
+            'locked_at' => $attempts >= 5 ? Carbon::now() : null,
+        ])->save();
+
+        UserLog::logAction((int) $user->id, 'failed_login', 'login', 'login');
+
+        if ($attempts >= 5) {
+            UserLog::logAction((int) $user->id, 'account_locked', 'login', 'login');
+        }
+    }
+
+    private function clearFailedLoginState(?User $user): void
+    {
+        if (!$user) {
+            return;
+        }
+
+        $user->forceFill([
+            'failed_login_attempts' => 0,
+            'last_failed_login_at' => null,
+            'locked_at' => null,
+            'password_reset_pending_at' => null,
+        ])->save();
     }
 }

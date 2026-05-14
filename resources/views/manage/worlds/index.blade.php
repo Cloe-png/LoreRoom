@@ -133,7 +133,7 @@
         <section class="first-world">
             <div>
                 <h2>Crée ton premier monde</h2>
-                <p>Tu dois avoir au moins un monde pour commencer a ajouter des personnages, lieux et chroniques.</p>
+                <p>Tu dois avoir au moins un monde pour commencer à ajouter des personnages, lieux et chroniques.</p>
                 <a class="plus-btn" href="{{ route('manage.worlds.create') }}" aria-label="Créer un monde">+</a>
             </div>
         </section>

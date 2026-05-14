@@ -363,6 +363,36 @@
             </article>
 
             <article class="section-card full-width">
+                <h3>Factions / groupes</h3>
+                @if($character->factionMemberships->isEmpty())
+                    <p class="muted">Aucune faction liée.</p>
+                @else
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Faction</th><th>Rôle</th><th>Grade</th><th>Entrée</th><th>Statut</th></tr></thead>
+                            <tbody>
+                                @foreach($character->factionMemberships as $membership)
+                                    <tr>
+                                        <td>
+                                            @if($membership->faction)
+                                                <a href="{{ route('manage.factions.show', $membership->faction) }}">{{ $membership->faction->name }}</a>
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td>{{ $membership->role ?: '-' }}</td>
+                                        <td>{{ $membership->grade ?: '-' }}</td>
+                                        <td>{{ $membership->joined_at ? $membership->joined_at->format('d/m/Y') : '-' }}</td>
+                                        <td>{{ $membership->status ?: '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </article>
+
+            <article class="section-card full-width">
                 <h3>Parcours scolaire</h3>
                 @if($character->educations->isEmpty())
                     <p class="muted">Aucune entrée scolaire.</p>

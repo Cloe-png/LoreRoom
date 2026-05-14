@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="utf-8">
@@ -170,16 +170,18 @@
         }
 
         .help {
+            margin-top: 6px;
+            font-size: .86rem;
+            color: #6f5841;
+            line-height: 1.4;
+        }
+
+        .footer-help {
             margin-top: 15px;
             padding-top: 10px;
             border-top: 1px dashed rgba(93,65,34,.24);
             font-size: .86rem;
             color: #6f5841;
-        }
-
-        .help a {
-            color: #73481d;
-            font-weight: 700;
         }
 
         @media (max-width: 640px) {
@@ -196,7 +198,7 @@
             <div class="meta">Nouveau compte</div>
         </div>
 
-        <p class="muted">Creez un compte LoreRoom. Votre role initial sera <strong>utilisateur</strong>.</p>
+        <p class="muted">Creez un compte LoreRoom. Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>
@@ -222,24 +224,24 @@
             <div class="grid">
                 <div class="field">
                     <label for="password">Mot de passe</label>
-                    <input id="password" type="password" name="password" autocomplete="new-password" required>
+                    <input id="password" type="password" name="password" autocomplete="new-password" minlength="12" required>
+                    <div class="help">12 caracteres minimum, avec au moins 1 majuscule, 1 minuscule, 1 chiffre et 1 caractere special.</div>
                 </div>
                 <div class="field">
                     <label for="password_confirmation">Confirmation</label>
-                    <input id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required>
+                    <input id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" minlength="12" required>
                 </div>
             </div>
 
             <div class="actions">
-                <button class="btn primary" type="submit">Cr?er le compte</button>
-                <a class="btn secondary" href="{{ route('login') }}">Déjà inscrit ? Connexion</a>
+                <button class="btn primary" type="submit">Creer le compte</button>
+                <a class="btn secondary" href="{{ route('login') }}">Deja inscrit ? Connexion</a>
             </div>
         </form>
 
-        <div class="help">
+        <div class="footer-help">
             En validant, vous accedez directement au panneau de gestion.
         </div>
     </main>
 </body>
 </html>
-

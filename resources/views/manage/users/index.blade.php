@@ -131,7 +131,7 @@
 
         .users-table {
             width: 100%;
-            min-width: 900px;
+            min-width: 980px;
             border-collapse: separate;
             border-spacing: 0;
         }
@@ -147,10 +147,6 @@
         .users-table td,
         .users-table th {
             padding: 14px 12px;
-        }
-
-        .users-table tbody tr {
-            transition: background 120ms ease;
         }
 
         .users-table tbody tr:hover {
@@ -214,11 +210,27 @@
             display: grid;
             gap: 8px;
             justify-items: start;
-            min-width: 170px;
+            min-width: 220px;
+        }
+
+        .users-password-form {
+            display: grid;
+            gap: 8px;
+            width: min(280px, 100%);
+        }
+
+        .users-password-form input {
+            width: 100%;
+        }
+
+        .users-status {
+            display: grid;
+            gap: 6px;
+            min-width: 190px;
         }
 
         .users-self-note {
-            max-width: 180px;
+            max-width: 220px;
             line-height: 1.35;
         }
 
@@ -292,8 +304,9 @@
                 <div>
                     <h2 class="users-hero-title">Administration des comptes</h2>
                     <p class="users-hero-text">
-                        Consulte les utilisateurs inscrits, ajuste leur rôle et garde une vue claire sur les accès
-                        à l'application.
+                        Consulte les utilisateurs inscrits, ajuste leur role et garde une vue claire sur les acces
+                        a l'application. Si un compte est bloque apres 5 echecs, l'utilisateur doit t'ecrire par mail
+                        pour demander un nouveau mot de passe.
                     </p>
                 </div>
                 <div class="users-badge">{{ $users->total() }} compte(s)</div>
@@ -304,7 +317,7 @@
             <form method="GET" action="{{ route('manage.users.index') }}" class="users-search-form">
                 <div class="field users-search-input">
                     <label>Recherche</label>
-                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, e-mail, rôle...">
+                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, e-mail, role...">
                 </div>
                 <button class="btn" type="submit">Rechercher</button>
                 @if(!empty($q))
@@ -316,12 +329,12 @@
         <section class="panel users-table-panel">
             <div class="users-panel-top">
                 <h3 class="users-panel-title">Liste des utilisateurs</h3>
-                <div class="users-panel-meta">Tri par nom puis par e-mail</div>
+                <div class="users-panel-meta">Tri par statut puis par nom</div>
             </div>
 
             @if($users->isEmpty())
                 <div class="empty-users">
-                    <p class="muted" style="margin:0;">Aucun compte trouvé.</p>
+                    <p class="muted" style="margin:0;">Aucun compte trouve.</p>
                 </div>
             @else
                 <div class="users-table-wrap">
@@ -330,8 +343,9 @@
                             <tr>
                                 <th>Nom</th>
                                 <th>E-mail</th>
-                                <th>Rôle</th>
-                                <th>Date de création</th>
+                                <th>Statut</th>
+                                <th>Role</th>
+                                <th>Date de creation</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -345,10 +359,27 @@
                                         <div class="users-email">{{ $item->email }}</div>
                                     </td>
                                     <td>
+                                        <div class="users-status">
+                                            @if($item->locked_at)
+                                                <span class="role-chip">Compte bloque</span>
+                                                <div class="muted">
+                                                    5 echecs ou plus. Demande par mail requise avant reinitialisation.
+                                                </div>
+                                            @elseif($item->password_reset_pending_at)
+                                                <span class="role-chip">En attente de reconnexion</span>
+                                                <div class="muted">
+                                                    Nouveau mot de passe defini. Le compte redevient actif apres une connexion reussie.
+                                                </div>
+                                            @else
+                                                <span class="role-chip">Actif</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
                                         <form method="POST" action="{{ route('manage.users.update', $item) }}" class="role-form">
                                             @csrf
                                             @method('PUT')
-                                            <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
+                                            <span class="role-chip">Role actuel : {{ ucfirst($item->role) }}</span>
                                             <select name="role">
                                                 @foreach($roleOptions as $roleOption)
                                                     <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
@@ -356,7 +387,7 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <button class="btn secondary" type="submit">Mettre à jour</button>
+                                            <button class="btn secondary" type="submit">Mettre a jour</button>
                                         </form>
                                     </td>
                                     <td>
@@ -369,8 +400,17 @@
                                                 @method('DELETE')
                                                 <button class="btn danger" type="submit" {{ auth()->id() === $item->id ? 'disabled' : '' }}>Supprimer</button>
                                             </form>
+                                            @if($item->locked_at || $item->password_reset_pending_at)
+                                                <form method="POST" action="{{ route('manage.users.password', $item) }}" class="users-password-form">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="password" name="password" placeholder="Nouveau mot de passe" minlength="8" required>
+                                                    <input type="password" name="password_confirmation" placeholder="Confirmation" minlength="8" required>
+                                                    <button class="btn secondary" type="submit">Definir un nouveau mot de passe</button>
+                                                </form>
+                                            @endif
                                             @if(auth()->id() === $item->id)
-                                                <div class="muted users-self-note">Ton compte ne peut pas être supprimé ici.</div>
+                                                <div class="muted users-self-note">Ton compte ne peut pas etre supprime ici.</div>
                                             @endif
                                         </div>
                                     </td>
@@ -386,12 +426,16 @@
                             <div class="users-name">{{ $item->name }}</div>
                             <div class="users-mobile-meta">
                                 <div><strong>E-mail :</strong> {{ $item->email }}</div>
-                                <div><strong>Créé le :</strong> {{ optional($item->created_at)->format('d/m/Y H:i') ?: '-' }}</div>
+                                <div><strong>Cree le :</strong> {{ optional($item->created_at)->format('d/m/Y H:i') ?: '-' }}</div>
+                                <div>
+                                    <strong>Statut :</strong>
+                                    {{ $item->locked_at ? 'Compte bloque' : ($item->password_reset_pending_at ? 'En attente de reconnexion' : 'Actif') }}
+                                </div>
                             </div>
                             <form method="POST" action="{{ route('manage.users.update', $item) }}" class="role-form">
                                 @csrf
                                 @method('PUT')
-                                <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
+                                <span class="role-chip">Role actuel : {{ ucfirst($item->role) }}</span>
                                 <select name="role">
                                     @foreach($roleOptions as $roleOption)
                                         <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
@@ -399,7 +443,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button class="btn secondary" type="submit">Mettre à jour</button>
+                                <button class="btn secondary" type="submit">Mettre a jour</button>
                             </form>
                             <div class="users-actions">
                                 <form method="POST" action="{{ route('manage.users.destroy', $item) }}" class="inline" onsubmit="return confirm('Supprimer ce compte utilisateur ?');">
@@ -407,8 +451,18 @@
                                     @method('DELETE')
                                     <button class="btn danger" type="submit" {{ auth()->id() === $item->id ? 'disabled' : '' }}>Supprimer</button>
                                 </form>
+                                @if($item->locked_at || $item->password_reset_pending_at)
+                                    <div class="muted">L'utilisateur doit te contacter par mail avant reinitialisation.</div>
+                                    <form method="POST" action="{{ route('manage.users.password', $item) }}" class="users-password-form">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="password" name="password" placeholder="Nouveau mot de passe" minlength="8" required>
+                                        <input type="password" name="password_confirmation" placeholder="Confirmation" minlength="8" required>
+                                        <button class="btn secondary" type="submit">Definir un nouveau mot de passe</button>
+                                    </form>
+                                @endif
                                 @if(auth()->id() === $item->id)
-                                    <div class="muted users-self-note">Ton compte ne peut pas être supprimé ici.</div>
+                                    <div class="muted users-self-note">Ton compte ne peut pas etre supprime ici.</div>
                                 @endif
                             </div>
                         </article>
@@ -422,9 +476,9 @@
                 </p>
                 <div class="users-pagination-pages">
                     @if($users->onFirstPage())
-                        <span class="btn secondary" style="opacity:.55; pointer-events:none;">Précédent</span>
+                        <span class="btn secondary" style="opacity:.55; pointer-events:none;">Precedent</span>
                     @else
-                        <a class="btn secondary" href="{{ $users->previousPageUrl() }}">Précédent</a>
+                        <a class="btn secondary" href="{{ $users->previousPageUrl() }}">Precedent</a>
                     @endif
 
                     @for($page = 1; $page <= $users->lastPage(); $page++)

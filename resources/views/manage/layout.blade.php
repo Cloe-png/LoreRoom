@@ -490,10 +490,19 @@
                         <a class="nav-link @if(request()->routeIs('manage.suggestions.*')) active @endif" href="{{ route('manage.suggestions.index') }}">
                             <span class="nav-name">Suggestions</span>
                         </a>
+                        <a class="nav-link @if(request()->routeIs('manage.trash.*')) active @endif" href="{{ route('manage.trash.index') }}">
+                            <span class="nav-name">Corbeille</span>
+                        </a>
                     </div>
 
                     <div class="sidebar-bottom">
+                        <a class="nav-link @if(request()->routeIs('manage.account.*')) active @endif" href="{{ route('manage.account.edit') }}">
+                            <span class="nav-name">Paramètres</span>
+                        </a>
                         @if((string) (auth()->user()->role ?? '') === 'admin')
+                            <a class="nav-link @if(request()->routeIs('manage.analytics.*')) active @endif" href="{{ route('manage.analytics.index') }}">
+                                <span class="nav-name">Analytics</span>
+                            </a>
                             <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}">
                                 <span class="nav-name">Comptes</span>
                             </a>
@@ -525,7 +534,7 @@
                         @endif
                         @if ($errors->any())
                             <div class="errors">
-                                <strong>Validation:</strong>
+                                <strong>Erreurs :</strong>
                                 <ul>
                                     @foreach ($errors->all() as $error)
                                         <li>{{ $error }}</li>

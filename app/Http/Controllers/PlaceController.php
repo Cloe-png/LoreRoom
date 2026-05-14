@@ -71,7 +71,7 @@ class PlaceController extends Controller
         $place = Place::create($data);
         $this->addPlaceGalleryImages($place, $request->file('gallery_images', []), $request->input('gallery_captions', []));
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu cree.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu créé.');
     }
 
     public function show(Place $place)
@@ -139,25 +139,16 @@ class PlaceController extends Controller
         $this->removePlaceGalleryImages($place, $removeGalleryIds);
         $this->addPlaceGalleryImages($place, $request->file('gallery_images', []), $request->input('gallery_captions', []));
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu mis a jour.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu mis à jour.');
     }
 
     public function destroy(Place $place)
     {
         $this->abortIfOutsideCurrentWorld((int) $place->world_id);
 
-        if ($place->image_path) {
-            Storage::disk('public')->delete($place->image_path);
-        }
-
-        $galleryPaths = $place->galleryImages()->pluck('image_path')->all();
-        if (!empty($galleryPaths)) {
-            Storage::disk('public')->delete($galleryPaths);
-        }
-
         $place->delete();
 
-        return redirect()->route('manage.places.index')->with('success', 'Lieu supprime.');
+        return redirect()->route('manage.places.index')->with('success', 'Lieu supprimé.');
     }
 
     private function removePlaceGalleryImages(Place $place, array $ids): void

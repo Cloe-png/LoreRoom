@@ -90,6 +90,21 @@
     </section>
 
     <section class="panel">
+        <h3 style="margin-top:0;">Rôles de la faction</h3>
+        @if(empty($faction->roles))
+            <p class="muted">Aucun rôle défini.</p>
+        @else
+            <div class="list-card">
+                @foreach($faction->roles as $role)
+                    <div class="relation-line">
+                        <strong>{{ $role }}</strong>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
+    <section class="panel">
         <h3 style="margin-top:0;">Direction</h3>
         <p class="dl-row"><strong>Leader:</strong>
             @if($faction->leader)
@@ -116,20 +131,22 @@
 
     <section class="panel">
         <h3 style="margin-top:0;">Membres</h3>
-        @if($faction->members->isEmpty())
+        @if($faction->memberships->isEmpty())
             <p class="muted">Aucun membre enregistré.</p>
         @else
             <div class="list-card">
-                @foreach($faction->members as $member)
+                @foreach($faction->memberships as $membership)
                     <div class="member-line">
                         <div>
-                            <strong>{{ $member->display_name }}</strong>
-                            <span class="muted">· {{ $member->pivot->role ?: '-' }}</span>
-                            <span class="muted">· grade: {{ $member->pivot->grade ?: '-' }}</span>
-                            <span class="muted">· entrée: {{ $member->pivot->joined_at ? \Carbon\Carbon::parse($member->pivot->joined_at)->format('d/m/Y') : '-' }}</span>
-                            <span class="muted">· statut: {{ $member->pivot->status ?: '-' }}</span>
+                            <strong>{{ optional($membership->character)->display_name ?: 'Personnage inconnu' }}</strong>
+                            <span class="muted">{{ $membership->role ?: '-' }}</span>
+                            <span class="muted">grade: {{ $membership->grade ?: '-' }}</span>
+                            <span class="muted">entrée: {{ $membership->joined_at ? $membership->joined_at->format('d/m/Y') : '-' }}</span>
+                            <span class="muted">statut: {{ $membership->status ?: '-' }}</span>
                         </div>
-                        <a class="btn secondary" href="{{ route('manage.characters.show', $member) }}">Voir</a>
+                        @if($membership->character)
+                            <a class="btn secondary" href="{{ route('manage.characters.show', $membership->character) }}">Voir</a>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -146,9 +163,9 @@
                     <div class="relation-line">
                         <div>
                             <strong>{{ $relation->relatedFaction->name ?? 'Faction inconnue' }}</strong>
-                            <span class="muted">· {{ $relation->relation_type }}</span>
+                            <span class="muted">{{ $relation->relation_type }}</span>
                             @if($relation->is_bidirectional)
-                                <span class="muted">· bidirectionnelle</span>
+                                <span class="muted">bidirectionnelle</span>
                             @endif
                         </div>
                         @if($relation->description)
@@ -170,9 +187,9 @@
                     <div class="relation-line">
                         <div>
                             <strong>{{ $relation->faction->name ?? 'Faction inconnue' }}</strong>
-                            <span class="muted">· {{ $relation->relation_type }}</span>
+                            <span class="muted">{{ $relation->relation_type }}</span>
                             @if($relation->is_bidirectional)
-                                <span class="muted">· bidirectionnelle</span>
+                                <span class="muted">{{ $relation->is_bidirectional ? 'bidirectionnelle' : '' }}</span>
                             @endif
                         </div>
                         @if($relation->description)
@@ -184,7 +201,7 @@
         @endif
     </section>
 
-    @if(mb_strtolower((string) $faction->type) === 'école')
+    @if(mb_strtolower((string) $faction->type) === 'Ecole')
         <section class="panel">
             <h3 style="margin-top:0;">Diplômes</h3>
             @if($faction->diplomas->isEmpty())
@@ -196,7 +213,7 @@
                             <div>
                                 <strong>{{ $diploma->name }}</strong>
                                 @if($diploma->level)
-                                    <span class="muted">· {{ $diploma->level }}</span>
+                                    <span class="muted">Niveau :{{ $diploma->level }}</span>
                                 @endif
                             </div>
                             @if($diploma->description)

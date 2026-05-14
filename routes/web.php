@@ -4,11 +4,14 @@ use App\Http\Controllers\CharacterController;
 use App\Http\Controllers\CharacterRelationController;
 use App\Http\Controllers\ChronicleController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\FactionController;
 use App\Http\Controllers\ManageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SuggestionController;
+use App\Http\Controllers\TrashController;
+use App\Http\Controllers\UserAnalyticsController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\WorldController;
 use App\Http\Controllers\GalleryController;
@@ -40,8 +43,16 @@ Route::get('/media/{path}', [MediaController::class, 'show'])
 
 Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
     Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
+    Route::get('manage/account', [AccountSettingsController::class, 'edit'])->name('manage.account.edit');
+    Route::put('manage/account/password', [AccountSettingsController::class, 'updatePassword'])->name('manage.account.password');
+    Route::get('manage/analytics', [UserAnalyticsController::class, 'index'])->name('manage.analytics.index');
+    Route::get('manage/trash', [TrashController::class, 'index'])->name('manage.trash.index');
+    Route::post('manage/trash/empty', [TrashController::class, 'empty'])->name('manage.trash.empty');
+    Route::post('manage/trash/{type}/{id}/restore', [TrashController::class, 'restore'])->name('manage.trash.restore');
+    Route::delete('manage/trash/{type}/{id}', [TrashController::class, 'destroy'])->name('manage.trash.destroy');
     Route::get('manage/users', [UserAdminController::class, 'index'])->name('manage.users.index');
     Route::put('manage/users/{user}', [UserAdminController::class, 'update'])->name('manage.users.update');
+    Route::put('manage/users/{user}/password', [UserAdminController::class, 'updatePassword'])->name('manage.users.password');
     Route::delete('manage/users/{user}', [UserAdminController::class, 'destroy'])->name('manage.users.destroy');
     Route::get('manage/suggestions', [SuggestionController::class, 'index'])->name('manage.suggestions.index');
     Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');

@@ -44,7 +44,6 @@
 <body>
     <section class="card">
         <h1>Bienvenue sur LoreRoom</h1>
-        <p>Cette page technique existe uniquement comme point d'entrée Laravel.</p>
         <a href="{{ route('login') }}">Aller à la connexion</a>
     </section>
 </body>
