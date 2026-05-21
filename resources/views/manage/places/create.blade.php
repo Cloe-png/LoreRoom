@@ -31,7 +31,7 @@
 
             <div class="field">
                 <label>Image principale</label>
-                <input type="file" name="image" accept="image/*">
+                <input type="file" name="image" accept=".jpg,.png,image/jpeg,image/png">
             </div>
 
             <div class="field">
@@ -45,7 +45,7 @@
                     <div id="gallery-list">
                         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
                             <div class="grid-4">
-                                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".jpg,.png,image/jpeg,image/png"></div>
                                 <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
                             </div>
                             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
@@ -65,7 +65,7 @@
     <template id="gallery-row-template">
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".jpg,.png,image/jpeg,image/png"></div>
                 <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
             </div>
             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>

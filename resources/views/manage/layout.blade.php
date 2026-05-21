@@ -99,12 +99,46 @@
                 background:rgba(255,255,255,.36);
                 box-shadow: inset 0 0 0 1px rgba(255, 236, 202, 0.2);
             }
-            .brand h1 {
-                margin:0;
+            .brand-logo {
+                display:block;
+                width:min(100%, 150px);
+                height:auto;
+                margin:0 auto;
+            }
+            .nav-sections {
+                display: grid;
+                gap: 10px;
+            }
+            .nav-section {
+                border: 1px solid rgba(101,74,42,.18);
+                border-radius: 12px;
+                background: rgba(255,255,255,.18);
+                overflow: hidden;
+            }
+            .nav-section > summary {
+                list-style: none;
+                cursor: pointer;
+                padding: 10px 12px;
+                color: #5e472c;
                 font-family:"Cinzel","Times New Roman",serif;
-                font-size:1.04rem;
-                letter-spacing:.06em;
-                color:#4e381d;
+                font-size: .88rem;
+                letter-spacing: .06em;
+                text-transform: uppercase;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .nav-section > summary::-webkit-details-marker { display:none; }
+            .nav-section > summary::after {
+                content: "▾";
+                color: #6b4b2a;
+                transition: transform 140ms ease;
+            }
+            .nav-section:not([open]) > summary::after {
+                transform: rotate(-90deg);
+            }
+            .nav-section-body {
+                padding: 0 10px 10px;
             }
             .brand p {
                 margin:5px 0 0;
@@ -441,6 +475,100 @@
                 .sidebar { border-right:none; border-bottom:1px solid var(--gold-line); }
                 .content { padding-left: 18px; }
                 .content::before, .content::after { display:none; }
+                .wrap {
+                    width: 100vw;
+                    margin: 0;
+                    border-radius: 0;
+                }
+                .sidebar {
+                    padding: 10px 10px 12px;
+                }
+                .brand {
+                    margin-bottom: 10px;
+                    padding: 14px 12px;
+                }
+                .brand-logo {
+                    width: min(100%, 180px);
+                }
+                .nav-sections {
+                    display: flex;
+                    gap: 10px;
+                    overflow-x: auto;
+                    padding-bottom: 2px;
+                    scroll-snap-type: x mandatory;
+                    -webkit-overflow-scrolling: touch;
+                }
+                .nav-sections::-webkit-scrollbar {
+                    height: 6px;
+                }
+                .nav-section {
+                    min-width: min(58vw, 240px);
+                    scroll-snap-align: start;
+                    flex: 0 0 auto;
+                    border-radius: 10px;
+                }
+                .nav-section > summary {
+                    padding: 8px 10px;
+                    font-size: .8rem;
+                    letter-spacing: .05em;
+                }
+                .nav-section-body {
+                    padding: 0 8px 8px;
+                }
+                .nav-group {
+                    margin-top: 4px;
+                }
+                .nav-link {
+                    padding: 3px 6px 4px;
+                    margin-bottom: 2px;
+                    font-size: .8rem;
+                    line-height: 1.2;
+                }
+                .sidebar-bottom {
+                    margin-top: 8px;
+                }
+                header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .header-left {
+                    width: 100%;
+                    justify-content: space-between;
+                }
+                .sidebar-toggle {
+                    display: none;
+                }
+            }
+            @media (max-width: 640px) {
+                .brand-logo {
+                    width: min(100%, 200px);
+                }
+                .nav-section {
+                    min-width: min(52vw, 210px);
+                }
+                .nav-section > summary {
+                    padding: 7px 9px;
+                    font-size: .76rem;
+                }
+                .nav-link {
+                    font-size: .76rem;
+                }
+            }
+            @media (min-width: 981px) {
+                .nav-section {
+                    border: 0;
+                    border-radius: 0;
+                    background: transparent;
+                }
+                .nav-section > summary {
+                    padding: 0 8px 4px;
+                }
+                .nav-section > summary::after {
+                    display: none;
+                }
+                .nav-section-body {
+                    padding: 0;
+                }
             }
         </style>
     </head>
@@ -449,68 +577,57 @@
             <div class="chrome">
                 <aside class="sidebar">
                     <div class="brand">
-                        <h1>LoreRoom</h1>
+                        <img src="{{ asset('Logo.png') }}" alt="LoreRoom" class="brand-logo">
                     </div>
-                    <div class="nav-group">
-                        <a class="nav-link @if(request()->routeIs('manage.index')) active @endif" href="{{ route('manage.index') }}">
-                            <span class="nav-name">Accueil</span>
-                        </a>
-                    </div>
-                    <div class="nav-group">
-                        <a class="nav-link @if(request()->routeIs('manage.worlds.*')) active @endif" href="{{ route('manage.worlds.index') }}">
-                            <span class="nav-name">Mondes</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}">
-                            <span class="nav-name">Personnages</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}">
-                            <span class="nav-name">Métiers</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.lore.*') || request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.lore.index') }}">
-                            <span class="nav-name">Lore</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}">
-                            <span class="nav-name">Lieux</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}">
-                            <span class="nav-name">Frise chronologique</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}">
-                            <span class="nav-name">Relations personnages</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.genealogy.*')) active @endif" href="{{ route('manage.genealogy.index') }}">
-                            <span class="nav-name">Arbre généalogique</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}">
-                            <span class="nav-name">Galerie</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}">
-                            <span class="nav-name">Factions / Organisations</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.suggestions.*')) active @endif" href="{{ route('manage.suggestions.index') }}">
-                            <span class="nav-name">Suggestions</span>
-                        </a>
-                        <a class="nav-link @if(request()->routeIs('manage.trash.*')) active @endif" href="{{ route('manage.trash.index') }}">
-                            <span class="nav-name">Corbeille</span>
-                        </a>
-                    </div>
+                    <div class="nav-sections">
+                        <details class="nav-section" open>
+                            <summary>Accueil</summary>
+                            <div class="nav-section-body">
+                                <div class="nav-group">
+                                    <a class="nav-link @if(request()->routeIs('manage.index')) active @endif" href="{{ route('manage.index') }}">
+                                        <span class="nav-name">Accueil</span>
+                                    </a>
+                                </div>
+                                <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button type="submit" class="back-portals-link">Déconnexion</button>
+                                    </form>
+                            </div>
+                        </details>
 
-                    <div class="sidebar-bottom">
-                        <a class="nav-link @if(request()->routeIs('manage.account.*')) active @endif" href="{{ route('manage.account.edit') }}">
-                            <span class="nav-name">Paramètres</span>
-                        </a>
-                        @if((string) (auth()->user()->role ?? '') === 'admin')
-                            <a class="nav-link @if(request()->routeIs('manage.analytics.*')) active @endif" href="{{ route('manage.analytics.index') }}">
-                                <span class="nav-name">Analytics</span>
-                            </a>
-                            <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}">
-                                <span class="nav-name">Comptes</span>
-                            </a>
-                        @endif
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="back-portals-link">Déconnexion</button>
-                        </form>
+                        <details class="nav-section" open>
+                            <summary>Univers</summary>
+                            <div class="nav-section-body">
+                                <div class="nav-group">
+                                    <a class="nav-link @if(request()->routeIs('manage.worlds.*')) active @endif" href="{{ route('manage.worlds.index') }}"><span class="nav-name">Mondes</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}"><span class="nav-name">Personnages</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}"><span class="nav-name">Métiers</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.lore.*') || request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.lore.index') }}"><span class="nav-name">Lore</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}"><span class="nav-name">Lieux</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}"><span class="nav-name">Frise chronologique</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}"><span class="nav-name">Relations personnages</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.genealogy.*')) active @endif" href="{{ route('manage.genealogy.index') }}"><span class="nav-name">Arbre généalogique</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}"><span class="nav-name">Galerie</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}"><span class="nav-name">Factions / Organisations</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.suggestions.*')) active @endif" href="{{ route('manage.suggestions.index') }}"><span class="nav-name">Suggestions</span></a>
+                                    <a class="nav-link @if(request()->routeIs('manage.trash.*')) active @endif" href="{{ route('manage.trash.index') }}"><span class="nav-name">Corbeille</span></a>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="nav-section" open>
+                            <summary>Compte</summary>
+                            <div class="nav-section-body">
+                                <div class="sidebar-bottom">
+                                    <a class="nav-link @if(request()->routeIs('manage.account.*')) active @endif" href="{{ route('manage.account.edit') }}"><span class="nav-name">Paramètres</span></a>
+                                    @if((string) (auth()->user()->role ?? '') === 'admin')
+                                        <a class="nav-link @if(request()->routeIs('manage.analytics.*')) active @endif" href="{{ route('manage.analytics.index') }}"><span class="nav-name">Analytics</span></a>
+                                        <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}"><span class="nav-name">Comptes</span></a>
+                                    @endif
+                                    
+                                </div>
+                            </div>
+                        </details>
                     </div>
                 </aside>
                 <section class="main">

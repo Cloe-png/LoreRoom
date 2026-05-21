@@ -1,7 +1,7 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Paramètres')
-@section('header', 'Paramètres')
+@section('title', 'Gestion - Parametres')
+@section('header', 'Parametres')
 
 @section('content')
     <style>
@@ -31,6 +31,36 @@
         .account-panel {
             max-width: 760px;
         }
+        .account-worlds {
+            max-width: 760px;
+            border: 1px solid rgba(114, 84, 49, .24);
+            border-radius: 14px;
+            background: rgba(255,255,255,.26);
+            padding: 16px;
+            box-shadow: 0 10px 24px rgba(67, 45, 20, .08);
+        }
+        .account-worlds-title {
+            margin: 0 0 8px;
+            color: #56391b;
+            font-family: "Cinzel", "Times New Roman", serif;
+            font-size: 1.05rem;
+            letter-spacing: .04em;
+        }
+        .account-worlds-text {
+            margin: 0 0 12px;
+            color: #6a4d30;
+            line-height: 1.45;
+        }
+        .account-worlds-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        .account-worlds-meta {
+            color: #70573a;
+            font-size: .9rem;
+        }
         .account-help {
             margin-top: 6px;
             color: #6a4d30;
@@ -50,12 +80,6 @@
             font-size: 1rem;
             letter-spacing: .04em;
         }
-        .account-security-text {
-            margin: 0 0 10px;
-            color: #6a4d30;
-            font-size: .92rem;
-            line-height: 1.45;
-        }
         .account-checklist {
             display: grid;
             gap: 8px;
@@ -71,7 +95,7 @@
             font-size: .92rem;
         }
         .account-check::before {
-            content: "•";
+            content: "*";
             width: 18px;
             height: 18px;
             display: inline-flex;
@@ -89,10 +113,11 @@
             font-weight: 600;
         }
         .account-check.is-valid::before {
-            content: "✓";
+            content: "OK";
             border-color: rgba(73, 145, 99, .42);
             background: rgba(184, 236, 198, .7);
             color: #245035;
+            font-size: .6rem;
         }
     </style>
 
@@ -102,6 +127,18 @@
             <p class="account-text">
                 Mets à jour ton mot de passe ici.
             </p>
+        </section>
+
+        <section class="account-worlds">
+            <h3 class="account-worlds-title">Univers</h3>
+            <p class="account-worlds-text">
+                Tu peux créer un nouvel univers à partir de zéro ou en importer un déjà existant depuis l'écran de création du monde.
+            </p>
+            <div class="account-worlds-actions">
+                <a class="btn" href="{{ route('manage.worlds.create') }}">Créer ou importer un univers</a>
+                <a class="btn secondary" href="{{ route('manage.worlds.index') }}">Voir mes univers</a>
+                <span class="account-worlds-meta">{{ $worldsCount }} univers enregistré(s)</span>
+            </div>
         </section>
 
         <section class="panel account-panel">
@@ -122,11 +159,11 @@
                     <div class="account-security" aria-live="polite">
                         <h3 class="account-security-title">Checklist sécurité</h3>
                         <ul class="account-checklist">
-                            <li class="account-check" data-rule="length">12 caractéres minimum</li>
+                            <li class="account-check" data-rule="length">12 caractères minimum</li>
                             <li class="account-check" data-rule="lower">Au moins 1 minuscule</li>
                             <li class="account-check" data-rule="upper">Au moins 1 majuscule</li>
                             <li class="account-check" data-rule="digit">Au moins 1 chiffre</li>
-                            <li class="account-check" data-rule="special">Au moins 1 caractére spécial</li>
+                            <li class="account-check" data-rule="special">Au moins 1 caractère spécial</li>
                         </ul>
                     </div>
                 </div>

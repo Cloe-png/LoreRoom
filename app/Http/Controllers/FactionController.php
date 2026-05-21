@@ -6,6 +6,7 @@ use App\Models\Character;
 use App\Models\Faction;
 use App\Models\FactionRelation;
 use App\Models\Diploma;
+use App\Support\UploadSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -239,7 +240,7 @@ class FactionController extends Controller
             'leader_id' => ['nullable', Rule::exists('characters', 'id')->where('world_id', $worldId)],
             'co_leader_id' => ['nullable', Rule::exists('characters', 'id')->where('world_id', $worldId)],
             'founder_id' => ['nullable', Rule::exists('characters', 'id')->where('world_id', $worldId)],
-            'logo' => ['nullable', 'image', 'max:4096'],
+            'logo' => UploadSecurity::imageRules(4096),
             'members' => ['nullable', 'array'],
             'members.*.character_id' => ['nullable', Rule::exists('characters', 'id')->where('world_id', $worldId)],
             'members.*.role' => ['nullable', 'string', 'max:120'],

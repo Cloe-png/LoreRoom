@@ -217,11 +217,11 @@
 
                     <form id="suggestion-form" @if($formspreeEndpoint !== '') action="{{ $formspreeEndpoint }}" @endif method="POST" novalidate>
                         <div class="field">
-                            <label for="suggestion_name">Nom</label>
+                            <label for="suggestion_name">Pseudo</label>
                             <input
                                 id="suggestion_name"
                                 type="text"
-                                name="name"
+                                name="Pseudo"
                                 maxlength="120"
                                 value="{{ old('name', $defaultName) }}"
                                 placeholder="Ton nom ou pseudo"
@@ -234,7 +234,7 @@
                             <input
                                 id="suggestion_email"
                                 type="email"
-                                name="email"
+                                name="Email"
                                 maxlength="180"
                                 value="{{ old('email', $defaultEmail) }}"
                                 placeholder="nom@exemple.com"
@@ -257,11 +257,11 @@
 
                         <div class="field">
                             <label for="suggestion_category">Catégorie</label>
-                            <select id="suggestion_category" name="category">
-                                <option value="fonctionnalite">Votre idée ?</option>
-                                <option value="contenu">Idée de contenu</option>
-                                <option value="bug">Bug</option>
-                                <option value="autre">Autre</option>
+                            <select id="suggestion_category" name="Catégorie">
+                                <option value="Fonctionnalité">Votre idée ?</option>
+                                <option value="Contenu">Idée de contenu</option>
+                                <option value="Bug">Bug</option>
+                                <option value="Autre">Autre</option>
                             </select>
                         </div>
 
@@ -270,8 +270,8 @@
                             <label for="suggestion_message">Ta suggestion / Ton problème</label>
                             <textarea
                                 id="suggestion_message"
-                                name="message"
-                                placeholder="Explique l'idée, le besoin et si possible le resultat attendu."
+                                name="Le message"
+                                placeholder="Explique l'idée, le besoin et si possible le résultat attendu."
                                 required
                             >{{ old('message') }}</textarea>
                         </div>
@@ -280,13 +280,12 @@
                             <label for="suggestion_value">Pourquoi c'est utile ?</label>
                             <textarea
                                 id="suggestion_value"
-                                name="value"
+                                name="Pourquoi ?"
                                 placeholder="Ex: Cela ferait gagner du temps ou rendrait les fiches plus claires."
                             >{{ old('value') }}</textarea>
                         </div>
 
                         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true">
-                        <input type="hidden" name="_source" value="LoreRoom - Module suggestions">
                         <input type="hidden" name="_format" value="plain">
 
                         <div class="stack">
@@ -298,7 +297,6 @@
                             >
                                 Envoyer la suggestion
                             </button>
-                            <span class="muted">Transmission directe par email via Formspree.</span>
                         </div>
                     </form>
 
@@ -360,9 +358,9 @@
                     }
 
                     form.reset();
-                    showStatus('Suggestion envoyée avec succès. Merci pour l idée.', 'success');
+                    showStatus('Suggestion envoyée avec succès. Merci pour ton message ! Tu aura une réponse au plus vite.', 'success');
                 } catch (error) {
-                    showStatus('Impossible d envoyer la suggestion pour le moment. Verifie la configuration Formspree et reessaie.', 'error');
+                    showStatus('Impossible d\'envoyer la suggestion pour le moment. Vérifie la configuration Formspree et réessaie.', 'error');
                 } finally {
                     submit.disabled = false;
                     submit.textContent = 'Envoyer la suggestion';

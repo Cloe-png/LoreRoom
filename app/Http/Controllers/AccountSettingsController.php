@@ -16,6 +16,7 @@ class AccountSettingsController extends Controller
         return view('manage.account.edit', [
             'user' => $request->user(),
             'passwordHelp' => PasswordRules::helpText(),
+            'worldsCount' => $request->user() ? $request->user()->worlds()->count() : 0,
         ]);
     }
 
@@ -27,8 +28,8 @@ class AccountSettingsController extends Controller
             'current_password' => ['required', 'string'],
             'password' => PasswordRules::defaultsWithConfirmation(),
         ], [
-            'password.min' => 'Le mot de passe doit contenir au moins 12 caracteres.',
-            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractere special.',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère special.',
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
@@ -53,6 +54,6 @@ class AccountSettingsController extends Controller
 
         return redirect()
             ->route('manage.account.edit')
-            ->with('success', 'Mot de passe mis a jour avec succes.');
+            ->with('success', 'Mot de passe mis à jour avec succès.');
     }
 }

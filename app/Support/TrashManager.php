@@ -21,49 +21,49 @@ class TrashManager
     {
         return [
             [
-                'title' => 'Mondes supprimes',
+                'title' => 'Mondes supprimés',
                 'type' => 'world',
                 'name' => 'name',
                 'items' => $user ? $user->worlds()->onlyTrashed()->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Personnages supprimes',
+                'title' => 'Personnages supprimés',
                 'type' => 'character',
                 'name' => 'display_name',
                 'items' => $worldId ? Character::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Lieux supprimes',
+                'title' => 'Lieux supprimés',
                 'type' => 'place',
                 'name' => 'name',
                 'items' => $worldId ? Place::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Chroniques supprimees',
+                'title' => 'Chroniques supprimées',
                 'type' => 'chronicle',
                 'name' => 'title',
                 'items' => $worldId ? Chronicle::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Factions supprimees',
+                'title' => 'Factions supprimées',
                 'type' => 'faction',
                 'name' => 'name',
                 'items' => $worldId ? Faction::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Entrees de lore supprimees',
+                'title' => 'Entrées de lore supprimées',
                 'type' => 'lore',
                 'name' => 'title',
                 'items' => $worldId ? LoreEntry::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Especes supprimees',
+                'title' => 'Espèces supprimées',
                 'type' => 'species',
                 'name' => 'name',
                 'items' => $worldId ? Species::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
             ],
             [
-                'title' => 'Metiers supprimes',
+                'title' => 'Métiers supprimés',
                 'type' => 'job',
                 'name' => 'name',
                 'items' => $worldId

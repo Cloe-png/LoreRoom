@@ -23,7 +23,7 @@ class EnsureSessionActivity
         if ($lastActivity) {
             $last = $lastActivity instanceof Carbon ? $lastActivity : Carbon::parse($lastActivity);
             if ($last->diffInMinutes($now) >= $lifetimeMinutes) {
-                UserLog::logAction((int) Auth::id(), 'deconnexion');
+                UserLog::logAction((int) Auth::id(), 'déconnexion');
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

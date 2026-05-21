@@ -29,8 +29,8 @@ class AuthController extends Controller
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
-        $credentials['email'] = mb_strtolower(trim((string) $credentials['email']));
-        $user = User::where('email', $credentials['email'])->first();
+        $credentials['email'] = User::normalizeEmail((string) $credentials['email']);
+        $user = User::findByEmail($credentials['email']);
 
         $remember = $request->boolean('remember');
 
@@ -42,7 +42,7 @@ class AuthController extends Controller
             ]);
         }
 
-        if (!Auth::attempt($credentials, $remember)) {
+        if (!$user || !Hash::check((string) $credentials['password'], (string) $user->password)) {
             $this->registerFailedLogin($user);
 
             if ($user && $user->fresh() && $user->locked_at) {
@@ -56,6 +56,7 @@ class AuthController extends Controller
             ]);
         }
 
+        Auth::login($user, $remember);
         $request->session()->regenerate();
         $this->clearFailedLoginState(Auth::user());
         $this->issueTemporaryLoginToken($request);
@@ -77,7 +78,21 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:180', 'unique:users,email'],
+            'email' => [
+                'required',
+                'email',
+                'max:180',
+                function (string $attribute, $value, \Closure $fail): void {
+                    $email = User::normalizeEmail((string) $value);
+                    $exists = User::supportsEmailHash()
+                        ? User::query()->where('email_hash', User::emailHash($email))->exists()
+                        : User::query()->where('email', $email)->exists();
+
+                    if ($exists) {
+                        $fail('Cette adresse e-mail est déjà utilisée.');
+                    }
+                },
+            ],
             'password' => PasswordRules::defaultsWithConfirmation(),
         ], [
             'password.min' => 'Le mot de passe doit contenir au moins 12 caracteres.',
@@ -87,7 +102,7 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => trim((string) $data['name']),
-            'email' => mb_strtolower(trim((string) $data['email'])),
+            'email' => User::normalizeEmail((string) $data['email']),
             'password' => Hash::make((string) $data['password']),
             'role' => 'utilisateur',
             'current_world_id' => null,
@@ -105,7 +120,7 @@ class AuthController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            UserLog::logAction((int) $user->id, 'deconnexion');
+            UserLog::logAction((int) $user->id, 'déconnexion');
             $user->forceFill([
                 'login_token_hash' => null,
                 'login_token_expires_at' => null,
@@ -117,7 +132,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Vous etes deconnecte.');
+        return redirect()->route('login')->with('success', 'Vous êtes déconnecté.');
     }
 
     private function issueTemporaryLoginToken(Request $request): void

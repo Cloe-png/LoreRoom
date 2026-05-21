@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Place;
+use App\Support\UploadSecurity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -54,9 +55,9 @@ class PlaceController extends Controller
             'type' => ['nullable', Rule::in(self::PLACE_TYPES)],
             'region' => ['nullable', 'string', 'max:120'],
             'summary' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => UploadSecurity::imageRules(4096),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => UploadSecurity::imageRules(4096),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
         ]);
@@ -115,9 +116,9 @@ class PlaceController extends Controller
             'type' => ['nullable', Rule::in(self::PLACE_TYPES)],
             'region' => ['nullable', 'string', 'max:120'],
             'summary' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => UploadSecurity::imageRules(4096),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => UploadSecurity::imageRules(4096),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
             'remove_gallery_ids' => ['nullable', 'array'],

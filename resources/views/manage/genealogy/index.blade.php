@@ -43,6 +43,54 @@
             padding: 10px;
             position: relative;
         }
+        .genealogy-summary {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 1.3fr .9fr;
+            margin: 0 0 14px;
+        }
+        .genealogy-summary-card {
+            border: 1px solid rgba(114,84,49,.2);
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,.54);
+            box-shadow: 0 10px 24px rgba(67, 45, 20, .08);
+        }
+        .genealogy-summary-card h3 {
+            margin: 0 0 6px;
+            color: #4c3419;
+            font-family: "Cinzel", "Times New Roman", serif;
+            font-size: 1rem;
+            letter-spacing: .04em;
+        }
+        .genealogy-summary-card p {
+            margin: 0;
+            color: #6d5234;
+            line-height: 1.45;
+        }
+        .genealogy-stats {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .genealogy-stat {
+            border-radius: 12px;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(255,250,239,.88), rgba(241,231,211,.9));
+            border: 1px solid rgba(114,84,49,.18);
+        }
+        .genealogy-stat strong {
+            display: block;
+            color: #4a3117;
+            font-size: 1.4rem;
+            font-family: "Cinzel", "Times New Roman", serif;
+        }
+        .genealogy-stat span {
+            color: #71563a;
+            font-size: .86rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
         .genealogy-controls {
             position: absolute;
             right: 18px;
@@ -139,14 +187,28 @@
         .genealogy-legend-floating .dot.mort {
             background: #f7dede;
         }
+        @media (max-width: 980px) {
+            .genealogy-summary {
+                grid-template-columns: 1fr;
+            }
+            .genealogy-stats {
+                grid-template-columns: 1fr;
+            }
+            .genealogy-legend-floating {
+                position: static;
+                margin-top: 12px;
+            }
+        }
     </style>
     <section class="panel" style="margin-top:0;">
         <form method="GET" action="{{ route('manage.genealogy.index') }}" class="grid-4">
             <div class="field">
-                <label>Personnage</label>
-                <select name="focus_id">
-                    @foreach($characters as $character)
-                        <option value="{{ $character->id }}" {{ $selectedId == $character->id ? 'selected' : '' }}>{{ $character->display_name }}</option>
+                <label>Famille</label>
+                <select name="family">
+                    @foreach($families as $family)
+                        <option value="{{ $family['key'] }}" {{ $selectedFamilyKey === $family['key'] ? 'selected' : '' }}>
+                            {{ $family['label'] }}{{ !empty($family['member_count']) ? ' (' . $family['member_count'] . ')' : '' }}
+                        </option>
                     @endforeach
                 </select>
             </div>
@@ -163,6 +225,8 @@
     @else
         @php
             $selectedNode = $nodes->firstWhere('id', (int) $selectedId);
+            $minLevel = (int) $nodes->min('level');
+            $maxLevel = (int) $nodes->max('level');
             $formatDate = function ($date) {
                 if (empty($date)) {
                     return '--/--/----';
@@ -180,7 +244,31 @@
             $focusDeath = empty($focusDeathRaw) ? ($focusIsDead ? '--/--/----' : 'En vie') : $formatDate($focusDeathRaw);
         @endphp
         <section class="panel">
+            <div class="genealogy-summary">
+                <article class="genealogy-summary-card">
+                    <h3>Lecture de l’arbre</h3>
+                    <p>
+                        Les ancêtres sont placés au-dessus, les descendants en dessous, et chaque couple partage une même ligne de génération.
+                        Le rendu met davantage l’accent sur les branches familiales pour se rapprocher d’un vrai arbre généalogique.
+                    </p>
+                </article>
+                <div class="genealogy-stats">
+                    <article class="genealogy-stat">
+                        <strong>{{ $nodes->count() }}</strong>
+                        <span>membres visibles</span>
+                    </article>
+                    <article class="genealogy-stat">
+                        <strong>{{ max(1, $maxLevel - $minLevel + 1) }}</strong>
+                        <span>générations</span>
+                    </article>
+                    <article class="genealogy-stat">
+                        <strong>{{ $selectedFamilyLabel }}</strong>
+                        <span>famille active</span>
+                    </article>
+                </div>
+            </div>
             <div class="genealogy-dates-focus">
+                <span class="chip">Famille: {{ $selectedFamilyLabel }}</span>
                 <span id="focus-name-chip" class="chip">{{ $focusName }}</span>
                 <span id="focus-birth-chip" class="chip birth">Naissance: {{ $focusBirth }}</span>
                 <span id="focus-death-chip" class="chip death">Mort: {{ $focusDeath }}</span>
@@ -250,11 +338,38 @@
                     const nodes=raw.map(n=>({...n,id:Number(n.id),father_id:Number(n.father_id||0),mother_id:Number(n.mother_id||0),spouse_id:Number(n.spouse_id||0),level:Number(n.level||0)-min}));
                     const byId=new Map(nodes.map(n=>[n.id,n])); const ids=new Set(nodes.map(n=>n.id));
 
-                    const cp=[]; const k=new Set(); const addPair=(a,b)=>{ const x=Number(a||0),y=Number(b||0); if(!x||!y||x===y||!ids.has(x)||!ids.has(y))return; const l=Math.min(x,y),r=Math.max(x,y),key=`${l}-${r}`; if(k.has(key))return; k.add(key); cp.push([l,r]); };
-                    edges.forEach(e=>{ if((e.kind||'')!=='couple')return; addPair(e.from,e.to); });
-                    nodes.forEach(n=>{ if(n.spouse_id&&ids.has(n.spouse_id)) addPair(n.id,n.spouse_id); });
-                    nodes.forEach(ch=>{ const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m) addPair(f,m); });
-                    const partner=new Map(); cp.forEach(([a,b])=>{ if(!partner.has(a))partner.set(a,[]); if(!partner.has(b))partner.set(b,[]); partner.get(a).push(b); partner.get(b).push(a); });
+                    const makePairStore=()=>{
+                        const pairs=[];
+                        const keys=new Set();
+                        const add=(a,b)=>{
+                            const x=Number(a||0),y=Number(b||0);
+                            if(!x||!y||x===y||!ids.has(x)||!ids.has(y)) return;
+                            const l=Math.min(x,y),r=Math.max(x,y),key=`${l}-${r}`;
+                            if(keys.has(key)) return;
+                            keys.add(key);
+                            pairs.push([l,r]);
+                        };
+                        return { pairs, add, has:(a,b)=>keys.has(`${Math.min(a,b)}-${Math.max(a,b)}`) };
+                    };
+                    const explicitCouples=makePairStore();
+                    edges.forEach(e=>{ if((e.kind||'')!=='couple')return; explicitCouples.add(e.from,e.to); });
+                    nodes.forEach(n=>{ if(n.spouse_id&&ids.has(n.spouse_id)) explicitCouples.add(n.id,n.spouse_id); });
+                    const coParents=makePairStore();
+                    nodes.forEach(ch=>{
+                        const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0;
+                        const m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0;
+                        if(f&&m) coParents.add(f,m);
+                    });
+                    const layoutPairs=makePairStore();
+                    explicitCouples.pairs.forEach(([a,b])=>layoutPairs.add(a,b));
+                    coParents.pairs.forEach(([a,b])=>layoutPairs.add(a,b));
+                    const partner=new Map();
+                    layoutPairs.pairs.forEach(([a,b])=>{
+                        if(!partner.has(a))partner.set(a,[]);
+                        if(!partner.has(b))partner.set(b,[]);
+                        partner.get(a).push(b);
+                        partner.get(b).push(a);
+                    });
                     const exPairs=[];
                     edges.forEach(e=>{
                         if((e.kind||'')!=='ex') return;
@@ -330,12 +445,19 @@
                             const w=unitWidth(u);
                             const prefs=u.map(id=>getNodePreferredCenter(id)).filter(v=>Number.isFinite(v));
                             const pref=prefs.length?prefs.reduce((a,b)=>a+b,0)/prefs.length:NaN;
+                            const birthKey=u
+                                .map(id=>String(byId.get(id)?.birth_date||'9999-12-31'))
+                                .sort((a,b)=>a.localeCompare(b))[0] || '9999-12-31';
                             const label=u.map(id=>String(byId.get(id)?.label||'')).join('|');
-                            return {u,w,pref,label};
+                            return {u,w,pref,birthKey,label};
                         });
 
-                        const withPref=metaUnits.filter(x=>Number.isFinite(x.pref)).sort((a,b)=>a.pref-b.pref||a.label.localeCompare(b.label));
-                        const withoutPref=metaUnits.filter(x=>!Number.isFinite(x.pref)).sort((a,b)=>a.label.localeCompare(b.label));
+                        const withPref=metaUnits
+                            .filter(x=>Number.isFinite(x.pref))
+                            .sort((a,b)=>a.pref-b.pref||a.birthKey.localeCompare(b.birthKey)||a.label.localeCompare(b.label));
+                        const withoutPref=metaUnits
+                            .filter(x=>!Number.isFinite(x.pref))
+                            .sort((a,b)=>a.birthKey.localeCompare(b.birthKey)||a.label.localeCompare(b.label));
                         const ordered=[...withPref,...withoutPref];
 
                         const hasPref=withPref.length>0;
@@ -361,21 +483,19 @@
                         });
                     });
 
-                    const pairEvidence=new Map();
-                    nodes.forEach(ch=>{ const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m){ const key=[f,m].sort((a,b)=>a-b).join('-'); pairEvidence.set(key,(pairEvidence.get(key)||0)+1); } });
-                    const pickPartner=(p)=>{ const pn=byId.get(p); if(!pn)return 0; const base=(partner.get(p)||[]); const spouse=Number(pn.spouse_id||0); const merged=[...base, ...(spouse? [spouse] : [])]; const candidates=[...new Set(merged)].filter(x=>{ const xn=byId.get(x); return !!xn&&xn.level===pn.level; }); if(!candidates.length)return 0; if(spouse&&candidates.includes(spouse))return spouse; if(candidates.length===1)return candidates[0]; let best=0,bestScore=-1; candidates.forEach(c=>{ const key=[p,c].sort((a,b)=>a-b).join('-'); const score=Number(pairEvidence.get(key)||0); if(score>bestScore){ best=c; bestScore=score; } }); return best||0; };
                     const byBirthThenName=(a,b)=>{
                         const dA=String(a.birth_date||'9999-12-31');
                         const dB=String(b.birth_date||'9999-12-31');
                         return dA.localeCompare(dB) || String(a.label||'').localeCompare(String(b.label||''));
                     };
                     const fam=new Map();
-                    nodes.forEach(ch=>{ let ps=[]; const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m)ps=[f,m].sort((a,b)=>a-b); else if(f||m){ const p=f||m; const inferred=pickPartner(p); ps=inferred?[p,inferred].sort((a,b)=>a-b):[p]; } else return; const key=ps.join('-'); if(!fam.has(key))fam.set(key,{parents:ps,children:[]}); fam.get(key).children.push(ch.id); });
+                    nodes.forEach(ch=>{ let ps=[]; const f=ch.father_id&&ids.has(ch.father_id)?ch.father_id:0, m=ch.mother_id&&ids.has(ch.mother_id)?ch.mother_id:0; if(f&&m)ps=[f,m].sort((a,b)=>a-b); else if(f||m)ps=[f||m]; else return; const key=ps.join('-'); if(!fam.has(key))fam.set(key,{parents:ps,children:[]}); fam.get(key).children.push(ch.id); });
                     fam.forEach((f)=>{ f.children=(f.children||[]).sort((a,b)=>byBirthThenName(byId.get(a)||{}, byId.get(b)||{})); });
 
                     const svg=S('svg',{width:svgW,height:svgH,viewBox:`0 0 ${svgW} ${svgH}`});
                     const viewport=S('g');
-                    const eg=S('g'), ng=S('g');
+                    const bg=S('g'), eg=S('g'), ng=S('g');
+                    viewport.appendChild(bg);
                     viewport.appendChild(eg);
                     viewport.appendChild(ng);
                     svg.appendChild(viewport);
@@ -430,11 +550,37 @@
                         return isGhost ? '#8a8f99' : '#2e3036';
                     };
                     const renderGraph=()=>{
+                        bg.innerHTML='';
                         eg.innerHTML='';
                         ng.innerHTML='';
                         const visible=new Set(nodes.map(n => n.id));
+                        const levelValues=[...new Set(nodes.map(n => Number(n.level||0)))].sort((a,b)=>a-b);
+                        levelValues.forEach((level, index)=>{
+                            const y=PY + (level * DY) - 34;
+                            const bandFill=index % 2 === 0 ? 'rgba(206, 187, 151, 0.14)' : 'rgba(150, 178, 211, 0.1)';
+                            bg.appendChild(S('rect',{
+                                x: 22,
+                                y,
+                                width: svgW - 44,
+                                height: H + 68,
+                                rx: 20,
+                                fill: bandFill,
+                                stroke: 'rgba(108, 82, 50, 0.08)'
+                            }));
+                            const label=S('text',{
+                                x: 40,
+                                y: y + 24,
+                                'font-family':'Cinzel, Times New Roman, serif',
+                                'font-size':'13',
+                                fill:'#6e5435',
+                                'font-weight':'700',
+                                'letter-spacing':'1.2'
+                            });
+                            label.textContent=`GENERATION ${level + 1}`;
+                            bg.appendChild(label);
+                        });
 
-                        cp.forEach(([a,b])=>{
+                        explicitCouples.pairs.forEach(([a,b])=>{
                             if(!visible.has(a) || !visible.has(b)) return;
                             const A=pos.get(a),B=pos.get(b); if(!A||!B)return;
                             const L=A.x<=B.x?A:B,R=A.x<=B.x?B:A;
@@ -577,6 +723,28 @@
 
                     const clampScale=(v)=>Math.max(0.45, Math.min(2.3, v));
                     const applyView=()=>{ viewport.setAttribute('transform', `translate(${tx} ${ty}) scale(${scale})`); };
+                    const getGraphBounds=()=>{
+                        const values=[...pos.values()];
+                        if(!values.length){
+                            return { minX:0, minY:0, maxX:svgW, maxY:svgH };
+                        }
+                        const minX=Math.min(...values.map(p=>p.x));
+                        const minY=Math.min(...values.map(p=>p.y));
+                        const maxX=Math.max(...values.map(p=>p.x+W));
+                        const maxY=Math.max(...values.map(p=>p.y+H));
+                        return { minX, minY, maxX, maxY };
+                    };
+                    const fitGraph=()=>{
+                        const { minX, minY, maxX, maxY } = getGraphBounds();
+                        const pad=48;
+                        const graphWidth=Math.max(1, (maxX-minX)+(pad*2));
+                        const graphHeight=Math.max(1, (maxY-minY)+(pad*2));
+                        const fitScale=clampScale(Math.min(root.clientWidth/graphWidth, root.clientHeight/graphHeight, 1.35));
+                        scale=fitScale;
+                        tx=((root.clientWidth-((maxX-minX)*scale))/2) - (minX*scale);
+                        ty=((root.clientHeight-((maxY-minY)*scale))/2) - (minY*scale);
+                        applyView();
+                    };
                     const centerOnNode=(nodeId, targetScale)=>{
                         const p=pos.get(Number(nodeId));
                         if(!p) return;
@@ -602,10 +770,7 @@
                     if(zoomInBtn) zoomInBtn.addEventListener('click', ()=>zoomAt(1.12, root.clientWidth*0.5, root.clientHeight*0.5));
                     if(zoomOutBtn) zoomOutBtn.addEventListener('click', ()=>zoomAt(0.89, root.clientWidth*0.5, root.clientHeight*0.5));
                     if(zoomResetBtn) zoomResetBtn.addEventListener('click', ()=>{
-                        scale=1;
-                        tx=Math.max(24,(root.clientWidth-svgW)/2);
-                        ty=24;
-                        applyView();
+                        fitGraph();
                     });
 
                     root.addEventListener('wheel', (ev)=>{
@@ -641,7 +806,7 @@
 
                     if(selected){
                         currentFocusId=selected.id;
-                        centerOnNode(currentFocusId, 1);
+                        fitGraph();
                         update(currentFocusId);
                         renderGraph();
                     }

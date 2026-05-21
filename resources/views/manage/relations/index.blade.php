@@ -5,7 +5,7 @@
 
 @section('content')
     <div class="stack" style="justify-content: space-between;">
-        <p class="muted">Module relationnel entre personnages (famille, alliance, rivalite, mentorat...).</p>
+        <p class="muted">Module relationnel entre personnages (famille, alliance, rivalité, mentor...).</p>
         <a class="btn" href="{{ route('manage.relations.create') }}">Nouvelle relation</a>
     </div>
 

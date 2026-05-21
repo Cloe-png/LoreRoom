@@ -58,9 +58,11 @@ class UserAnalyticsController extends Controller
             ->where('action_at', '>=', $since)
             ->when($userSearch !== '', function ($query) use ($userSearch) {
                 $query->whereHas('user', function ($userQuery) use ($userSearch) {
-                    $userQuery
-                        ->where('name', 'like', '%' . $userSearch . '%')
-                        ->orWhere('email', 'like', '%' . $userSearch . '%');
+                    $userQuery->where('name', 'like', '%' . $userSearch . '%');
+
+                    if (filter_var($userSearch, FILTER_VALIDATE_EMAIL) && User::supportsEmailHash()) {
+                        $userQuery->orWhere('email_hash', User::emailHash($userSearch));
+                    }
                 });
             })
             ->latest('action_at')

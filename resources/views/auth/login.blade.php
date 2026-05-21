@@ -193,7 +193,6 @@
             <div class="meta">LoreRoom</div>
         </div>
 
-        <p class="muted">Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>

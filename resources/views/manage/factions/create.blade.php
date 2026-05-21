@@ -106,7 +106,7 @@
 
             <div class="field">
                 <label>Logo</label>
-                <input type="file" name="logo" accept="image/*">
+                <input type="file" name="logo" accept=".jpg,.png,image/jpeg,image/png">
             </div>
 
             <div class="grid-4">

@@ -33,20 +33,40 @@ class GenealogyController extends Controller
                 'image_path',
             ]);
 
-        $selectedId = (int) request('focus_id', 0);
-        if ($selectedId <= 0 || !$characters->firstWhere('id', $selectedId)) {
-            $selectedId = (int) ($characters->first()->id ?? 0);
+        $families = $this->buildFamilyBuckets($characters);
+        $selectedFamilyKey = (string) request('family', '');
+        if ($selectedFamilyKey === '' || !$families->has($selectedFamilyKey)) {
+            $selectedFamilyKey = (string) ($families->keys()->first() ?? '');
         }
 
-        $rootIds = $characters
-            ->filter(function ($character) {
-                return (int) ($character->father_id ?? 0) === 0 && (int) ($character->mother_id ?? 0) === 0;
-            })
-            ->pluck('id')
+        $selectedFamily = $families->get($selectedFamilyKey, [
+            'key' => '',
+            'label' => 'Sans famille',
+            'member_ids' => collect(),
+            'root_ids' => collect(),
+        ]);
+
+        $familyMemberIds = collect($selectedFamily['member_ids'] ?? [])
             ->map(fn ($id) => (int) $id)
             ->filter()
-            ->unique()
             ->values();
+
+        $familyRootIds = collect($selectedFamily['root_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter()
+            ->values();
+
+        $familyCharacters = $characters
+            ->whereIn('id', $familyMemberIds->all())
+            ->sort(fn (Character $a, Character $b) => $this->compareByBirthThenName($a, $b))
+            ->values();
+
+        $selectedId = (int) request('focus_id', 0);
+        if ($selectedId <= 0 || !$familyMemberIds->contains($selectedId)) {
+            $selectedId = (int) ($familyRootIds->first() ?? $familyCharacters->first()->id ?? 0);
+        }
+
+        $rootIds = $familyRootIds->values();
 
         if ($rootIds->isEmpty() && $selectedId > 0) {
             $rootIds->push($selectedId);
@@ -59,11 +79,71 @@ class GenealogyController extends Controller
 
         return view('manage.genealogy.index', [
             'characters' => $characters,
+            'families' => $families->values(),
+            'selectedFamilyKey' => $selectedFamilyKey,
+            'selectedFamilyLabel' => (string) ($selectedFamily['label'] ?? 'Sans famille'),
             'selectedId' => $selectedId,
             'nodes' => $nodes,
             'edges' => $edges,
             'layout' => $layout,
         ]);
+    }
+
+    private function buildFamilyBuckets(Collection $characters): Collection
+    {
+        if ($characters->isEmpty()) {
+            return collect();
+        }
+
+        return $characters
+            ->groupBy(fn (Character $character) => $this->resolveFamilyKey($character))
+            ->map(function (Collection $members, string $key) {
+                $orderedMembers = $members
+                    ->sort(fn (Character $a, Character $b) => $this->compareByBirthThenName($a, $b))
+                    ->values();
+
+                $memberIds = $orderedMembers
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values();
+
+                $memberIdSet = $memberIds->flip();
+                $rootIds = $orderedMembers
+                    ->filter(function (Character $character) use ($memberIdSet) {
+                        $fatherId = (int) ($character->father_id ?? 0);
+                        $motherId = (int) ($character->mother_id ?? 0);
+
+                        return !isset($memberIdSet[$fatherId]) && !isset($memberIdSet[$motherId]);
+                    })
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values();
+
+                if ($rootIds->isEmpty() && $memberIds->isNotEmpty()) {
+                    $rootIds->push((int) $memberIds->first());
+                }
+
+                $label = trim((string) ($orderedMembers->first()->family_name ?? ''));
+                if ($label === '') {
+                    $label = trim((string) ($orderedMembers->first()->last_name ?? ''));
+                }
+                if ($label === '') {
+                    $label = 'Sans famille';
+                }
+
+                return [
+                    'key' => $key,
+                    'label' => $label,
+                    'member_ids' => $memberIds,
+                    'root_ids' => $rootIds,
+                    'member_count' => $memberIds->count(),
+                ];
+            })
+            ->sortBy(function (array $family) {
+                return mb_strtolower((string) ($family['label'] ?? ''), 'UTF-8');
+            })
+            ->values()
+            ->keyBy('key');
     }
 
     private function buildFamilyGraph(Collection $characters, array $rootIds, int $depth, Collection $couplePairs, Collection $exPairs): array
@@ -537,6 +617,20 @@ class GenealogyController extends Controller
         }
 
         return 'Generation +' . $level;
+    }
+
+    private function resolveFamilyKey(Character $character): string
+    {
+        $label = trim((string) ($character->family_name ?? ''));
+        if ($label === '') {
+            $label = trim((string) ($character->last_name ?? ''));
+        }
+
+        if ($label === '') {
+            return '__sans-famille__';
+        }
+
+        return mb_strtolower($label, 'UTF-8');
     }
 
     private function resolveUsableImagePath(?Character $character): ?string

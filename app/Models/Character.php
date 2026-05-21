@@ -48,6 +48,7 @@ class Character extends Model
         'status',
         'has_children',
         'has_brother_sister',
+        'is_adopted',
         'father_id',
         'mother_id',
         'spouse_id',
@@ -85,6 +86,7 @@ class Character extends Model
         'death_date' => 'date',
         'has_children' => 'boolean',
         'has_brother_sister' => 'boolean',
+        'is_adopted' => 'boolean',
         'has_power' => 'boolean',
         'secrets_is_private' => 'boolean',
     ];

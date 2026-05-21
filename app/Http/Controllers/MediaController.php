@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\UploadSecurity;
 use Illuminate\Support\Facades\Storage;
 
 class MediaController extends Controller
@@ -10,7 +11,7 @@ class MediaController extends Controller
     {
         $cleanPath = ltrim($path, '/');
 
-        if (!Storage::disk('public')->exists($cleanPath)) {
+        if (!UploadSecurity::hasAllowedExtension($cleanPath) || !Storage::disk('public')->exists($cleanPath)) {
             abort(404);
         }
 

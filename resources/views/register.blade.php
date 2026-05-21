@@ -198,7 +198,7 @@
             <div class="meta">Nouveau compte</div>
         </div>
 
-        <p class="muted">Creez un compte LoreRoom. Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
+        <p class="muted">Créez un compte LoreRoom.</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>

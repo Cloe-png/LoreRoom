@@ -139,7 +139,7 @@
                 }
             @endphp
             <p class="muted" style="margin-top:0;">
-                Resultats pour:
+                Resultats pour :
                 {!! collect($filters)->map(fn ($label) => '<strong>' . $label . '</strong>')->implode(' | ') !!}
             </p>
         @endif

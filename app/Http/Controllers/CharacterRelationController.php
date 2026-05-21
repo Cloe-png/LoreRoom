@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\CharacterRelation;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CharacterRelationController extends Controller
 {
@@ -131,7 +133,23 @@ class CharacterRelationController extends Controller
         $data['relation_type'] = $this->normalizeChildTypeBySourceGender($data['relation_type'], (int) $data['from_character_id']);
         $data = $this->assignRelationMetadata($data);
 
-        CharacterRelation::create($data);
+        $this->assertRelationDoesNotExist(
+            (int) $data['from_character_id'],
+            (int) $data['to_character_id'],
+            (string) $data['relation_type']
+        );
+
+        try {
+            CharacterRelation::create($data);
+        } catch (QueryException $e) {
+            if ($this->isDuplicateRelationQueryException($e)) {
+                throw ValidationException::withMessages([
+                    'relation_type' => 'Cette relation existe deja pour ce duo de personnages.',
+                ]);
+            }
+
+            throw $e;
+        }
 
         return redirect()->route('manage.relations.index')->with('success', 'Relation créée.');
     }
@@ -300,6 +318,26 @@ class CharacterRelationController extends Controller
         }
 
         return [$category, $siblingKind];
+    }
+
+    private function assertRelationDoesNotExist(int $fromId, int $toId, string $relationType): void
+    {
+        $exists = CharacterRelation::query()
+            ->where('from_character_id', $fromId)
+            ->where('to_character_id', $toId)
+            ->where('relation_type', $relationType)
+            ->exists();
+
+        if ($exists) {
+            throw ValidationException::withMessages([
+                'relation_type' => 'Cette relation existe deja pour ce duo de personnages.',
+            ]);
+        }
+    }
+
+    private function isDuplicateRelationQueryException(QueryException $e): bool
+    {
+        return str_contains((string) $e->getMessage(), 'Cette relation existe deja pour ce duo de personnages.');
     }
 }
 

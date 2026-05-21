@@ -14,6 +14,7 @@ use App\Models\Job;
 use App\Models\LoreEntry;
 use App\Models\Place;
 use App\Models\Species;
+use App\Support\UploadSecurity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +26,7 @@ class CharacterController extends Controller
 {
     private const AUTO_FAMILY_TAG = '[AUTO_FAMILY]';
     private const AUTO_SIBLING_TAG = '[AUTO_SIBLING]';
+    private const AUTO_COUSIN_TAG = '[AUTO_COUSIN]';
     private const FACTION_MEMBER_STATUSES = [
         'actif',
         'ancien membre',
@@ -170,6 +172,7 @@ class CharacterController extends Controller
         $selectedFullSiblingIds = old('sibling_ids_full', []);
         $selectedTwinSiblingIds = old('sibling_ids_twin', []);
         $selectedHalfSiblingIds = old('sibling_ids_half', []);
+        $selectedCousinIds = old('cousin_ids', []);
         $roleOptions = self::CHARACTER_ROLES;
         $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
 
@@ -198,6 +201,7 @@ class CharacterController extends Controller
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
+            'selectedCousinIds',
             'roleOptions',
             'factionMemberStatusOptions'
         ));
@@ -242,13 +246,13 @@ class CharacterController extends Controller
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
-            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_audio' => UploadSecurity::mp4Rules(20480),
             'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => UploadSecurity::imageRules(4096),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => UploadSecurity::imageRules(4096),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
             'relations' => ['nullable', 'array'],
@@ -290,10 +294,13 @@ class CharacterController extends Controller
             'sibling_ids_twin.*' => ['nullable', 'exists:characters,id'],
             'sibling_ids_half' => ['nullable', 'array'],
             'sibling_ids_half.*' => ['nullable', 'exists:characters,id'],
+            'cousin_ids' => ['nullable', 'array'],
+            'cousin_ids.*' => ['nullable', 'exists:characters,id'],
         ]);
 
         $data['has_children'] = $request->boolean('has_children');
         $data['has_brother_sister'] = $request->boolean('has_brother_sister');
+        $data['is_adopted'] = $request->boolean('is_adopted');
         $data['has_power'] = $request->boolean('has_power');
         $data['secrets_is_private'] = $request->boolean('secrets_is_private');
         $data['name'] = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
@@ -338,15 +345,16 @@ class CharacterController extends Controller
             'twin' => collect($data['sibling_ids_twin'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
             'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
         ];
+        $selectedCousinIds = collect($data['cousin_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
         unset($data['items'], $data['jobs'], $data['faction_memberships']);
         unset($data['educations']);
         unset($data['species_ids']);
-        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
+        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half'], $data['cousin_ids']);
         unset($data['gallery_images'], $data['gallery_captions']);
         $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
+        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $selectedCousinIds) {
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
@@ -359,11 +367,19 @@ class CharacterController extends Controller
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
             $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
+            $this->syncCousinRelations($character, $selectedCousinIds);
+            $impactedChildIds = Character::query()
+                ->where('father_id', $character->id)
+                ->orWhere('mother_id', $character->id)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
             $this->syncAutoFamilyRelationsForCharacters(array_filter([
                 $character->id,
                 $character->father_id,
                 $character->mother_id,
                 ...$impactedSpouseIds,
+                ...$impactedChildIds,
             ]));
         });
 
@@ -390,8 +406,16 @@ class CharacterController extends Controller
             'species',
             'galleryImages',
         ]);
+        $cousins = $character->outgoingRelations()
+            ->with('toCharacter:id,first_name,last_name,name')
+            ->where('description', 'like', self::AUTO_COUSIN_TAG . '%')
+            ->get()
+            ->pluck('toCharacter')
+            ->filter()
+            ->unique('id')
+            ->values();
 
-        return view('manage.characters.show', compact('character'));
+        return view('manage.characters.show', compact('character', 'cousins'));
     }
 
     public function exportPdf(Character $character)
@@ -466,7 +490,8 @@ class CharacterController extends Controller
                 ->where(function ($query) {
                     $query->whereNull('description')
                         ->orWhere('description', 'not like', self::AUTO_FAMILY_TAG . '%')
-                        ->where('description', 'not like', self::AUTO_SIBLING_TAG . '%');
+                        ->where('description', 'not like', self::AUTO_SIBLING_TAG . '%')
+                        ->where('description', 'not like', self::AUTO_COUSIN_TAG . '%');
                 })
                 ->orderBy('id')
                 ->get()
@@ -599,6 +624,19 @@ class CharacterController extends Controller
             $selectedHalfSiblingIds = array_values(array_unique($selectedHalfSiblingIds));
         }
 
+        if (old('cousin_ids') !== null) {
+            $selectedCousinIds = old('cousin_ids', []);
+        } else {
+            $selectedCousinIds = $character->outgoingRelations()
+                ->where('description', 'like', self::AUTO_COUSIN_TAG . '%')
+                ->pluck('to_character_id')
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
         $existingGallery = $character->galleryImages()->get();
         $roleOptions = self::CHARACTER_ROLES;
         $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
@@ -640,6 +678,7 @@ class CharacterController extends Controller
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
+            'selectedCousinIds',
             'roleOptions',
             'factionMemberStatusOptions'
         ));
@@ -684,13 +723,13 @@ class CharacterController extends Controller
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
-            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_audio' => UploadSecurity::mp4Rules(20480),
             'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => UploadSecurity::imageRules(4096),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => UploadSecurity::imageRules(4096),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
             'remove_gallery_ids' => ['nullable', 'array'],
@@ -734,10 +773,13 @@ class CharacterController extends Controller
             'sibling_ids_twin.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'sibling_ids_half' => ['nullable', 'array'],
             'sibling_ids_half.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
+            'cousin_ids' => ['nullable', 'array'],
+            'cousin_ids.*' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
         ]);
 
         $data['has_children'] = $request->boolean('has_children');
         $data['has_brother_sister'] = $request->boolean('has_brother_sister');
+        $data['is_adopted'] = $request->boolean('is_adopted');
         $data['has_power'] = $request->boolean('has_power');
         $data['secrets_is_private'] = $request->boolean('secrets_is_private');
         $data['name'] = trim($data['first_name'] . ' ' . ($data['last_name'] ?? ''));
@@ -792,12 +834,13 @@ class CharacterController extends Controller
             'twin' => collect($data['sibling_ids_twin'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
             'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
         ];
+        $selectedCousinIds = collect($data['cousin_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
         unset($data['items'], $data['jobs'], $data['faction_memberships'], $data['remove_gallery_ids']);
         unset($data['educations']);
         unset($data['species_ids']);
-        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
+        unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half'], $data['cousin_ids']);
         unset($data['gallery_images'], $data['gallery_captions']);
         $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
 
@@ -805,7 +848,7 @@ class CharacterController extends Controller
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $selectedCousinIds, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
@@ -819,6 +862,13 @@ class CharacterController extends Controller
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
             $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
+            $this->syncCousinRelations($character, $selectedCousinIds);
+            $impactedChildIds = Character::query()
+                ->where('father_id', $character->id)
+                ->orWhere('mother_id', $character->id)
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
 
             $this->syncAutoFamilyRelationsForCharacters(array_filter([
                 $character->id,
@@ -828,10 +878,11 @@ class CharacterController extends Controller
                 $character->father_id,
                 $character->mother_id,
                 ...$impactedSpouseIds,
+                ...$impactedChildIds,
             ]));
         });
 
-        return redirect()->route('manage.characters.index')->with('success', 'Personnage mis à jour avec ses relations.');
+        return redirect()->route('manage.characters.index')->with('success', 'Personnage mis à jour.');
     }
 
     public function destroy(Character $character)
@@ -853,15 +904,19 @@ class CharacterController extends Controller
                 continue;
             }
 
-            CharacterRelation::create([
-                'from_character_id' => $character->id,
-                'to_character_id' => $toId,
-                'relation_type' => $type,
-                'relation_category' => $this->inferRelationMetadata($type)[0],
-                'sibling_kind' => $this->inferRelationMetadata($type)[1],
-                'description' => trim((string) ($row['description'] ?? '')) ?: null,
-                'is_bidirectional' => (bool) ($row['is_bidirectional'] ?? true),
-            ]);
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => $character->id,
+                    'to_character_id' => $toId,
+                    'relation_type' => $type,
+                ],
+                [
+                    'relation_category' => $this->inferRelationMetadata($type)[0],
+                    'sibling_kind' => $this->inferRelationMetadata($type)[1],
+                    'description' => trim((string) ($row['description'] ?? '')) ?: null,
+                    'is_bidirectional' => (bool) ($row['is_bidirectional'] ?? true),
+                ]
+            );
         }
     }
 
@@ -955,6 +1010,70 @@ class CharacterController extends Controller
                     'relation_category' => 'family_sibling',
                     'sibling_kind' => $kind,
                     'intensity' => 9,
+                    'is_bidirectional' => false,
+                ]
+            );
+        }
+    }
+
+    private function syncCousinRelations(Character $character, array $selectedCousinIds): void
+    {
+        $characterId = (int) $character->id;
+
+        $cousinIds = collect($selectedCousinIds)
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0 && $id !== $characterId)
+            ->unique()
+            ->values()
+            ->all();
+
+        CharacterRelation::query()
+            ->where(function ($query) use ($characterId) {
+                $query->where('from_character_id', $characterId)
+                    ->orWhere('to_character_id', $characterId);
+            })
+            ->where('description', 'like', self::AUTO_COUSIN_TAG . '%')
+            ->delete();
+
+        if (empty($cousinIds)) {
+            return;
+        }
+
+        $cousins = Character::query()
+            ->whereIn('id', $cousinIds)
+            ->get(['id', 'gender']);
+
+        foreach ($cousins as $cousin) {
+            $fromType = $this->cousinRelationTypeFromGender((string) $character->gender);
+            $toType = $this->cousinRelationTypeFromGender((string) $cousin->gender);
+            $description = self::AUTO_COUSIN_TAG . ' cousin';
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => $characterId,
+                    'to_character_id' => (int) $cousin->id,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $fromType,
+                    'relation_category' => 'family_extended',
+                    'sibling_kind' => null,
+                    'intensity' => 7,
+                    'is_bidirectional' => false,
+                ]
+            );
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => (int) $cousin->id,
+                    'to_character_id' => $characterId,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $toType,
+                    'relation_category' => 'family_extended',
+                    'sibling_kind' => null,
+                    'intensity' => 7,
                     'is_bidirectional' => false,
                 ]
             );
@@ -1084,7 +1203,10 @@ class CharacterController extends Controller
                 $query->where('from_character_id', $characterId)
                     ->orWhere('to_character_id', $characterId);
             })
-            ->where('description', 'like', self::AUTO_FAMILY_TAG . '%')
+            ->where(function ($query) {
+                $query->where('description', 'like', self::AUTO_FAMILY_TAG . '%')
+                    ->orWhere('description', 'like', self::AUTO_COUSIN_TAG . '%');
+            })
             ->delete();
 
         $children = Character::query()
@@ -1168,6 +1290,123 @@ class CharacterController extends Controller
                     ]
                 );
             }
+        }
+
+        $this->syncAutomaticCousinRelations($character);
+    }
+
+    private function syncAutomaticCousinRelations(Character $character): void
+    {
+        $characterId = (int) $character->id;
+        $parentIds = collect([(int) ($character->father_id ?? 0), (int) ($character->mother_id ?? 0)])
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($parentIds->isEmpty()) {
+            return;
+        }
+
+        $auntUncleIds = collect();
+        foreach ($parentIds as $parentId) {
+            $parent = Character::find((int) $parentId);
+            if (!$parent) {
+                continue;
+            }
+
+            $relatedSiblingIds = CharacterRelation::query()
+                ->where('from_character_id', (int) $parentId)
+                ->where('description', 'like', self::AUTO_SIBLING_TAG . '%')
+                ->pluck('to_character_id')
+                ->map(fn ($id) => (int) $id);
+
+            $sharedParentSiblingIds = collect();
+            $fatherId = (int) ($parent->father_id ?? 0);
+            $motherId = (int) ($parent->mother_id ?? 0);
+            if ($fatherId > 0 || $motherId > 0) {
+                $sharedParentSiblingIds = Character::query()
+                    ->where('id', '!=', (int) $parentId)
+                    ->where(function ($query) use ($fatherId, $motherId) {
+                        if ($fatherId > 0) {
+                            $query->orWhere('father_id', $fatherId);
+                        }
+                        if ($motherId > 0) {
+                            $query->orWhere('mother_id', $motherId);
+                        }
+                    })
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id);
+            }
+
+            $auntUncleIds = $auntUncleIds
+                ->merge($relatedSiblingIds)
+                ->merge($sharedParentSiblingIds);
+        }
+
+        $auntUncleIds = $auntUncleIds
+            ->filter(fn ($id) => $id > 0 && $id !== $characterId)
+            ->diff($parentIds)
+            ->unique()
+            ->values();
+
+        if ($auntUncleIds->isEmpty()) {
+            return;
+        }
+
+        $cousins = Character::query()
+            ->where(function ($query) use ($auntUncleIds) {
+                $query->whereIn('father_id', $auntUncleIds->all())
+                    ->orWhereIn('mother_id', $auntUncleIds->all());
+            })
+            ->get(['id', 'gender', 'father_id', 'mother_id']);
+
+        foreach ($cousins as $cousin) {
+            $cousinId = (int) $cousin->id;
+            if ($cousinId <= 0 || $cousinId === $characterId) {
+                continue;
+            }
+
+            $isSibling = (
+                ((int) $character->father_id > 0 && (int) $character->father_id === (int) $cousin->father_id) ||
+                ((int) $character->mother_id > 0 && (int) $character->mother_id === (int) $cousin->mother_id)
+            );
+            if ($isSibling) {
+                continue;
+            }
+
+            $fromType = $this->cousinRelationTypeFromGender((string) $cousin->gender);
+            $toType = $this->cousinRelationTypeFromGender((string) $character->gender);
+            $description = self::AUTO_COUSIN_TAG . ' cousin';
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => $characterId,
+                    'to_character_id' => $cousinId,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $fromType,
+                    'relation_category' => 'family_extended',
+                    'sibling_kind' => null,
+                    'intensity' => 7,
+                    'is_bidirectional' => false,
+                ]
+            );
+
+            CharacterRelation::updateOrCreate(
+                [
+                    'from_character_id' => $cousinId,
+                    'to_character_id' => $characterId,
+                    'description' => $description,
+                ],
+                [
+                    'relation_type' => $toType,
+                    'relation_category' => 'family_extended',
+                    'sibling_kind' => null,
+                    'intensity' => 7,
+                    'is_bidirectional' => false,
+                ]
+            );
         }
     }
 
@@ -1257,6 +1496,18 @@ class CharacterController extends Controller
         }
 
         return 'full';
+    }
+
+    private function cousinRelationTypeFromGender(string $gender): string
+    {
+        if ($gender === 'femme') {
+            return 'cousine';
+        }
+        if ($gender === 'homme') {
+            return 'cousin';
+        }
+
+        return 'cousin/cousine';
     }
 
     private function syncCharacterItems(Character $character, array $rows): void

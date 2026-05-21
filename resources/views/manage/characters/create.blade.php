@@ -51,7 +51,7 @@
 
             <div class="field">
                 <label>Image (portrait principal)</label>
-                <input type="file" name="image" accept="image/*">
+                <input type="file" name="image" accept=".jpg,.png,image/jpeg,image/png">
             </div>
 
             <div class="field">
@@ -129,7 +129,7 @@
                     </select>
                 </div>
                 <div class="field">
-                    <label>Epouse / Epoux</label>
+                    <label>Épouse / Époux</label>
                     <select name="spouse_id">
                         <option value="">Inconnu(e)</option>
                         @foreach($spouses as $spouse)
@@ -172,6 +172,7 @@
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children') ? 'checked' : '' }}> Enfants (oui/non)</label>
                 <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frère / sœur (oui/non)</label>
+                <label><input type="checkbox" id="is_adopted" name="is_adopted" value="1" {{ old('is_adopted') ? 'checked' : '' }}> Adopté(e)</label>
             </div>
 
             <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
@@ -209,6 +210,7 @@
                     $selectedFullSiblings = collect($selectedFullSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
                     $selectedTwinSiblings = collect($selectedTwinSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
                     $selectedHalfSiblings = collect($selectedHalfSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                    $selectedCousins = collect($selectedCousinIds ?? [])->map(fn ($id) => (int) $id)->all();
                 @endphp
                 @if($characters->isEmpty())
                     <p class="muted">Aucun personnage créé pour le moment.</p>
@@ -251,6 +253,24 @@
                 @endif
             </div>
 
+            <div class="panel" style="margin-top:0; margin-bottom:12px; padding:10px;">
+                <div class="field">
+                    <label>Zone cousin / cousine</label>
+                    @if($characters->isEmpty())
+                        <p class="muted">Aucun personnage créé pour le moment.</p>
+                    @else
+                        <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                            @foreach($characters as $cousinCandidate)
+                                <label>
+                                    <input type="checkbox" name="cousin_ids[]" value="{{ $cousinCandidate->id }}" {{ in_array($cousinCandidate->id, $selectedCousins) ? 'checked' : '' }}>
+                                    {{ $cousinCandidate->display_name }}
+                                </label>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
                 </div>
             </details>
 
@@ -266,7 +286,7 @@
                         <input type="number" min="1" max="10" name="power_level" value="{{ old('power_level') }}">
                     </div>
                     <div class="field" style="grid-column: span 3;">
-                        <label>Pouvoir (si oui, details)</label>
+                        <label>Pouvoir(s)</label>
                         <textarea name="power_description">{{ old('power_description') }}</textarea>
                     </div>
                 </div>
@@ -305,7 +325,6 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="muted">Liste alimentée avec les races définies dans le Lore.</p>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks') }}</textarea></div>
                     <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style') }}</textarea></div>
@@ -317,7 +336,7 @@
                 <div class="accordion-body">
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities') }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws') }}</textarea></div>
-                    <div class="field"><label>Voix (audio téléversé)</label><input type="file" name="voice_audio" accept="audio/*"></div>
+                    <div class="field"><label>Voix (fichier MP4)</label><input type="file" name="voice_audio" accept=".mp4,video/mp4,audio/mp4"></div>
                     <div class="field"><label>Lien YouTube (à la place de l'audio)</label><input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url') }}" placeholder="https://www.youtube.com/watch?v=..."></div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary') }}</textarea></div>
                 </div>
@@ -511,7 +530,7 @@
             <div id="gallery-list">
                 <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
                     <div class="grid-4">
-                        <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                        <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".jpg,.png,image/jpeg,image/png"></div>
                         <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
                     </div>
                     <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
@@ -705,7 +724,7 @@
     <template id="gallery-row-template">
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".jpg,.png,image/jpeg,image/png"></div>
                 <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
             </div>
             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
