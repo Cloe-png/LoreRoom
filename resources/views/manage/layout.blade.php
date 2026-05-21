@@ -20,6 +20,8 @@
                 --nav-3: #93add9;
                 --nav-4: #e3a0a0;
                 --nav-5: #c9b1e4;
+                --sidebar-width: 290px;
+                --header-height: 72px;
             }
             * { box-sizing: border-box; }
             body {
@@ -55,9 +57,11 @@
                     repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 1px, transparent 1px 5px);
                 z-index: 0;
             }
+            body.manage-ui-locked {
+                overflow: hidden;
+            }
             .wrap {
                 position: relative;
-                z-index: 1;
                 width:min(1360px,97vw);
                 margin:16px auto;
                 border:1px solid var(--gold-line);
@@ -68,12 +72,26 @@
             }
             .chrome {
                 display:grid;
-                grid-template-columns: 290px 1fr;
+                grid-template-columns: var(--sidebar-width) 1fr;
                 min-height: calc(100vh - 32px);
                 transition:grid-template-columns 180ms ease;
             }
             .chrome.is-collapsed {
                 grid-template-columns: 0 1fr;
+            }
+            .drawer-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(8, 12, 18, .54);
+                backdrop-filter: blur(3px);
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 180ms ease;
+                z-index: 8;
+            }
+            body.manage-ui-drawer-open .drawer-backdrop {
+                opacity: 1;
+                pointer-events: auto;
             }
             .sidebar {
                 border-right:1px solid var(--gold-line);
@@ -86,6 +104,29 @@
                 flex-direction:column;
                 overflow:hidden;
                 transition:opacity 140ms ease;
+            }
+            .sidebar-mobile-head {
+                display: none;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 12px;
+                padding: 0 2px;
+            }
+            .sidebar-mobile-label {
+                color: #694d2d;
+                font-size: .78rem;
+                text-transform: uppercase;
+                letter-spacing: .1em;
+            }
+            .sidebar-close {
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                border: 1px solid rgba(112, 82, 47, .24);
+                background: rgba(255,255,255,.68);
+                color: #5e472c;
+                font-size: 1rem;
             }
             .chrome.is-collapsed .sidebar {
                 opacity:0;
@@ -251,8 +292,17 @@
                 display:flex;
                 align-items:center;
                 gap:10px;
+                min-width: 0;
             }
-            .sidebar-toggle {
+            .header-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+            }
+            .sidebar-toggle,
+            .header-toggle {
                 width:32px;
                 height:32px;
                 border-radius:8px;
@@ -264,20 +314,66 @@
                 line-height:1;
                 transition:background 120ms ease, transform 180ms ease;
             }
-            .sidebar-toggle:hover { background:rgba(255,255,255,.12); }
+            .sidebar-toggle:hover,
+            .header-toggle:hover { background:rgba(255,255,255,.12); }
             .chrome.is-collapsed .sidebar-toggle { transform:rotate(180deg); }
+            .mobile-nav-toggle {
+                display: none;
+            }
+            .desktop-nav-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
             .title {
                 margin:0;
                 font-family:"Segoe Print","Comic Sans MS",cursive;
                 letter-spacing:.02em;
                 font-size:clamp(1.2rem,2.1vw,1.65rem);
                 color:#f6e8cb;
+                min-width: 0;
             }
             .topline {
                 color:#dbc9a8;
                 font-size:.76rem;
                 letter-spacing:.1em;
                 text-transform:uppercase;
+            }
+            .topline a {
+                color:#f6e8cb;
+            }
+            .header-context {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 8px;
+                min-width: 0;
+            }
+            .header-glance {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: flex-end;
+                gap: 8px;
+            }
+            .glance-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 32px;
+                padding: 6px 12px;
+                border-radius: 999px;
+                border: 1px solid rgba(228,191,127,.22);
+                background: rgba(255,255,255,.07);
+                color: #f2e5ca;
+                text-decoration: none;
+                font-size: .78rem;
+                letter-spacing: .05em;
+                text-transform: uppercase;
+                white-space: nowrap;
+            }
+            .glance-chip strong {
+                color: #fff2d4;
+                font-weight: 700;
             }
             .sidebar-bottom {
                 margin-top:auto;
@@ -436,18 +532,165 @@
             }
             .muted { color:#70573a; font-size:.9rem; }
             form.inline { display:inline; }
+            .touch-surface {
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+                touch-action: pan-x pan-y;
+            }
             @media (max-width: 980px) {
-                .chrome { grid-template-columns: 1fr; }
-                .sidebar { border-right:none; border-bottom:1px solid var(--gold-line); }
+                .chrome { grid-template-columns: 1fr !important; }
+                .drawer-backdrop {
+                    z-index: 18;
+                }
+                .sidebar {
+                    position: fixed;
+                    left: 0;
+                    top: 0;
+                    bottom: 0;
+                    width: min(82vw, 332px);
+                    border-right:1px solid var(--gold-line);
+                    border-bottom:0;
+                    transform: translateX(-102%);
+                    opacity: 1;
+                    pointer-events: auto;
+                    transition: transform 180ms ease;
+                    z-index: 22;
+                    box-shadow: 0 24px 64px rgba(0,0,0,.38);
+                    overflow-y: auto;
+                }
+                body.manage-ui-drawer-open .sidebar {
+                    transform: translateX(0);
+                }
                 .content { padding-left: 18px; }
                 .content::before, .content::after { display:none; }
+                .wrap {
+                    width: 100vw;
+                    margin: 0;
+                    border-radius: 0;
+                }
+                .sidebar-mobile-head {
+                    display: flex;
+                }
+                .sidebar {
+                    padding: 14px 12px 18px;
+                }
+                .brand {
+                    margin-bottom: 10px;
+                    padding: 14px 12px;
+                }
+                .brand-logo {
+                    width: min(100%, 170px);
+                }
+                .nav-sections {
+                    display: grid;
+                    gap: 10px;
+                    overflow: visible;
+                    padding-bottom: 0;
+                    scroll-snap-type: none;
+                }
+                .nav-section {
+                    min-width: 0;
+                    border-radius: 10px;
+                }
+                .nav-section > summary {
+                    padding: 10px 10px;
+                    font-size: .8rem;
+                    letter-spacing: .05em;
+                }
+                .nav-section-body {
+                    padding: 0 8px 10px;
+                }
+                .nav-group {
+                    margin-top: 4px;
+                }
+                .nav-link {
+                    padding: 7px 8px 8px;
+                    margin-bottom: 3px;
+                    font-size: .84rem;
+                    line-height: 1.24;
+                }
+                .sidebar-bottom {
+                    margin-top: 8px;
+                }
+                header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    position: sticky;
+                    top: 0;
+                    z-index: 6;
+                    backdrop-filter: blur(8px);
+                }
+                .header-left {
+                    width: 100%;
+                    justify-content: flex-start;
+                    gap: 8px;
+                }
+                .header-context {
+                    width: 100%;
+                    align-items: flex-start;
+                }
+                .header-actions,
+                .header-glance {
+                    width: 100%;
+                    justify-content: flex-start;
+                }
+                .mobile-nav-toggle {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .desktop-nav-toggle {
+                    display: none;
+                }
+            }
+            @media (max-width: 640px) {
+                .brand-logo {
+                    width: min(100%, 200px);
+                }
+                .nav-section {
+                    min-width: 0;
+                }
+                .nav-section > summary {
+                    padding: 9px 9px;
+                    font-size: .76rem;
+                }
+                .nav-link {
+                    font-size: .79rem;
+                }
+                .content {
+                    padding: 14px 14px 18px;
+                }
+                .glance-chip {
+                    font-size: .74rem;
+                }
+            }
+            @media (min-width: 981px) {
+                .nav-section {
+                    border: 0;
+                    border-radius: 0;
+                    background: transparent;
+                }
+                .nav-section > summary {
+                    padding: 0 8px 4px;
+                }
+                .nav-section > summary::after {
+                    display: none;
+                }
+                .nav-section-body {
+                    padding: 0;
+                }
             }
         </style>
     </head>
     <body>
+        <button class="drawer-backdrop" type="button" id="drawer-backdrop" aria-hidden="true" tabindex="-1"></button>
         <div class="wrap">
             <div class="chrome">
                 <aside class="sidebar">
+                    <div class="sidebar-mobile-head">
+                        <span class="sidebar-mobile-label">Navigation LoreRoom</span>
+                        <button class="sidebar-close" type="button" id="sidebar-close" aria-label="Fermer la navigation">✕</button>
+                    </div>
                     <div class="brand">
                         <h1>LoreRoom</h1>
                     </div>
@@ -516,16 +759,19 @@
                 <section class="main">
                     <header>
                         <div class="header-left">
-                            <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Afficher ou cacher la navigation">&#9664;</button>
+                            <button class="sidebar-toggle mobile-nav-toggle" type="button" id="mobile-nav-toggle" aria-label="Ouvrir la navigation">☰</button>
+                            <button class="sidebar-toggle desktop-nav-toggle" type="button" id="sidebar-toggle" aria-label="Afficher ou cacher la navigation">&#9664;</button>
                             <h1 class="title">@yield('header', 'Gestion LoreRoom')</h1>
                         </div>
-                        <div class="topline">
-                            @if(!empty($activeWorld))
-                                Monde actif: {{ $activeWorld->name }} ·
-                                <a href="{{ route('manage.worlds.index') }}" style="color:#f6e8cb;">Changer</a>
-                            @else
-                                Carnet de notes du musée
-                            @endif
+                        <div class="header-context">
+                            <div class="topline">
+                                @if(!empty($activeWorld))
+                                    Monde actif: {{ $activeWorld->name }} ·
+                                    <a href="{{ route('manage.worlds.index') }}">Changer</a>
+                                @else
+                                    Carnet de notes du musée
+                                @endif
+                            </div>
                         </div>
                     </header>
                     <main class="content">
@@ -549,18 +795,67 @@
         </div>
         <script>
             (function () {
+                const body = document.body;
                 const chrome = document.querySelector('.chrome');
-                const toggle = document.getElementById('sidebar-toggle');
-                if (!chrome || !toggle) return;
+                const desktopToggle = document.getElementById('sidebar-toggle');
+                const mobileToggle = document.getElementById('mobile-nav-toggle');
+                const mobileClose = document.getElementById('sidebar-close');
+                const drawerBackdrop = document.getElementById('drawer-backdrop');
+                if (!chrome) return;
 
-                const key = 'loreroom_manage_sidebar_collapsed';
-                if (localStorage.getItem(key) === '1') {
+                const sidebarKey = 'loreroom_manage_sidebar_collapsed';
+
+                const isMobile = function () {
+                    return window.matchMedia('(max-width: 980px)').matches;
+                };
+
+                const setDrawer = function (open) {
+                    body.classList.toggle('manage-ui-drawer-open', open);
+                    body.classList.toggle('manage-ui-locked', open && isMobile());
+                    if (mobileToggle) {
+                        mobileToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    }
+                };
+
+                if (!isMobile() && localStorage.getItem(sidebarKey) === '1') {
                     chrome.classList.add('is-collapsed');
                 }
 
-                toggle.addEventListener('click', function () {
-                    chrome.classList.toggle('is-collapsed');
-                    localStorage.setItem(key, chrome.classList.contains('is-collapsed') ? '1' : '0');
+                if (desktopToggle) {
+                    desktopToggle.addEventListener('click', function () {
+                        chrome.classList.toggle('is-collapsed');
+                        localStorage.setItem(sidebarKey, chrome.classList.contains('is-collapsed') ? '1' : '0');
+                    });
+                }
+
+                if (mobileToggle) {
+                    mobileToggle.addEventListener('click', function () {
+                        setDrawer(!body.classList.contains('manage-ui-drawer-open'));
+                    });
+                }
+
+                if (mobileClose) {
+                    mobileClose.addEventListener('click', function () {
+                        setDrawer(false);
+                    });
+                }
+
+                if (drawerBackdrop) {
+                    drawerBackdrop.addEventListener('click', function () {
+                        setDrawer(false);
+                    });
+                }
+
+                window.addEventListener('resize', function () {
+                    if (!isMobile()) {
+                        setDrawer(false);
+                    }
+                });
+
+                window.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') {
+                        setDrawer(false);
+                    }
                 });
             })();
         </script>

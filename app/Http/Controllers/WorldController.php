@@ -70,9 +70,34 @@ class WorldController extends Controller
             abort(404);
         }
 
-        $world->load(['characters', 'places', 'chronicles']);
+        $world->load([
+            'characters' => function ($query) {
+                $query->orderByRaw('birth_date IS NULL, birth_date ASC')
+                    ->orderBy('name');
+            },
+            'places' => function ($query) {
+                $query->orderBy('name');
+            },
+            'chronicles' => function ($query) {
+                $query->orderByRaw('event_date IS NULL, event_date ASC')
+                    ->orderBy('title');
+            },
+        ]);
 
-        return view('manage.worlds.show', compact('world'));
+        $factionsCount = Faction::withoutGlobalScopes()
+            ->where('world_id', $world->id)
+            ->count();
+
+        $relationsCount = CharacterRelation::query()
+            ->whereHas('fromCharacter', function ($query) use ($world) {
+                $query->withoutGlobalScopes()->where('world_id', $world->id);
+            })
+            ->whereHas('toCharacter', function ($query) use ($world) {
+                $query->withoutGlobalScopes()->where('world_id', $world->id);
+            })
+            ->count();
+
+        return view('manage.worlds.show', compact('world', 'factionsCount', 'relationsCount'));
     }
 
     public function edit(World $world)

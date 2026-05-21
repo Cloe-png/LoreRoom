@@ -43,6 +43,59 @@
             padding: 10px;
             position: relative;
         }
+        .genealogy-stage-note {
+            margin: 0 0 10px;
+            color: #6a5133;
+            font-size: .9rem;
+        }
+        .genealogy-summary {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 1.3fr .9fr;
+            margin: 0 0 14px;
+        }
+        .genealogy-summary-card {
+            border: 1px solid rgba(114,84,49,.2);
+            border-radius: 14px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,.54);
+            box-shadow: 0 10px 24px rgba(67, 45, 20, .08);
+        }
+        .genealogy-summary-card h3 {
+            margin: 0 0 6px;
+            color: #4c3419;
+            font-family: "Cinzel", "Times New Roman", serif;
+            font-size: 1rem;
+            letter-spacing: .04em;
+        }
+        .genealogy-summary-card p {
+            margin: 0;
+            color: #6d5234;
+            line-height: 1.45;
+        }
+        .genealogy-stats {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        .genealogy-stat {
+            border-radius: 12px;
+            padding: 12px;
+            background: linear-gradient(180deg, rgba(255,250,239,.88), rgba(241,231,211,.9));
+            border: 1px solid rgba(114,84,49,.18);
+        }
+        .genealogy-stat strong {
+            display: block;
+            color: #4a3117;
+            font-size: 1.4rem;
+            font-family: "Cinzel", "Times New Roman", serif;
+        }
+        .genealogy-stat span {
+            color: #71563a;
+            font-size: .86rem;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
         .genealogy-controls {
             position: absolute;
             right: 18px;
@@ -139,6 +192,25 @@
         .genealogy-legend-floating .dot.mort {
             background: #f7dede;
         }
+        @media (max-width: 980px) {
+            .genealogy-summary {
+                grid-template-columns: 1fr;
+            }
+            .genealogy-stats {
+                grid-template-columns: 1fr;
+            }
+            .genealogy-basic-wrap {
+                padding: 8px;
+            }
+            .genealogy-controls {
+                right: 12px;
+                top: 12px;
+            }
+            .genealogy-legend-floating {
+                position: static;
+                margin-top: 12px;
+            }
+        }
     </style>
     <section class="panel" style="margin-top:0;">
         <form method="GET" action="{{ route('manage.genealogy.index') }}" class="grid-4">
@@ -191,12 +263,13 @@
             </div>
             <div id="genealogy-network-error" class="muted" style="display:none; margin:0 0 10px; padding:10px; border:1px solid rgba(130,60,60,.28); border-radius:8px; background:rgba(255,245,245,.7); color:#6d2a2a;"></div>
             <div class="genealogy-basic-wrap">
+                <p class="genealogy-stage-note">Astuce mobile: fais glisser l’arbre pour suivre une branche sans perdre le contexte.</p>
                 <div class="genealogy-controls">
                     <button type="button" id="tree-zoom-out" title="Zoom -">-</button>
                     <button type="button" id="tree-zoom-reset" title="Recentrer">1:1</button>
                     <button type="button" id="tree-zoom-in" title="Zoom +">+</button>
                 </div>
-                <div id="genealogy-network" style="height:760px; border:1px solid rgba(114,84,49,.2); border-radius:10px; background:rgba(249,249,249,.92);"></div>
+                <div id="genealogy-network" style="height:min(76vh, 760px); min-height:420px; border:1px solid rgba(114,84,49,.2); border-radius:10px; background:rgba(249,249,249,.92); touch-action:none;"></div>
             </div>
         </section>
         <div class="genealogy-legend-floating">

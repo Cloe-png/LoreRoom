@@ -4,6 +4,103 @@
 @section('header', 'Relations personnages')
 
 @section('content')
+    <style>
+        .relations-hero {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: minmax(0, 1.1fr) auto;
+            align-items: center;
+            padding: 16px 18px;
+            border: 1px solid rgba(114,84,49,.24);
+            border-radius: 18px;
+            background:
+                radial-gradient(420px 180px at 0% 0%, rgba(254, 227, 167, .24), transparent 72%),
+                linear-gradient(135deg, rgba(255,255,255,.64), rgba(241, 230, 206, .76));
+            box-shadow: 0 14px 28px rgba(69, 44, 18, .08);
+        }
+        .relations-hero h2 {
+            margin: 0;
+            color: #432c14;
+            font-family: "Cinzel", "Times New Roman", serif;
+        }
+        .relations-hero p {
+            margin: 6px 0 0;
+            color: #6d5234;
+            line-height: 1.5;
+        }
+        .relations-hints {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .relations-hint {
+            display: inline-flex;
+            align-items: center;
+            min-height: 34px;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.76);
+            border: 1px solid rgba(114,84,49,.18);
+            color: #61482a;
+            font-size: .78rem;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+        }
+        .relations-network-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(114,84,49,.22);
+            background: linear-gradient(180deg, rgba(255,255,255,.44), rgba(246, 238, 221, .54));
+        }
+        .relations-network-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px 0;
+            flex-wrap: wrap;
+        }
+        .relations-network-head p {
+            margin: 0;
+            color: #6f5639;
+        }
+        #relations-network {
+            height: 680px;
+            border: 0;
+            border-radius: 0 0 16px 16px;
+            background:
+                radial-gradient(560px 200px at 50% 0%, rgba(249, 233, 194, .38), transparent 72%),
+                rgba(255,255,255,.25);
+            touch-action: none;
+        }
+        @media (max-width: 980px) {
+            .relations-hero {
+                grid-template-columns: 1fr;
+            }
+            .relations-hints {
+                justify-content: flex-start;
+            }
+            #relations-network {
+                height: 68vh;
+                min-height: 420px;
+            }
+        }
+    </style>
+
+    <section class="relations-hero">
+        <div>
+            <h2>Réseau vivant du casting</h2>
+            <p>Le graphe sert de lecture rapide: alliances, rivalités, famille et liens ambigus restent lisibles sur desktop comme sur mobile.</p>
+        </div>
+        <div class="relations-hints">
+            <span class="relations-hint">Glisser pour explorer</span>
+            <span class="relations-hint">Zoom pour isoler</span>
+            <span class="relations-hint">Mode focus conseillé</span>
+        </div>
+    </section>
+
     <div class="stack" style="justify-content: space-between;">
         <p class="muted">Module relationnel entre personnages (famille, alliance, rivalite, mentorat...).</p>
         <a class="btn" href="{{ route('manage.relations.create') }}">Nouvelle relation</a>
@@ -38,7 +135,13 @@
         @if($graphRelations->isEmpty())
             <p class="muted">Aucune relation à afficher.</p>
         @else
-            <div id="relations-network" style="height:680px; border:1px dashed rgba(114,84,49,.35); border-radius:8px; background:rgba(255,255,255,.25);"></div>
+            <div class="relations-network-wrap">
+                <div class="relations-network-head">
+                    <p>Vue condensée du monde actif.</p>
+                    <span class="muted">Astuce mobile: garde la navigation dans le drawer pour réserver l’écran au graphe.</span>
+                </div>
+                <div id="relations-network"></div>
+            </div>
             @php
                 $networkEdges = $graphRelations->values();
                 $networkNodes = [];
@@ -124,7 +227,6 @@
                     return node;
                 });
 
-                // Deterministic circular layout to avoid node/label collisions.
                 const count = Math.max(1, nodes.length);
                 const radius = Math.max(260, 38 * count);
                 nodes.forEach((node, index) => {
@@ -134,7 +236,6 @@
                     node.fixed = { x: true, y: true };
                 });
 
-                // Group duplicate links to avoid text/arrow overload.
                 const grouped = new Map();
                 rawEdges.forEach((e) => {
                     const from = Number(e.from_id || 0);
@@ -173,7 +274,6 @@
                         arrows: e.bidirectional
                             ? { from: { enabled: true, scaleFactor: 0.58 }, to: { enabled: true, scaleFactor: 0.58 } }
                             : { to: { enabled: true, scaleFactor: 0.72 } },
-                        // Keep canvas readable: types are shown on hover only.
                         label: '',
                         title,
                         font: { face: 'Georgia', color: '#4f3b21', size: 11, strokeWidth: 0, align: 'top' },
