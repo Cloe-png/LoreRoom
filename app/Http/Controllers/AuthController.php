@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
+use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class AuthController extends Controller
 {
@@ -38,7 +40,7 @@ class AuthController extends Controller
             UserLog::logAction((int) $user->id, 'account_locked', 'login', 'login');
 
             throw ValidationException::withMessages([
-                'email' => 'Ce compte est bloque. Veuillez contacter loreroomapp@gmail.com.',
+                'email' => __('app.auth.account_locked'),
             ]);
         }
 
@@ -47,12 +49,12 @@ class AuthController extends Controller
 
             if ($user && $user->fresh() && $user->locked_at) {
                 throw ValidationException::withMessages([
-                    'email' => 'Ce compte est bloque. Veuillez contacter loreroomapp@gmail.com.',
+                    'email' => __('app.auth.account_locked'),
                 ]);
             }
 
             throw ValidationException::withMessages([
-                'email' => 'Email ou mot de passe incorrect.',
+                'email' => __('app.auth.invalid_credentials'),
             ]);
         }
 
@@ -70,7 +72,14 @@ class AuthController extends Controller
             return redirect()->route('manage.index');
         }
 
-        return view('register');
+        if (request()->hasSession() && !request()->session()->has('locale')) {
+            request()->session()->put('locale', 'en');
+            app()->setLocale('en');
+        }
+
+        return view('register', [
+            'roleOptions' => config('module_access.signup_roles', []),
+        ]);
     }
 
     public function register(Request $request)
@@ -78,11 +87,14 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:180', 'unique:users,email'],
+            'locale' => ['required', 'string', Rule::in(array_keys(LaravelLocalization::getSupportedLocales()))],
+            'roles' => ['required', 'array', 'min:1'],
+            'roles.*' => ['required', 'string', Rule::in(array_keys(config('module_access.signup_roles', [])))],
             'password' => PasswordRules::defaultsWithConfirmation(),
         ], [
-            'password.min' => 'Le mot de passe doit contenir au moins 12 caracteres.',
-            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractere special.',
-            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+            'password.min' => __('app.auth.password_min'),
+            'password.regex' => __('app.auth.password_regex'),
+            'password.confirmed' => __('app.auth.password_confirmed'),
         ]);
 
         $user = User::create([
@@ -90,11 +102,14 @@ class AuthController extends Controller
             'email' => mb_strtolower(trim((string) $data['email'])),
             'password' => Hash::make((string) $data['password']),
             'role' => 'utilisateur',
+            'roles' => array_values(array_unique(array_map('strval', $data['roles']))),
             'current_world_id' => null,
+            'preferred_locale' => $data['locale'],
         ]);
 
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->put('locale', $data['locale']);
         $this->issueTemporaryLoginToken($request);
         UserLog::logAction((int) $user->id, 'connexion');
 
@@ -117,7 +132,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')->with('success', 'Vous etes deconnecte.');
+        return redirect()->route('login')->with('success', __('app.auth.logged_out'));
     }
 
     private function issueTemporaryLoginToken(Request $request): void

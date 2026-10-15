@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chapter;
 use App\Models\Character;
 use App\Models\CharacterEvent;
 use App\Models\Chronicle;
@@ -43,7 +44,16 @@ class ChronicleController extends Controller
             ->with([
                 'world:id,name',
                 'eventPlace:id,name,region',
-                'linkedCharacters:id,name,first_name,last_name,preferred_color,image_path',
+                'linkedCharacters' => function ($query) {
+                    $query->select([
+                        'characters.id',
+                        'characters.name',
+                        'characters.first_name',
+                        'characters.last_name',
+                        'characters.preferred_color',
+                        'characters.image_path',
+                    ]);
+                },
             ])
             ->get()
             ->map(function (Chronicle $chronicle) {
@@ -65,9 +75,48 @@ class ChronicleController extends Controller
                     'photo_path' => $firstLinked ? $firstLinked->image_path : null,
                     'accent_color' => $this->resolveColor($firstLinked ? $firstLinked->preferred_color : null),
                     'link' => route('manage.chronicles.show', $chronicle),
-                    'edit_link' => route('manage.chronicles.edit', $chronicle),
-                    'delete_link' => route('manage.chronicles.destroy', $chronicle),
-                    'can_manage' => true,
+                    'can_manage' => false,
+                ];
+            });
+
+        $chapterEvents = Chapter::query()
+            ->with([
+                'world:id,name',
+                'characters' => function ($query) {
+                    $query->select([
+                        'characters.id',
+                        'characters.name',
+                        'characters.first_name',
+                        'characters.last_name',
+                        'characters.preferred_color',
+                        'characters.image_path',
+                    ]);
+                },
+                'places:id,name,region',
+            ])
+            ->get()
+            ->map(function (Chapter $chapter) {
+                $linkedCharacters = $chapter->characters;
+                $firstLinked = $linkedCharacters->first();
+                $linkedNames = $linkedCharacters->pluck('display_name')->filter()->values()->all();
+                $placeNames = $chapter->places->pluck('name')->filter()->values()->all();
+
+                return [
+                    'date' => $chapter->chapter_date,
+                    'end_date' => null,
+                    'location' => $placeNames !== [] ? implode(', ', $placeNames) : null,
+                    'title' => $chapter->title,
+                    'description' => $chapter->description,
+                    'type' => 'chapter',
+                    'source_name' => optional($chapter->world)->name,
+                    'related_person_name' => $firstLinked ? $firstLinked->display_name : null,
+                    'related_person_link' => $firstLinked ? route('manage.characters.show', $firstLinked) : null,
+                    'related_people' => $linkedNames,
+                    'photo_path' => $firstLinked ? $firstLinked->image_path : null,
+                    'accent_color' => $this->resolveColor($firstLinked ? $firstLinked->preferred_color : null) ?? '#8f6b3c',
+                    'link' => route('manage.chapters.show', $chapter),
+                    'can_manage' => false,
+                    'summary' => $chapter->summary,
                 ];
             });
 
@@ -148,6 +197,7 @@ class ChronicleController extends Controller
             });
 
         return $chronicleEvents
+            ->concat($chapterEvents)
             ->concat($characterEvents)
             ->concat($lifeEvents)
             ->sort(function (array $a, array $b) {
@@ -221,9 +271,47 @@ class ChronicleController extends Controller
                     'photo_path' => $character->image_path,
                     'accent_color' => $this->resolveColor($character->preferred_color),
                     'link' => route('manage.chronicles.show', $chronicle),
-                    'edit_link' => route('manage.chronicles.edit', $chronicle),
-                    'delete_link' => route('manage.chronicles.destroy', $chronicle),
-                    'can_manage' => true,
+                    'can_manage' => false,
+                ];
+            });
+
+        $chapterEntries = $character->chapters()
+            ->with([
+                'world:id,name',
+                'characters' => function ($query) {
+                    $query->select([
+                        'characters.id',
+                        'characters.name',
+                        'characters.first_name',
+                        'characters.last_name',
+                        'characters.preferred_color',
+                        'characters.image_path',
+                    ]);
+                },
+                'places:id,name,region',
+            ])
+            ->get()
+            ->map(function (Chapter $chapter) use ($character) {
+                $linkedCharacters = $chapter->characters;
+                $linkedNames = $linkedCharacters->pluck('display_name')->filter()->values()->all();
+                $placeNames = $chapter->places->pluck('name')->filter()->values()->all();
+
+                return [
+                    'date' => $chapter->chapter_date,
+                    'end_date' => null,
+                    'location' => $placeNames !== [] ? implode(', ', $placeNames) : null,
+                    'title' => $chapter->title,
+                    'description' => $chapter->description,
+                    'type' => 'chapter',
+                    'source_name' => optional($chapter->world)->name,
+                    'related_person_name' => $character->display_name,
+                    'related_person_link' => route('manage.characters.show', $character),
+                    'related_people' => $linkedNames !== [] ? $linkedNames : [$character->display_name],
+                    'photo_path' => $character->image_path,
+                    'accent_color' => $this->resolveColor($character->preferred_color),
+                    'link' => route('manage.chapters.show', $chapter),
+                    'can_manage' => false,
+                    'summary' => $chapter->summary,
                 ];
             });
 
@@ -268,6 +356,7 @@ class ChronicleController extends Controller
 
         return $eventEntries
             ->concat($chronicleEntries)
+            ->concat($chapterEntries)
             ->concat($lifeEntries)
             ->sort(function (array $a, array $b) {
                 if ($a['date'] && $b['date']) {
@@ -309,22 +398,12 @@ class ChronicleController extends Controller
 
     public function create()
     {
-        $defaultWorld = $this->currentWorld();
-        $places = Place::query()
-            ->select(['id', 'name', 'region'])
-            ->orderBy('name')
-            ->get();
-        $characters = Character::query()
-            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'image_path'])
-            ->orderByRaw('birth_date IS NULL, birth_date ASC')
-            ->orderBy('name')
-            ->get();
-
-        return view('manage.chronicles.create', compact('defaultWorld', 'characters', 'places'));
+        abort(403, 'La frise chronologique est en lecture seule.');
     }
 
     public function store(Request $request)
     {
+        abort(403, 'La frise chronologique est en lecture seule.');
         $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
@@ -357,13 +436,14 @@ class ChronicleController extends Controller
 
     public function show(Chronicle $chronicle)
     {
-        $chronicle->load(['world', 'eventPlace']);
+        $chronicle->load(['world', 'eventPlace', 'places']);
 
         return view('manage.chronicles.show', compact('chronicle'));
     }
 
     public function edit(Chronicle $chronicle)
     {
+        abort(403, 'La frise chronologique est en lecture seule.');
         $chronicle->load('linkedCharacters:id');
         $defaultWorld = $this->currentWorld();
         $places = Place::query()
@@ -381,6 +461,7 @@ class ChronicleController extends Controller
 
     public function update(Request $request, Chronicle $chronicle)
     {
+        abort(403, 'La frise chronologique est en lecture seule.');
         $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
@@ -413,6 +494,7 @@ class ChronicleController extends Controller
 
     public function destroy(Chronicle $chronicle)
     {
+        abort(403, 'La frise chronologique est en lecture seule.');
         $chronicle->delete();
 
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique supprimée.');

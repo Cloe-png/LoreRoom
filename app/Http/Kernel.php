@@ -33,6 +33,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
+            \App\Http\Middleware\SetApplicationLocale::class,
             \App\Http\Middleware\LogUserActivity::class,
             // \Illuminate\Session\Middleware\AuthenticateSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
@@ -67,5 +68,6 @@ class Kernel extends HttpKernel
         'temp.token' => \App\Http\Middleware\EnsureTemporaryLoginToken::class,
         'session.activity' => \App\Http\Middleware\EnsureSessionActivity::class,
         'world.selected' => \App\Http\Middleware\EnsureWorldSelected::class,
+        'module.access' => \App\Http\Middleware\EnsureModuleAccess::class,
     ];
 }

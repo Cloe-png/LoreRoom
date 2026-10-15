@@ -1,6 +1,6 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Suggestions')
+@section('title', __('app.suggestions.page_title'))
 @section('header', 'Boite à suggestions')
 
 @section('content')
@@ -243,13 +243,13 @@
                         </div>
 
                         <div class="field">
-                            <label for="suggestion_subject">Sujet</label>
+                            <label for="suggestion_subject">Objet</label>
                             <input
                                 id="suggestion_subject"
                                 type="text"
                                 name="_subject"
                                 maxlength="160"
-                                value="{{ old('_subject', 'Nouvelle suggestion LoreRoom') }}"
+                                value="{{ old('_subject', __('app.suggestions.default_subject')) }}"
                                 placeholder="Ex: Ajouter un calendrier par monde"
                                 required
                             >
@@ -277,7 +277,7 @@
                         </div>
 
                         <div class="field">
-                            <label for="suggestion_value">Pourquoi c'est utile ?</label>
+                            <label for="suggestion_value">Utilité ?</label>
                             <textarea
                                 id="suggestion_value"
                                 name="value"
@@ -286,7 +286,7 @@
                         </div>
 
                         <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute; left:-9999px;" aria-hidden="true">
-                        <input type="hidden" name="_source" value="LoreRoom - Module suggestions">
+                        <input type="hidden" name="_source" value="{{ __('app.suggestions.source') }}">
                         <input type="hidden" name="_format" value="plain">
 
                         <div class="stack">
@@ -298,7 +298,6 @@
                             >
                                 Envoyer la suggestion
                             </button>
-                            <span class="muted">Transmission directe par email via Formspree.</span>
                         </div>
                     </form>
 

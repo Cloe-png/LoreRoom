@@ -32,7 +32,7 @@ class EnsureWorldSelected
             ) {
                 return redirect()
                     ->route('manage.worlds.index')
-                    ->with('success', 'Bienvenue. Crée ton premier monde pour commencer.');
+                    ->with('success', __('app.messages.welcome_create_world'));
             }
 
             $request->session()->forget('selected_world_id');

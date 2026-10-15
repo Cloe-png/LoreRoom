@@ -44,6 +44,8 @@
                 <p><span class="label">Age:</span> {{ $character->calculated_age !== null ? $character->calculated_age . ' ans' : '-' }}</p>
                 <p><span class="label">Monde:</span> {{ optional($character->world)->name ?: '-' }}</p>
                 <p><span class="label">Rôle:</span> {{ $character->role ?: '-' }}</p>
+                <p><span class="label">Orientation sexuelle:</span> {{ $character->sexual_orientation ?: '-' }}</p>
+                <p><span class="label">Mode vestimentaire:</span> {{ $character->clothing_style_mode ?: '-' }}</p>
                 <p><span class="label">Naissance:</span> {{ optional($character->birth_date)->format('Y-m-d') ?: '-' }}</p>
                 <p><span class="label">Mort:</span> {{ optional($character->death_date)->format('Y-m-d') ?: '-' }}</p>
                 <p><span class="label">Lieu de naissance:</span> {{ optional($character->birthPlace)->name ?: '-' }}</p>
@@ -80,8 +82,19 @@
     <p><span class="label">Espèces / races:</span> {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}</p>
     <p><span class="label">Marques:</span> {{ $character->marks ?: '-' }}</p>
     <p><span class="label">Style:</span> {{ $character->clothing_style ?: '-' }}</p>
+    <p><span class="label">Description de l'apparence:</span> {{ $character->appearance_description ?: '-' }}</p>
+    <p><span class="label">Personnalité:</span> {{ $character->psychology_notes ?: '-' }}</p>
     <p><span class="label">Qualités:</span> {{ $character->qualities ?: '-' }}</p>
     <p><span class="label">Défauts:</span> {{ $character->flaws ?: '-' }}</p>
+    <p><span class="label">Pouvoirs:</span>
+        @if($character->powers->isEmpty())
+            -
+        @else
+            {{ $character->powers->map(fn ($power) => $power->name . ($power->description ? ' — ' . $power->description : ''))->join(' | ') }}
+        @endif
+    </p>
+    <p><span class="label">Aime:</span> {{ $character->likes ?: '-' }}</p>
+    <p><span class="label">N'aime pas:</span> {{ $character->dislikes ?: '-' }}</p>
     <p><span class="label">Voix / tics:</span> {{ $character->voice_tics ?: '-' }}</p>
     <p><span class="label">Résumé:</span> {{ $character->summary ?: '-' }}</p>
 </div>
@@ -161,6 +174,24 @@
                 <div style="display:inline-block; text-align:center;">
                     <img class="gallery-img" src="{{ $dataUri }}" alt="Galerie">
                     <div class="muted">{{ $img->caption ?: 'Sans légende' }}</div>
+                </div>
+            @endif
+        @endforeach
+    @endif
+</div>
+
+<div class="section">
+    <h2>Tenues enregistrées</h2>
+    @if($character->outfitImages->isEmpty())
+        <p class="muted">Aucune tenue.</p>
+    @else
+        @foreach($character->outfitImages as $outfit)
+            @php $dataUri = $outfitDataUris[$outfit->id] ?? null; @endphp
+            @if($dataUri)
+                <div style="display:inline-block; text-align:center; margin-right:8px; margin-bottom:8px;">
+                    <img class="gallery-img" src="{{ $dataUri }}" alt="Tenue">
+                    <div><strong>Mode:</strong> {{ $outfit->mode ?: '-' }}</div>
+                    <div class="muted">{{ $outfit->caption ?: 'Sans description' }}</div>
                 </div>
             @endif
         @endforeach

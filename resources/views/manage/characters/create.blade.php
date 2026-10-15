@@ -39,6 +39,9 @@
             margin: 0;
             flex: 0 0 auto;
         }
+        #power-panel {
+            transition: all 0.2s ease;
+        }
     </style>
     <section class="panel">
         <form method="POST" action="{{ route('manage.characters.store') }}" enctype="multipart/form-data">
@@ -51,7 +54,8 @@
 
             <div class="field">
                 <label>Image (portrait principal)</label>
-                <input type="file" name="image" accept="image/*">
+                <input type="file" name="image" accept=".png,.jpg,.jpeg">
+                <p class="muted">PNG ou JPG. Tu peux aussi laisser cette zone vide et décrire le personnage plus bas.</p>
             </div>
 
             <div class="field">
@@ -102,173 +106,53 @@
                 </div>
             </div>
 
-            <details class="accordion">
-                <summary>Famille</summary>
-                <div class="accordion-body">
-                    <div class="field">
-                        <label>Famille (pivot)</label>
-                        <input type="text" name="family_name" value="{{ old('family_name') }}" placeholder="Ex: Stark">
-                    </div>
             <div class="grid-4">
                 <div class="field">
-                    <label>Père</label>
-                    <select name="father_id">
-                        <option value="">Inconnu</option>
-                        @foreach($parents as $parent)
-                            <option value="{{ $parent->id }}" {{ old('father_id') == $parent->id ? 'selected' : '' }}>{{ $parent->display_name }}</option>
+                    <label>Âge</label>
+                    <input type="number" min="0" max="999" name="age" value="{{ old('age') }}" placeholder="Optionnel">
+                </div>
+                <div class="field">
+                    <label>Orientation sexuelle</label>
+                    <select name="sexual_orientation">
+                        <option value="">-</option>
+                        @foreach($sexualOrientationOptions as $orientation)
+                            <option value="{{ $orientation }}" {{ old('sexual_orientation') === $orientation ? 'selected' : '' }}>{{ $orientation }}</option>
                         @endforeach
                     </select>
                 </div>
                 <div class="field">
-                    <label>Mère</label>
-                    <select name="mother_id">
-                        <option value="">Inconnue</option>
-                        @foreach($parents as $parent)
-                            <option value="{{ $parent->id }}" {{ old('mother_id') == $parent->id ? 'selected' : '' }}>{{ $parent->display_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Epouse / Epoux</label>
-                    <select name="spouse_id">
-                        <option value="">Inconnu(e)</option>
-                        @foreach($spouses as $spouse)
-                            <option value="{{ $spouse->id }}" {{ old('spouse_id') == $spouse->id ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Ex (un ou plusieurs)</label>
-                    @php
-                        $selectedEx = collect($selectedExIds ?? [])->map(fn ($id) => (int) $id)->all();
-                    @endphp
-                    <select name="ex_character_ids[]" multiple size="5">
-                        @foreach($spouses as $spouse)
-                            <option value="{{ $spouse->id }}" {{ in_array((int) $spouse->id, $selectedEx, true) ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
-                        @endforeach
-                    </select>
-                    <p class="muted">Maintiens Ctrl (ou Cmd) pour selectionner plusieurs ex.</p>
-                </div>
-                <div class="field">
-                    <label>Lieu de naissance</label>
-                    <select name="birth_place_id">
-                        <option value="">Inconnu</option>
-                        @foreach($places as $place)
-                            <option value="{{ $place->id }}" {{ old('birth_place_id') == $place->id ? 'selected' : '' }}>{{ $place->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="field">
-                    <label>Résidence actuelle</label>
-                    <select name="residence_place_id">
-                        <option value="">Inconnue</option>
-                        @foreach($places as $place)
-                            <option value="{{ $place->id }}" {{ old('residence_place_id') == $place->id ? 'selected' : '' }}>{{ $place->name }}</option>
-                        @endforeach
-                    </select>
+                    <label>Famille / clan</label>
+                    <input type="text" name="family_name" value="{{ old('family_name') }}" placeholder="Ex: Stark">
                 </div>
             </div>
-
-            <div class="stack" style="margin-bottom:12px;">
-                <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children') ? 'checked' : '' }}> Enfants (oui/non)</label>
-                <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frère / sœur (oui/non)</label>
-            </div>
-
-            <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
-                <div class="grid-4">
-                    <div class="field">
-                        <label>Liaison parentale</label>
-                        <select name="children_link_type">
-                            <option value="father" {{ ($childrenLinkType ?? 'father') === 'father' ? 'selected' : '' }}>Père</option>
-                            <option value="mother" {{ ($childrenLinkType ?? 'father') === 'mother' ? 'selected' : '' }}>Mère</option>
-                        </select>
-                    </div>
-                    <div class="field" style="grid-column: span 3;">
-                        <label>Personnages déjà créés (enfants)</label>
-                        @php
-                            $selectedChildren = collect($selectedChildrenIds ?? [])->map(fn ($id) => (int) $id)->all();
-                        @endphp
-                        @if($characters->isEmpty())
-                            <p class="muted">Aucun personnage créé pour le moment.</p>
-                        @else
-                            <div class="children-picker" style="max-height:220px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
-                                @foreach($characters as $childCandidate)
-                                    <label>
-                                        <input type="checkbox" name="children_ids[]" value="{{ $childCandidate->id }}" {{ in_array($childCandidate->id, $selectedChildren) ? 'checked' : '' }}>
-                                        {{ $childCandidate->display_name }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <div id="siblings-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
-                @php
-                    $selectedFullSiblings = collect($selectedFullSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
-                    $selectedTwinSiblings = collect($selectedTwinSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
-                    $selectedHalfSiblings = collect($selectedHalfSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
-                @endphp
-                @if($characters->isEmpty())
-                    <p class="muted">Aucun personnage créé pour le moment.</p>
-                @else
-                    <div class="grid-4">
-                        <div class="field" style="grid-column: span 4;">
-                            <label>Zone frère / sœur</label>
-                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
-                                @foreach($characters as $siblingCandidate)
-                                    <label>
-                                        <input type="checkbox" name="sibling_ids_full[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedFullSiblings) ? 'checked' : '' }}>
-                                        {{ $siblingCandidate->display_name }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="field" style="grid-column: span 4;">
-                            <label>Zone jumeau / jumelle</label>
-                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
-                                @foreach($characters as $siblingCandidate)
-                                    <label>
-                                        <input type="checkbox" name="sibling_ids_twin[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedTwinSiblings) ? 'checked' : '' }}>
-                                        {{ $siblingCandidate->display_name }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div class="field" style="grid-column: span 4;">
-                            <label>Zone demi-frère / demi-sœur</label>
-                            <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
-                                @foreach($characters as $siblingCandidate)
-                                    <label>
-                                        <input type="checkbox" name="sibling_ids_half[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedHalfSiblings) ? 'checked' : '' }}>
-                                        {{ $siblingCandidate->display_name }}
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-                </div>
-            </details>
 
             <div class="stack" style="margin-bottom:12px;">
                 <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power') ? 'checked' : '' }}> Pouvoir actif</label>
                 <label><input type="checkbox" id="has_private_secret" name="secrets_is_private" value="1" {{ old('secrets_is_private', 0) ? 'checked' : '' }}> Secret privé</label>
             </div>
 
-            <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
-                <div class="grid-4">
-                    <div class="field">
-                        <label>Niveau de puissance (1-10)</label>
-                        <input type="number" min="1" max="10" name="power_level" value="{{ old('power_level') }}">
+            <!-- Bloc pouvoirs - maintenant correctement masquable -->
+            <div id="power-panel" style="display: {{ old('has_power') ? 'block' : 'none' }};">
+                <div class="field">
+                    <label>Pouvoirs du personnage</label>
+                    <div id="powers-list">
+                        @foreach(($powerRows ?? []) as $i => $row)
+                            <div class="panel" data-power-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Nom du pouvoir</label>
+                                        <input type="text" name="powers[{{ $i }}][name]" value="{{ $row['name'] ?? '' }}">
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Description</label>
+                                        <input type="text" name="powers[{{ $i }}][description]" value="{{ $row['description'] ?? '' }}">
+                                    </div>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-power aria-label="Retirer ce pouvoir">Retirer</button>
+                            </div>
+                        @endforeach
                     </div>
-                    <div class="field" style="grid-column: span 3;">
-                        <label>Pouvoir (si oui, details)</label>
-                        <textarea name="power_description">{{ old('power_description') }}</textarea>
-                    </div>
+                    <div class="stack" style="margin-top:8px;"><button class="btn secondary" type="button" id="add-power-btn">Ajouter un pouvoir</button></div>
                 </div>
             </div>
 
@@ -283,10 +167,159 @@
                 </div>
             </div>
 
-            <div class="field" id="secret-panel" style="display:none;">
-                <label>Secret privé</label>
-                <textarea name="secrets">{{ old('secrets') }}</textarea>
+            <div id="secret-panel" style="display: {{ old('secrets_is_private', 0) ? 'block' : 'none' }};">
+                <div class="field">
+                    <label>Secret privé</label>
+                    <textarea name="secrets">{{ old('secrets') }}</textarea>
+                </div>
             </div>
+
+            <details class="accordion">
+                <summary>Famille biologique</summary>
+                <div class="accordion-body">
+                    <div class="grid-4">
+                        <div class="field">
+                            <label>Père</label>
+                            <select name="father_id">
+                                <option value="">Inconnu</option>
+                                @foreach($parents as $parent)
+                                    <option value="{{ $parent->id }}" {{ old('father_id') == $parent->id ? 'selected' : '' }}>{{ $parent->display_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Mère</label>
+                            <select name="mother_id">
+                                <option value="">Inconnue</option>
+                                @foreach($parents as $parent)
+                                    <option value="{{ $parent->id }}" {{ old('mother_id') == $parent->id ? 'selected' : '' }}>{{ $parent->display_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Epouse / Epoux</label>
+                            <select name="spouse_id">
+                                <option value="">Inconnu(e)</option>
+                                @foreach($spouses as $spouse)
+                                    <option value="{{ $spouse->id }}" {{ old('spouse_id') == $spouse->id ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Ex (un ou plusieurs)</label>
+                            @php
+                                $selectedEx = collect($selectedExIds ?? [])->map(fn ($id) => (int) $id)->all();
+                            @endphp
+                            <select name="ex_character_ids[]" multiple size="5">
+                                @foreach($spouses as $spouse)
+                                    <option value="{{ $spouse->id }}" {{ in_array((int) $spouse->id, $selectedEx, true) ? 'selected' : '' }}>{{ $spouse->display_name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="muted">Maintiens Ctrl (ou Cmd) pour selectionner plusieurs ex.</p>
+                        </div>
+                        <div class="field">
+                            <label>Lieu de naissance</label>
+                            <select name="birth_place_id">
+                                <option value="">Inconnu</option>
+                                @foreach($places as $place)
+                                    <option value="{{ $place->id }}" {{ old('birth_place_id') == $place->id ? 'selected' : '' }}>{{ $place->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label>Résidence actuelle</label>
+                            <select name="residence_place_id">
+                                <option value="">Inconnue</option>
+                                @foreach($places as $place)
+                                    <option value="{{ $place->id }}" {{ old('residence_place_id') == $place->id ? 'selected' : '' }}>{{ $place->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="stack" style="margin-bottom:12px;">
+                        <label><input type="checkbox" id="has_children" name="has_children" value="1" {{ old('has_children') ? 'checked' : '' }}> Enfants (oui/non)</label>
+                        <label><input type="checkbox" id="has_brother_sister" name="has_brother_sister" value="1" {{ old('has_brother_sister') ? 'checked' : '' }}> Frère / sœur (oui/non)</label>
+                    </div>
+
+                    <div id="children-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display: {{ old('has_children') ? 'block' : 'none' }};">
+                        <div class="grid-4">
+                            <div class="field">
+                                <label>Liaison parentale</label>
+                                <select name="children_link_type">
+                                    <option value="father" {{ ($childrenLinkType ?? 'father') === 'father' ? 'selected' : '' }}>Père</option>
+                                    <option value="mother" {{ ($childrenLinkType ?? 'father') === 'mother' ? 'selected' : '' }}>Mère</option>
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: span 3;">
+                                <label>Personnages déjà créés (enfants)</label>
+                                @php
+                                    $selectedChildren = collect($selectedChildrenIds ?? [])->map(fn ($id) => (int) $id)->all();
+                                @endphp
+                                @if($characters->isEmpty())
+                                    <p class="muted">Aucun personnage créé pour le moment.</p>
+                                @else
+                                    <div class="children-picker" style="max-height:220px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                        @foreach($characters as $childCandidate)
+                                            <label>
+                                                <input type="checkbox" name="children_ids[]" value="{{ $childCandidate->id }}" {{ in_array($childCandidate->id, $selectedChildren) ? 'checked' : '' }}>
+                                                {{ $childCandidate->display_name }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="siblings-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display: {{ old('has_brother_sister') ? 'block' : 'none' }};">
+                        @php
+                            $selectedFullSiblings = collect($selectedFullSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                            $selectedTwinSiblings = collect($selectedTwinSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                            $selectedHalfSiblings = collect($selectedHalfSiblingIds ?? [])->map(fn ($id) => (int) $id)->all();
+                        @endphp
+                        @if($characters->isEmpty())
+                            <p class="muted">Aucun personnage créé pour le moment.</p>
+                        @else
+                            <div class="grid-4">
+                                <div class="field" style="grid-column: span 4;">
+                                    <label>Zone frère / sœur</label>
+                                    <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                        @foreach($characters as $siblingCandidate)
+                                            <label>
+                                                <input type="checkbox" name="sibling_ids_full[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedFullSiblings) ? 'checked' : '' }}>
+                                                {{ $siblingCandidate->display_name }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="field" style="grid-column: span 4;">
+                                    <label>Zone jumeau / jumelle</label>
+                                    <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                        @foreach($characters as $siblingCandidate)
+                                            <label>
+                                                <input type="checkbox" name="sibling_ids_twin[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedTwinSiblings) ? 'checked' : '' }}>
+                                                {{ $siblingCandidate->display_name }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                                <div class="field" style="grid-column: span 4;">
+                                    <label>Zone demi-frère / demi-sœur</label>
+                                    <div class="children-picker" style="max-height:160px; overflow:auto; border:1px solid rgba(101,74,42,.28); border-radius:8px; background:rgba(255,255,255,.45); padding:8px;">
+                                        @foreach($characters as $siblingCandidate)
+                                            <label>
+                                                <input type="checkbox" name="sibling_ids_half[]" value="{{ $siblingCandidate->id }}" {{ in_array($siblingCandidate->id, $selectedHalfSiblings) ? 'checked' : '' }}>
+                                                {{ $siblingCandidate->display_name }}
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </details>
 
             <details class="accordion">
                 <summary>Apparence</summary>
@@ -308,16 +341,19 @@
                         <p class="muted">Liste alimentée avec les races définies dans le Lore.</p>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks') }}</textarea></div>
-                    <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style') }}</textarea></div>
+                    <div class="field"><label>Description de l'apparence</label><textarea name="appearance_description" placeholder="Décris le personnage si tu ne veux pas ajouter d'image.">{{ old('appearance_description') }}</textarea></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Psychologie</summary>
                 <div class="accordion-body">
+                    <div class="field"><label>Personnalité</label><textarea name="psychology_notes" placeholder="Tempérament, réactions, traits marquants, etc.">{{ old('psychology_notes') }}</textarea></div>
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities') }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws') }}</textarea></div>
-                    <div class="field"><label>Voix (audio téléversé)</label><input type="file" name="voice_audio" accept="audio/*"></div>
+                    <div class="field"><label>Aime</label><textarea name="likes" placeholder="Nourriture, activités, lieux, etc.">{{ old('likes') }}</textarea></div>
+                    <div class="field"><label>N'aime pas</label><textarea name="dislikes" placeholder="Nourriture, activités, lieux, etc.">{{ old('dislikes') }}</textarea></div>
+                    <div class="field"><label>Voix (audio téléversé)</label><input type="file" name="voice_audio" accept=".mp3"></div>
                     <div class="field"><label>Lien YouTube (à la place de l'audio)</label><input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url') }}" placeholder="https://www.youtube.com/watch?v=..."></div>
                     <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary') }}</textarea></div>
                 </div>
@@ -326,239 +362,273 @@
             <details class="accordion">
                 <summary>Equipements / artefacts</summary>
                 <div class="accordion-body">
-            <div id="items-list">
-                @foreach(($itemRows ?? []) as $i => $item)
-                    <div class="panel" data-item-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;"><label>Nom objet</label><input type="text" name="items[{{ $i }}][name]" value="{{ $item['name'] ?? '' }}"></div>
-                            <div class="field"><label>Rareté</label>
-                                <select name="items[{{ $i }}][rarity]">
-                                    <option value="">-</option>
-                                    @foreach(['commun','rare','epique','legendaire','mythique'] as $rarity)
-                                        <option value="{{ $rarity }}" {{ ($item['rarity'] ?? '') === $rarity ? 'selected' : '' }}>{{ ucfirst($rarity) }}</option>
-                                    @endforeach
-                                </select>
+                    <div id="items-list">
+                        @foreach(($itemRows ?? []) as $i => $item)
+                            <div class="panel" data-item-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;"><label>Nom objet</label><input type="text" name="items[{{ $i }}][name]" value="{{ $item['name'] ?? '' }}"></div>
+                                    <div class="field"><label>Rareté</label>
+                                        <select name="items[{{ $i }}][rarity]">
+                                            <option value="">-</option>
+                                            @foreach(['commun','rare','epique','legendaire','mythique'] as $rarity)
+                                                <option value="{{ $rarity }}" {{ ($item['rarity'] ?? '') === $rarity ? 'selected' : '' }}>{{ ucfirst($rarity) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field"><label>Notes</label><textarea name="items[{{ $i }}][notes]">{{ $item['notes'] ?? '' }}</textarea></div>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-item aria-label="Retirer cet objet">Retirer</button>
                             </div>
-                            <div class="field"><label>Notes</label><textarea name="items[{{ $i }}][notes]">{{ $item['notes'] ?? '' }}</textarea></div>
-                        </div>
-                        <button class="btn danger" type="button" data-remove-item>Retirer</button>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-item-btn">Ajouter un objet</button></div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-item-btn">Ajouter un objet</button></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Métiers</summary>
                 <div class="accordion-body">
-            <div id="jobs-list">
-                @foreach(($jobRows ?? []) as $i => $job)
-                    <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Métier existant</label>
-                                <select name="jobs[{{ $i }}][job_id]" data-job-select>
-                                    <option value="">-</option>
-                                    @foreach($jobOptions as $opt)
-                                        <option value="{{ $opt->id }}" {{ (string)($job['job_id'] ?? '') === (string)$opt->id ? 'selected' : '' }}>
-                                            {{ $opt->name }}{{ $opt->is_default ? ' · défaut' : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                    <div id="jobs-list">
+                        @foreach(($jobRows ?? []) as $i => $job)
+                            <div class="panel" data-job-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Métier existant</label>
+                                        <select name="jobs[{{ $i }}][job_id]" data-job-select>
+                                            <option value="">-</option>
+                                            @foreach($jobOptions as $opt)
+                                                <option value="{{ $opt->id }}" {{ (string)($job['job_id'] ?? '') === (string)$opt->id ? 'selected' : '' }}>
+                                                    {{ $opt->name }}{{ $opt->is_default ? ' · défaut' : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Métier personnalisé</label>
+                                        <input type="text" name="jobs[{{ $i }}][job_name]" value="{{ $job['job_name'] ?? '' }}" placeholder="Si non présent dans la liste" list="job-name-options">
+                                        <p class="muted">Cette zone concerne uniquement le métier du personnage.</p>
+                                    </div>
+                                    <div class="field"><label>Année début</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][start_year]" value="{{ $job['start_year'] ?? '' }}"></div>
+                                    <div class="field"><label>Année fin</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][end_year]" value="{{ $job['end_year'] ?? '' }}"></div>
+                                </div>
+                                <div class="field"><label>Notes</label><textarea name="jobs[{{ $i }}][notes]">{{ $job['notes'] ?? '' }}</textarea></div>
+                                <button class="btn danger" type="button" data-remove-job aria-label="Retirer ce métier">Retirer</button>
                             </div>
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Métier personnalisé</label>
-                                <input type="text" name="jobs[{{ $i }}][job_name]" value="{{ $job['job_name'] ?? '' }}" placeholder="Si non présent dans la liste" list="job-name-options">
-                                <p class="muted">Cette zone concerne uniquement le métier du personnage.</p>
-                            </div>
-                            <div class="field"><label>Année début</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][start_year]" value="{{ $job['start_year'] ?? '' }}"></div>
-                            <div class="field"><label>Année fin</label><input type="number" min="1" max="9999" name="jobs[{{ $i }}][end_year]" value="{{ $job['end_year'] ?? '' }}"></div>
-                        </div>
-                        <div class="field"><label>Notes</label><textarea name="jobs[{{ $i }}][notes]">{{ $job['notes'] ?? '' }}</textarea></div>
-                        <button class="btn danger" type="button" data-remove-job>Retirer</button>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-job-btn">Ajouter un métier</button></div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-job-btn">Ajouter un métier</button></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Factions / groupes</summary>
                 <div class="accordion-body">
-            <p class="muted">Lie ce personnage à une faction existante, par exemple "Héros".</p>
-            <div id="factions-list">
-                @foreach(($factionRows ?? []) as $i => $row)
-                    <div class="panel" data-faction-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Faction</label>
-                                <select name="faction_memberships[{{ $i }}][faction_id]">
-                                    <option value="">Aucune</option>
-                                    @foreach($factionOptions as $factionOption)
-                                        <option value="{{ $factionOption->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$factionOption->id ? 'selected' : '' }}>
-                                            {{ $factionOption->name }}{{ $factionOption->type ? ' · ' . $factionOption->type : '' }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                    <p class="muted">Lie ce personnage à une faction existante, par exemple "Héros".</p>
+                    <div id="factions-list">
+                        @foreach(($factionRows ?? []) as $i => $row)
+                            <div class="panel" data-faction-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Faction</label>
+                                        <select name="faction_memberships[{{ $i }}][faction_id]">
+                                            <option value="">Aucune</option>
+                                            @foreach($factionOptions as $factionOption)
+                                                <option value="{{ $factionOption->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$factionOption->id ? 'selected' : '' }}>
+                                                    {{ $factionOption->name }}{{ $factionOption->type ? ' · ' . $factionOption->type : '' }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Rôle dans le groupe</label>
+                                        <select name="faction_memberships[{{ $i }}][role]" data-faction-role-select>
+                                            <option value="">-</option>
+                                            @foreach(($factionRoleMap[(int) ($row['faction_id'] ?? 0)] ?? []) as $roleName)
+                                                <option value="{{ $roleName }}" {{ ($row['role'] ?? '') === $roleName ? 'selected' : '' }}>{{ $roleName }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field">
+                                        <label>Grade</label>
+                                        <input type="text" name="faction_memberships[{{ $i }}][grade]" value="{{ $row['grade'] ?? '' }}">
+                                    </div>
+                                    <div class="field">
+                                        <label>Date d'entrée</label>
+                                        <input type="date" name="faction_memberships[{{ $i }}][joined_at]" value="{{ $row['joined_at'] ?? '' }}">
+                                    </div>
+                                    <div class="field">
+                                        <label>Statut</label>
+                                        <select name="faction_memberships[{{ $i }}][status]">
+                                            <option value="">-</option>
+                                            @foreach($factionMemberStatusOptions as $status)
+                                                <option value="{{ $status }}" {{ (string)($row['status'] ?? '') === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-faction aria-label="Retirer cette faction">Retirer</button>
                             </div>
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Rôle dans le groupe</label>
-                                <select name="faction_memberships[{{ $i }}][role]" data-faction-role-select>
-                                    <option value="">-</option>
-                                    @foreach(($factionRoleMap[(int) ($row['faction_id'] ?? 0)] ?? []) as $roleName)
-                                        <option value="{{ $roleName }}" {{ ($row['role'] ?? '') === $roleName ? 'selected' : '' }}>{{ $roleName }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="field">
-                                <label>Grade</label>
-                                <input type="text" name="faction_memberships[{{ $i }}][grade]" value="{{ $row['grade'] ?? '' }}">
-                            </div>
-                            <div class="field">
-                                <label>Date d'entrée</label>
-                                <input type="date" name="faction_memberships[{{ $i }}][joined_at]" value="{{ $row['joined_at'] ?? '' }}">
-                            </div>
-                            <div class="field">
-                                <label>Statut</label>
-                                <select name="faction_memberships[{{ $i }}][status]">
-                                    <option value="">-</option>
-                                    @foreach($factionMemberStatusOptions as $status)
-                                        <option value="{{ $status }}" {{ (string)($row['status'] ?? '') === $status ? 'selected' : '' }}>{{ ucfirst($status) }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <button class="btn danger" type="button" data-remove-faction>Retirer</button>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-faction-btn">Ajouter une faction</button></div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-faction-btn">Ajouter une faction</button></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Parcours scolaire / formation</summary>
                 <div class="accordion-body">
-            <p class="muted">Cette zone sert uniquement aux études, écoles, académies et diplômes.</p>
-            <div id="educations-list">
-                @foreach(($educationRows ?? []) as $i => $row)
-                    <div class="panel" data-education-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Établissement scolaire</label>
-                                <select name="educations[{{ $i }}][faction_id]">
-                                    <option value="">Aucune</option>
-                                    @foreach($factions as $faction)
-                                        <option value="{{ $faction->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$faction->id ? 'selected' : '' }}>
-                                            {{ $faction->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                    <p class="muted">Cette zone sert uniquement aux études, écoles, académies et diplômes.</p>
+                    <div id="educations-list">
+                        @foreach(($educationRows ?? []) as $i => $row)
+                            <div class="panel" data-education-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Établissement scolaire</label>
+                                        <select name="educations[{{ $i }}][faction_id]">
+                                            <option value="">Aucune</option>
+                                            @foreach($factions as $faction)
+                                                <option value="{{ $faction->id }}" {{ (string)($row['faction_id'] ?? '') === (string)$faction->id ? 'selected' : '' }}>
+                                                    {{ $faction->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Diplôme / certificat</label>
+                                        <select name="educations[{{ $i }}][diploma_id]">
+                                            <option value="">Aucun</option>
+                                            @foreach($diplomas as $diploma)
+                                                @php
+                                                    $label = $diploma->name;
+                                                    $school = optional($diploma->faction)->name;
+                                                    if ($school) {
+                                                        $label .= ' (' . $school . ')';
+                                                    }
+                                                    if ($diploma->level) {
+                                                        $label .= ' - ' . $diploma->level;
+                                                    }
+                                                @endphp
+                                                <option value="{{ $diploma->id }}" {{ (string)($row['diploma_id'] ?? '') === (string)$diploma->id ? 'selected' : '' }}>
+                                                    {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Spécialité / domaine d'étude</label>
+                                        <input type="text" name="educations[{{ $i }}][field]" value="{{ $row['field'] ?? '' }}">
+                                    </div>
+                                    <div class="field">
+                                        <label>Année début</label>
+                                        <input type="number" min="1" max="9999" name="educations[{{ $i }}][start_year]" value="{{ $row['start_year'] ?? '' }}">
+                                    </div>
+                                    <div class="field">
+                                        <label>Année fin</label>
+                                        <input type="number" min="1" max="9999" name="educations[{{ $i }}][end_year]" value="{{ $row['end_year'] ?? '' }}">
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Notes</label>
+                                    <textarea name="educations[{{ $i }}][notes]">{{ $row['notes'] ?? '' }}</textarea>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-education aria-label="Retirer cette formation">Retirer</button>
                             </div>
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Diplôme / certificat</label>
-                                <select name="educations[{{ $i }}][diploma_id]">
-                                    <option value="">Aucun</option>
-                                    @foreach($diplomas as $diploma)
-                                        @php
-                                            $label = $diploma->name;
-                                            $school = optional($diploma->faction)->name;
-                                            if ($school) {
-                                                $label .= ' (' . $school . ')';
-                                            }
-                                            if ($diploma->level) {
-                                                $label .= ' - ' . $diploma->level;
-                                            }
-                                        @endphp
-                                        <option value="{{ $diploma->id }}" {{ (string)($row['diploma_id'] ?? '') === (string)$diploma->id ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Spécialité / domaine d'étude</label>
-                                <input type="text" name="educations[{{ $i }}][field]" value="{{ $row['field'] ?? '' }}">
-                            </div>
-                            <div class="field">
-                                <label>Année début</label>
-                                <input type="number" min="1" max="9999" name="educations[{{ $i }}][start_year]" value="{{ $row['start_year'] ?? '' }}">
-                            </div>
-                            <div class="field">
-                                <label>Année fin</label>
-                                <input type="number" min="1" max="9999" name="educations[{{ $i }}][end_year]" value="{{ $row['end_year'] ?? '' }}">
-                            </div>
-                        </div>
-                        <div class="field">
-                            <label>Notes</label>
-                            <textarea name="educations[{{ $i }}][notes]">{{ $row['notes'] ?? '' }}</textarea>
-                        </div>
-                        <button class="btn danger" type="button" data-remove-education>Retirer</button>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-education-btn">Ajouter une formation</button></div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-education-btn">Ajouter une formation</button></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Galerie d'images</summary>
                 <div class="accordion-body">
-            <div id="gallery-list">
-                <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
-                    <div class="grid-4">
-                        <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
-                        <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
+                    <div id="gallery-list">
+                        <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
+                            <div class="grid-4">
+                                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".png,.jpg,.jpeg"></div>
+                                <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
+                            </div>
+                            <button class="btn danger" type="button" data-remove-gallery aria-label="Retirer cette image">Retirer</button>
+                        </div>
                     </div>
-                    <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-gallery-btn">Ajouter une image</button></div>
                 </div>
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-gallery-btn">Ajouter une image</button></div>
+            </details>
+
+            <details class="accordion">
+                <summary>Tenues vestimentaires</summary>
+                <div class="accordion-body">
+                    <p class="muted" style="margin-top:0;">Ajoute une ligne par tenue: choisis un mode vestimentaire, puis uploade l'image correspondante.</p>
+                    <div id="outfits-list">
+                        @foreach(($outfitRows ?? []) as $i => $row)
+                            <div class="panel" data-outfit-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Mode vestimentaire</label>
+                                        <select name="outfits[{{ $i }}][mode]">
+                                            <option value="">-</option>
+                                            @foreach($clothingStyleModeOptions as $modeOption)
+                                                <option value="{{ $modeOption }}" {{ (string)($row['mode'] ?? '') === (string)$modeOption ? 'selected' : '' }}>{{ $modeOption }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Image</label>
+                                        <input type="file" name="outfits[{{ $i }}][image]" accept=".png,.jpg,.jpeg">
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label>Description de la tenue</label>
+                                    <input type="text" name="outfits[{{ $i }}][caption]" value="{{ $row['caption'] ?? '' }}">
+                                </div>
+                                <button class="btn danger" type="button" data-remove-outfit aria-label="Retirer cette tenue">Retirer</button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-outfit-btn">Ajouter une tenue</button></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Relations (sphères liées)</summary>
                 <div class="accordion-body">
-            <div id="relations-list">
-                @foreach(($relationRows ?? []) as $i => $row)
-                    <div class="panel" data-relation-row style="margin-top:10px; padding:10px;">
-                        <div class="grid-4">
-                            <div class="field" style="grid-column: span 2;">
-                                <label>Lié à</label>
-                                <select name="relations[{{ $i }}][to_character_id]">
-                                    <option value="">Aucun</option>
-                                    @foreach($characters as $linkedCharacter)
-                                        <option value="{{ $linkedCharacter->id }}" {{ (string)($row['to_character_id'] ?? '') === (string)$linkedCharacter->id ? 'selected' : '' }}>{{ $linkedCharacter->display_name }}</option>
-                                    @endforeach
-                                </select>
+                    <div id="relations-list">
+                        @foreach(($relationRows ?? []) as $i => $row)
+                            <div class="panel" data-relation-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Lié à</label>
+                                        <select name="relations[{{ $i }}][to_character_id]">
+                                            <option value="">Aucun</option>
+                                            @foreach($characters as $linkedCharacter)
+                                                <option value="{{ $linkedCharacter->id }}" {{ (string)($row['to_character_id'] ?? '') === (string)$linkedCharacter->id ? 'selected' : '' }}>{{ $linkedCharacter->display_name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="field"><label>Type</label><input type="text" name="relations[{{ $i }}][relation_type]" value="{{ $row['relation_type'] ?? '' }}"></div>
+                                </div>
+                                <div class="grid-4">
+                                    <div class="field">
+                                        <label>Sens</label>
+                                        <select name="relations[{{ $i }}][is_bidirectional]">
+                                            <option value="1" {{ (string)($row['is_bidirectional'] ?? '1') === '1' ? 'selected' : '' }}>Bidirectionnelle</option>
+                                            <option value="0" {{ (string)($row['is_bidirectional'] ?? '1') === '0' ? 'selected' : '' }}>Unidirectionnelle</option>
+                                        </select>
+                                    </div>
+                                    <div class="field" style="grid-column: span 3;"><label>Description</label><textarea name="relations[{{ $i }}][description]">{{ $row['description'] ?? '' }}</textarea></div>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-relation aria-label="Retirer cette relation">Retirer</button>
                             </div>
-                            <div class="field"><label>Type</label><input type="text" name="relations[{{ $i }}][relation_type]" value="{{ $row['relation_type'] ?? '' }}"></div>
-                        </div>
-                        <div class="grid-4">
-                            <div class="field">
-                                <label>Sens</label>
-                                <select name="relations[{{ $i }}][is_bidirectional]">
-                                    <option value="1" {{ (string)($row['is_bidirectional'] ?? '1') === '1' ? 'selected' : '' }}>Bidirectionnelle</option>
-                                    <option value="0" {{ (string)($row['is_bidirectional'] ?? '1') === '0' ? 'selected' : '' }}>Unidirectionnelle</option>
-                                </select>
-                            </div>
-                            <div class="field" style="grid-column: span 3;"><label>Description</label><textarea name="relations[{{ $i }}][description]">{{ $row['description'] ?? '' }}</textarea></div>
-                        </div>
-                        <button class="btn danger" type="button" data-remove-relation>Retirer</button>
+                        @endforeach
                     </div>
-                @endforeach
-            </div>
-            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-relation-btn">Ajouter une relation</button></div>
+                    <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-relation-btn">Ajouter une relation</button></div>
                 </div>
             </details>
 
             <div class="stack">
-                <button class="btn" type="submit">Créer</button>
+                <button class="btn" type="submit" id="submit-btn">Créer</button>
                 <a class="btn secondary" href="{{ route('manage.characters.index') }}">Annuler</a>
             </div>
         </form>
@@ -705,10 +775,51 @@
     <template id="gallery-row-template">
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".png,.jpg,.jpeg"></div>
                 <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
             </div>
             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
+        </div>
+    </template>
+
+    <template id="outfit-row-template">
+        <div class="panel" data-outfit-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Mode vestimentaire</label>
+                    <select data-field="mode">
+                        <option value="">-</option>
+                        @foreach($clothingStyleModeOptions as $modeOption)
+                            <option value="{{ $modeOption }}">{{ $modeOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Image</label>
+                    <input type="file" data-field="image" accept=".png,.jpg,.jpeg">
+                </div>
+            </div>
+            <div class="field">
+                <label>Description de la tenue</label>
+                <input type="text" data-field="caption" value="">
+            </div>
+            <button class="btn danger" type="button" data-remove-outfit>Retirer</button>
+        </div>
+    </template>
+
+    <template id="power-row-template">
+        <div class="panel" data-power-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Nom du pouvoir</label>
+                    <input type="text" data-field="name">
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Description</label>
+                    <input type="text" data-field="description">
+                </div>
+            </div>
+            <button class="btn danger" type="button" data-remove-power>Retirer</button>
         </div>
     </template>
 
@@ -736,6 +847,13 @@
 
     <script>
         (function () {
+            function stripHtml(str) {
+                if (!str) return '';
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
             function bindCollection(listId, addBtnId, tplId, rowAttr, removeAttr, baseName) {
                 const list = document.getElementById(listId);
                 const addBtn = document.getElementById(addBtnId);
@@ -779,6 +897,8 @@
             bindCollection('jobs-list', 'add-job-btn', 'job-row-template', 'data-job-row', 'data-remove-job', 'jobs');
             bindCollection('factions-list', 'add-faction-btn', 'faction-row-template', 'data-faction-row', 'data-remove-faction', 'faction_memberships');
             bindCollection('educations-list', 'add-education-btn', 'education-row-template', 'data-education-row', 'data-remove-education', 'educations');
+            bindCollection('outfits-list', 'add-outfit-btn', 'outfit-row-template', 'data-outfit-row', 'data-remove-outfit', 'outfits');
+            bindCollection('powers-list', 'add-power-btn', 'power-row-template', 'data-power-row', 'data-remove-power', 'powers');
 
             const factionRoleMap = @json($factionRoleMap ?? []);
 
@@ -818,15 +938,17 @@
                 const nameInput = panel ? panel.querySelector('input[name*="[job_name]"], input[data-field="job_name"]') : null;
                 const label = target.options[target.selectedIndex]?.textContent || '';
                 if (nameInput && label && label !== '-') {
-                    nameInput.value = label.replace(' · défaut', '').trim();
+                    nameInput.value = stripHtml(label.replace(' · défaut', '').trim());
                 }
             });
+            
             document.addEventListener('change', function (event) {
                 const target = event.target;
                 if (target && target.matches('#factions-list select[name*="[faction_id]"], #factions-list select[data-field="faction_id"]')) {
                     refreshFactionRoleOptions();
                 }
             });
+            
             const galleryList = document.getElementById('gallery-list');
             const addGalleryBtn = document.getElementById('add-gallery-btn');
             const galleryTpl = document.getElementById('gallery-row-template');
@@ -860,30 +982,45 @@
                 if (!hasChildren || !childrenPanel) return;
                 childrenPanel.style.display = hasChildren.checked ? 'block' : 'none';
             }
+            
             function togglePowerPanel() {
                 if (!hasPower || !powerPanel) return;
                 powerPanel.style.display = hasPower.checked ? 'block' : 'none';
             }
+            
             function toggleSiblingsPanel() {
                 if (!hasBroSis || !siblingsPanel) return;
                 siblingsPanel.style.display = hasBroSis.checked ? 'block' : 'none';
             }
+            
             function toggleSecretPanel() {
                 if (!hasPrivateSecret || !secretPanel) return;
                 secretPanel.style.display = hasPrivateSecret.checked ? 'block' : 'none';
             }
 
+            // Initialisation des panneaux
             toggleChildrenPanel();
             toggleSiblingsPanel();
             togglePowerPanel();
             toggleSecretPanel();
+            
+            // Écouteurs d'événements
             if (hasChildren) hasChildren.addEventListener('change', toggleChildrenPanel);
             if (hasBroSis) hasBroSis.addEventListener('change', toggleSiblingsPanel);
             if (hasPower) hasPower.addEventListener('change', togglePowerPanel);
             if (hasPrivateSecret) hasPrivateSecret.addEventListener('change', toggleSecretPanel);
+            
             refreshFactionRoleOptions();
+
+            // Protection contre la double soumission
+            const form = document.querySelector('form');
+            const submitBtn = document.getElementById('submit-btn');
+            if (form && submitBtn) {
+                form.addEventListener('submit', function() {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Création en cours...';
+                });
+            }
         })();
     </script>
 @endsection
-
-

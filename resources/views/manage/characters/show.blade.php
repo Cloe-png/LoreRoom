@@ -223,6 +223,8 @@
                     <div class="meta-item"><span class="k">Âge</span><span class="v">{{ $character->calculated_age !== null ? $character->calculated_age . ' ans' : '-' }}</span></div>
                     <div class="meta-item"><span class="k">Naissance</span><span class="v">{{ $formatDate($character->birth_date) }}</span></div>
                     <div class="meta-item"><span class="k">Décès</span><span class="v">{{ $formatDate($character->death_date) }}</span></div>
+                    <div class="meta-item"><span class="k">Orientation sexuelle</span><span class="v">{{ $character->sexual_orientation ?: '-' }}</span></div>
+                    <div class="meta-item"><span class="k">Mode vestimentaire</span><span class="v">{{ $character->clothing_style_mode ?: '-' }}</span></div>
                     <div class="meta-item"><span class="k">Monde</span><span class="v">{{ optional($character->world)->name ?: '-' }}</span></div>
                     <div class="meta-item"><span class="k">Famille</span><span class="v">{{ $character->family_name ?: ($character->last_name ?: '-') }}</span></div>
                 </div>
@@ -249,9 +251,7 @@
                     @if($character->power_level)
                         <p class="dl-row"><strong>Niveau:</strong> {{ $character->power_level }}/10</p>
                     @endif
-                    @if(trim((string) $character->power_description) !== '')
-                        <p class="dl-row"><strong>Pouvoir:</strong> {{ $character->power_description }}</p>
-                    @endif
+                   
                 @endif
                 <p class="dl-row"><strong>Objectif court terme:</strong> {{ $character->short_term_goal ?: '-' }}</p>
                 <p class="dl-row"><strong>Objectif long terme:</strong> {{ $character->long_term_goal ?: '-' }}</p>
@@ -268,8 +268,18 @@
 
             <article class="section-card">
                 <h3>Psychologie</h3>
+                <p class="dl-row"><strong>Traumas:</strong> {{ !empty($character->traumas) ? collect($character->traumas)->filter()->join(', ') : '-' }}</p>
+                <p class="dl-row"><strong>Personnalité:</strong> {{ $character->psychology_notes ?: '-' }}</p>
                 <p class="dl-row"><strong>Qualités:</strong> {{ $character->qualities ?: '-' }}</p>
                 <p class="dl-row"><strong>Défauts:</strong> {{ $character->flaws ?: '-' }}</p>
+                @if($character->powers->isNotEmpty())
+                    <p class="dl-row"><strong>Pouvoirs:</strong></p>
+                    <ul style="margin-top:0; padding-left:20px;">
+                        @foreach($character->powers as $power)
+                            <li><strong>{{ $power->name }}</strong>{{ $power->description ? ' — ' . $power->description : '' }}</li>
+                        @endforeach
+                    </ul>
+                @endif
 
                 <div class="voice-wrap">
                     <p class="dl-row"><strong>Voix:</strong></p>
@@ -308,7 +318,7 @@
                     {{ $character->species->isEmpty() ? '-' : $character->species->pluck('name')->join(', ') }}
                 </p>
                 <p class="dl-row"><strong>Marques:</strong> {{ $character->marks ?: '-' }}</p>
-                <p class="dl-row"><strong>Style vestimentaire:</strong> {{ $character->clothing_style ?: '-' }}</p>
+                <p class="dl-row"><strong>Description de l'apparence:</strong> {{ $character->appearance_description ?: '-' }}</p>
             </article>
 
             <article class="section-card full-width">
@@ -360,6 +370,12 @@
                         </table>
                     </div>
                 @endif
+            </article>
+
+            <article class="section-card full-width">
+                <h3>Préférences</h3>
+                <p class="dl-row"><strong>Aime:</strong> {{ $character->likes ?: '-' }}</p>
+                <p class="dl-row"><strong>N'aime pas:</strong> {{ $character->dislikes ?: '-' }}</p>
             </article>
 
             <article class="section-card full-width">
@@ -447,8 +463,25 @@
             </article>
 
             <article class="section-card full-width">
+                <h3>Tenues enregistrées</h3>
+                @if($character->outfitImages->isEmpty())
+                    <p class="muted">Aucune tenue enregistrée.</p>
+                @else
+                    <div class="grid-4" style="margin-top:10px;">
+                        @foreach($character->outfitImages as $outfit)
+                            <div class="card" style="padding:8px;">
+                                <img src="{{ route('media.show', ['path' => $outfit->image_path]) }}" alt="Tenue {{ $character->display_name }}" style="width:100%; border-radius:8px; margin-bottom:6px;">
+                                <div><strong>Mode:</strong> {{ $outfit->mode ?: '-' }}</div>
+                                <div><strong>Description:</strong> {{ $outfit->caption ?: '-' }}</div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </article>
+
+            <article class="section-card full-width">
                 <h3>Résumé</h3>
-                <p>{{ $character->summary ?: 'Aucun résumé.' }}</p>
+                <p>{{ $character->summary ?: 'Aucune zone libre.' }}</p>
             </article>
         </div>
 
@@ -507,6 +540,12 @@
                 start();
             })();
         </script>
+    @endif
+    @if($character->places->isNotEmpty() || $character->ledPlaces->isNotEmpty())
+        <section class="panel"><h2>Lieux liés</h2>
+            @foreach($character->ledPlaces as $place)<p><a href="{{ route('manage.places.show',$place) }}">{{ $place->name }}</a> <span class="muted">{{ $place->pivot->title ?: 'Dirigeant' }}</span></p>@endforeach
+            @foreach($character->places as $place)<p><a href="{{ route('manage.places.show',$place) }}">{{ $place->name }}</a></p>@endforeach
+        </section>
     @endif
 @endsection
 

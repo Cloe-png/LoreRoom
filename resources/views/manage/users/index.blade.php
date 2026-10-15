@@ -304,8 +304,8 @@
                 <div>
                     <h2 class="users-hero-title">Administration des comptes</h2>
                     <p class="users-hero-text">
-                        Consulte les utilisateurs inscrits, ajuste leur role et garde une vue claire sur les acces
-                        a l'application. Si un compte est bloque apres 5 echecs, l'utilisateur doit t'ecrire par mail
+                        Consulte les utilisateurs inscrits, ajuste leur rôle et garde une vue claire sur les accès
+                        à l'application. Si un compte est bloqué après 5 échecs, l'utilisateur doit t'écrire par mail
                         pour demander un nouveau mot de passe.
                     </p>
                 </div>
@@ -317,7 +317,7 @@
             <form method="GET" action="{{ route('manage.users.index') }}" class="users-search-form">
                 <div class="field users-search-input">
                     <label>Recherche</label>
-                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, e-mail, role...">
+                    <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, e-mail, rôle...">
                 </div>
                 <button class="btn" type="submit">Rechercher</button>
                 @if(!empty($q))
@@ -361,14 +361,14 @@
                                     <td>
                                         <div class="users-status">
                                             @if($item->locked_at)
-                                                <span class="role-chip">Compte bloque</span>
+                                                <span class="role-chip">Compte bloqué</span>
                                                 <div class="muted">
-                                                    5 echecs ou plus. Demande par mail requise avant reinitialisation.
+                                                    5 échecs ou plus. Demande par mail requise avant réinitialisation.
                                                 </div>
                                             @elseif($item->password_reset_pending_at)
                                                 <span class="role-chip">En attente de reconnexion</span>
                                                 <div class="muted">
-                                                    Nouveau mot de passe defini. Le compte redevient actif apres une connexion reussie.
+                                                    Nouveau mot de passe défini. Le compte redevient actif après une connexion réussie.
                                                 </div>
                                             @else
                                                 <span class="role-chip">Actif</span>
@@ -379,7 +379,7 @@
                                         <form method="POST" action="{{ route('manage.users.update', $item) }}" class="role-form">
                                             @csrf
                                             @method('PUT')
-                                            <span class="role-chip">Role actuel : {{ ucfirst($item->role) }}</span>
+                                            <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
                                             <select name="role">
                                                 @foreach($roleOptions as $roleOption)
                                                     <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
@@ -387,7 +387,7 @@
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <button class="btn secondary" type="submit">Mettre a jour</button>
+                                            <button class="btn secondary" type="submit">Mettre à jour</button>
                                         </form>
                                     </td>
                                     <td>
@@ -406,11 +406,11 @@
                                                     @method('PUT')
                                                     <input type="password" name="password" placeholder="Nouveau mot de passe" minlength="8" required>
                                                     <input type="password" name="password_confirmation" placeholder="Confirmation" minlength="8" required>
-                                                    <button class="btn secondary" type="submit">Definir un nouveau mot de passe</button>
+                                                    <button class="btn secondary" type="submit">Définir un nouveau mot de passe</button>
                                                 </form>
                                             @endif
                                             @if(auth()->id() === $item->id)
-                                                <div class="muted users-self-note">Ton compte ne peut pas etre supprime ici.</div>
+                                                <div class="muted users-self-note">Ton compte ne peut pas être supprimé ici.</div>
                                             @endif
                                         </div>
                                     </td>
@@ -426,16 +426,16 @@
                             <div class="users-name">{{ $item->name }}</div>
                             <div class="users-mobile-meta">
                                 <div><strong>E-mail :</strong> {{ $item->email }}</div>
-                                <div><strong>Cree le :</strong> {{ optional($item->created_at)->format('d/m/Y H:i') ?: '-' }}</div>
+                                <div><strong>Créé le :</strong> {{ optional($item->created_at)->format('d/m/Y H:i') ?: '-' }}</div>
                                 <div>
                                     <strong>Statut :</strong>
-                                    {{ $item->locked_at ? 'Compte bloque' : ($item->password_reset_pending_at ? 'En attente de reconnexion' : 'Actif') }}
+                                    {{ $item->locked_at ? 'Compte bloqué' : ($item->password_reset_pending_at ? 'En attente de reconnexion' : 'Actif') }}
                                 </div>
                             </div>
                             <form method="POST" action="{{ route('manage.users.update', $item) }}" class="role-form">
                                 @csrf
                                 @method('PUT')
-                                <span class="role-chip">Role actuel : {{ ucfirst($item->role) }}</span>
+                                <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
                                 <select name="role">
                                     @foreach($roleOptions as $roleOption)
                                         <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
@@ -443,7 +443,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button class="btn secondary" type="submit">Mettre a jour</button>
+                                <button class="btn secondary" type="submit">Mettre à jour</button>
                             </form>
                             <div class="users-actions">
                                 <form method="POST" action="{{ route('manage.users.destroy', $item) }}" class="inline" onsubmit="return confirm('Supprimer ce compte utilisateur ?');">
@@ -452,17 +452,17 @@
                                     <button class="btn danger" type="submit" {{ auth()->id() === $item->id ? 'disabled' : '' }}>Supprimer</button>
                                 </form>
                                 @if($item->locked_at || $item->password_reset_pending_at)
-                                    <div class="muted">L'utilisateur doit te contacter par mail avant reinitialisation.</div>
+                                    <div class="muted">L'utilisateur doit te contacter par mail avant réinitialisation.</div>
                                     <form method="POST" action="{{ route('manage.users.password', $item) }}" class="users-password-form">
                                         @csrf
                                         @method('PUT')
                                         <input type="password" name="password" placeholder="Nouveau mot de passe" minlength="8" required>
                                         <input type="password" name="password_confirmation" placeholder="Confirmation" minlength="8" required>
-                                        <button class="btn secondary" type="submit">Definir un nouveau mot de passe</button>
+                                        <button class="btn secondary" type="submit">Définir un nouveau mot de passe</button>
                                     </form>
                                 @endif
                                 @if(auth()->id() === $item->id)
-                                    <div class="muted users-self-note">Ton compte ne peut pas etre supprime ici.</div>
+                                    <div class="muted users-self-note">Ton compte ne peut pas être supprimé ici.</div>
                                 @endif
                             </div>
                         </article>
@@ -476,9 +476,9 @@
                 </p>
                 <div class="users-pagination-pages">
                     @if($users->onFirstPage())
-                        <span class="btn secondary" style="opacity:.55; pointer-events:none;">Precedent</span>
+                        <span class="btn secondary" style="opacity:.55; pointer-events:none;">Précédent</span>
                     @else
-                        <a class="btn secondary" href="{{ $users->previousPageUrl() }}">Precedent</a>
+                        <a class="btn secondary" href="{{ $users->previousPageUrl() }}">Précédent</a>
                     @endif
 
                     @for($page = 1; $page <= $users->lastPage(); $page++)

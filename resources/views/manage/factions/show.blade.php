@@ -225,4 +225,7 @@
             @endif
         </section>
     @endif
+    @if($faction->places->isNotEmpty())
+        <section class="panel"><h2>Lieux liés</h2>@foreach($faction->places as $place)<p><a href="{{ route('manage.places.show',$place) }}">{{ $place->name }}</a></p>@endforeach</section>
+    @endif
 @endsection

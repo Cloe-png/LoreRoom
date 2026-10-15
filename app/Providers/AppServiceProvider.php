@@ -39,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
                 return;
             }
 
+            if (!$request->hasSession()) {
+                $view->with('sidebarFactions', collect());
+                return;
+            }
+
             $worldId = (int) $request->session()->get('selected_world_id', 0);
             if ($worldId <= 0) {
                 $view->with('sidebarFactions', collect());

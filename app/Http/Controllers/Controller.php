@@ -6,14 +6,27 @@ use App\Models\World;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    protected const IMAGE_FILE_RULES = ['nullable', 'file', 'mimes:png,jpg,jpeg', 'max:4096'];
+    protected const AUDIO_FILE_RULES = ['nullable', 'file', 'mimes:mp3', 'max:20480'];
+
+    protected function imageFileRules(): array
+    {
+        return self::IMAGE_FILE_RULES;
+    }
+
+    protected function audioFileRules(): array
+    {
+        return self::AUDIO_FILE_RULES;
+    }
 
     protected function currentWorldId(): ?int
     {
@@ -44,7 +57,7 @@ class Controller extends BaseController
     {
         $worldId = $this->currentWorldId();
         if (!$worldId) {
-            throw new NotFoundHttpException('Monde actif introuvable.');
+            throw new NotFoundHttpException(__('app.messages.active_world_missing'));
         }
 
         return $worldId;
@@ -61,8 +74,8 @@ class Controller extends BaseController
     protected function requireAdmin(): void
     {
         $user = Auth::user();
-        if (!$user || (string) ($user->role ?? '') !== 'admin') {
-            throw new AccessDeniedHttpException('Accès administrateur requis.');
+        if (!$user || !$user->isAdmin()) {
+            throw new AccessDeniedHttpException(__('app.messages.admin_required'));
         }
     }
 }

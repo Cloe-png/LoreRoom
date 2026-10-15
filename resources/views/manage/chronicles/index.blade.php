@@ -165,7 +165,6 @@
                 <h3 class="select-title">Frise chronologique</h3>
                 <p class="select-sub">Choisis une vue: globale ou un personnage.</p>
             </div>
-            <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
         </div>
 
         <div class="select-panel">

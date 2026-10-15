@@ -29,7 +29,7 @@ class EnsureSessionActivity
                 $request->session()->regenerateToken();
 
                 return redirect()->route('login')->withErrors([
-                    'auth' => 'Session expirée pour inactivité. Reconnecte-toi.',
+                    'auth' => __('app.auth.session_inactive'),
                 ]);
             }
         }

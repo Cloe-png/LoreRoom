@@ -62,7 +62,7 @@ class UserAdminController extends Controller
 
         return redirect()
             ->route('manage.users.index')
-            ->with('success', 'Role utilisateur mis a jour.');
+            ->with('success', 'Rôle utilisateur mis à jour.');
     }
 
     public function updatePassword(Request $request, User $user): RedirectResponse
@@ -72,14 +72,14 @@ class UserAdminController extends Controller
         if (!$user->locked_at && !$user->password_reset_pending_at) {
             return redirect()
                 ->route('manage.users.index')
-                ->withErrors(['user' => 'Ce compte n est ni bloque ni en attente de reconnexion.']);
+                ->withErrors(['user' => 'Ce compte n’est ni bloqué ni en attente de reconnexion.']);
         }
 
         $data = $request->validate([
             'password' => PasswordRules::defaultsWithConfirmation(),
         ], [
-            'password.min' => 'Le mot de passe doit contenir au moins 12 caracteres.',
-            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractere special.',
+            'password.min' => 'Le mot de passe doit contenir au moins 12 caractères.',
+            'password.regex' => 'Le mot de passe doit contenir une majuscule, une minuscule, un chiffre et un caractère spécial.',
             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
         ]);
 
@@ -103,7 +103,7 @@ class UserAdminController extends Controller
 
         return redirect()
             ->route('manage.users.index')
-            ->with('success', 'Mot de passe reinitialise. Le compte redeviendra actif apres la prochaine connexion reussie.');
+            ->with('success', 'Mot de passe réinitialisé. Le compte redeviendra actif après la prochaine connexion réussie.');
     }
 
     public function destroy(User $user): RedirectResponse
@@ -120,13 +120,13 @@ class UserAdminController extends Controller
         if ($user->worlds()->exists()) {
             return redirect()
                 ->route('manage.users.index')
-                ->withErrors(['user' => 'Supprime d abord les mondes associes a ce compte.']);
+                ->withErrors(['user' => 'Supprime d’abord les mondes associés à ce compte.']);
         }
 
         $user->delete();
 
         return redirect()
             ->route('manage.users.index')
-            ->with('success', 'Compte utilisateur supprime.');
+            ->with('success', 'Compte utilisateur supprimé.');
     }
 }

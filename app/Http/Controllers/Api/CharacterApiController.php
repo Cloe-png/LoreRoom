@@ -43,7 +43,7 @@ class CharacterApiController extends BaseApiController
 
     public function store(Request $request): JsonResponse
     {
-        $character = Character::create($this->validatePayload($request));
+        $character = Character::create($this->normalizePayload($this->validatePayload($request)));
 
         return $this->success(
             $character->load(['world:id,name', 'birthPlace:id,name', 'residencePlace:id,name']),
@@ -68,7 +68,7 @@ class CharacterApiController extends BaseApiController
 
     public function update(Request $request, Character $character): JsonResponse
     {
-        $character->update($this->validatePayload($request, true));
+        $character->update($this->normalizePayload($this->validatePayload($request, true)));
 
         return $this->success($character->fresh()->load(['world:id,name', 'birthPlace:id,name', 'residencePlace:id,name']));
     }
@@ -123,10 +123,29 @@ class CharacterApiController extends BaseApiController
             'qualities' => ['nullable', 'string'],
             'flaws' => ['nullable', 'string'],
             'psychology_notes' => ['nullable', 'string'],
+            'traumas' => ['nullable', 'array'],
+            'traumas.*.value' => ['nullable', 'string', 'max:120'],
             'voice_tics' => ['nullable', 'string'],
             'voice_audio_path' => ['nullable', 'string', 'max:255'],
             'voice_youtube_url' => ['nullable', 'url', 'max:255'],
             'summary' => ['nullable', 'string'],
         ]);
+    }
+
+    private function normalizePayload(array $payload): array
+    {
+        $payload['traumas'] = collect($payload['traumas'] ?? [])
+            ->map(function ($row) {
+                if (is_array($row)) {
+                    return trim((string) ($row['value'] ?? ''));
+                }
+
+                return trim((string) $row);
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        return $payload;
     }
 }

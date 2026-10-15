@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LoreRoom - Inscription</title>
+    <title>{{ __('app.public.register_page_title') }}</title>
     <style>
         :root {
             --ink: #2d2014;
@@ -73,12 +73,18 @@
         }
 
         .meta {
-            font-size: .72rem;
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            color: #755a3a;
-            text-align: right;
-            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .brand-logo {
+            height: 54px;
+            width: auto;
+            max-width: 140px;
+            border-radius: 14px;
+            object-fit: contain;
+            box-shadow: 0 8px 20px rgba(63, 44, 22, .16);
         }
 
         .muted {
@@ -111,6 +117,54 @@
 
         .field { margin-bottom: 11px; }
 
+        .role-section {
+            margin: 8px 0 14px;
+            padding: 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(108,77,43,.22);
+            background: rgba(255,255,255,.2);
+        }
+
+        .role-section legend {
+            padding: 0 6px;
+            font-weight: 700;
+            font-size: .95rem;
+            color: #3a2a18;
+        }
+
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .role-card {
+            display: grid;
+            gap: 6px;
+            align-content: start;
+            border-radius: 10px;
+            border: 1px solid rgba(108,77,43,.24);
+            background: rgba(255,253,248,.86);
+            padding: 10px 11px;
+            cursor: pointer;
+        }
+
+        .role-card input {
+            margin: 0;
+        }
+
+        .role-card strong {
+            display: block;
+            color: #2f2013;
+        }
+
+        .role-card span {
+            color: #6f5841;
+            font-size: .86rem;
+            line-height: 1.35;
+        }
+
         label {
             display: block;
             margin-bottom: 5px;
@@ -122,7 +176,8 @@
 
         input[type="text"],
         input[type="email"],
-        input[type="password"] {
+        input[type="password"],
+        select {
             width: 100%;
             border: 1px solid rgba(108,77,43,.38);
             border-radius: 10px;
@@ -194,11 +249,11 @@
 
     <main class="shell">
         <div class="head">
-            <h1>Inscription</h1>
-            <div class="meta">Nouveau compte</div>
+            <h1>{{ __('app.public.register_heading') }}</h1>
+            <div class="meta">@include('partials.brand-logo', ['size' => 54])</div>
         </div>
 
-        <p class="muted">Creez un compte LoreRoom. Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
+        <p class="muted">{{ __('app.public.register_intro') }}</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>
@@ -212,36 +267,66 @@
             @csrf
 
             <div class="field">
-                <label for="name">Nom complet</label>
+                <label for="name">{{ __('app.public.full_name') }}</label>
                 <input id="name" type="text" name="name" value="{{ old('name') }}" autocomplete="name" required>
             </div>
 
             <div class="field">
-                <label for="email">Email</label>
+                <label for="email">{{ __('app.public.email') }}</label>
                 <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email" required>
             </div>
 
+            <div class="field">
+                <label for="locale">{{ __('app.public.language') }}</label>
+                <select id="locale" name="locale" required>
+                    @foreach(config('laravellocalization.supportedLocales', []) as $localeCode => $localeInfo)
+                        <option value="{{ $localeCode }}" {{ old('locale', 'en') === $localeCode ? 'selected' : '' }}>
+                            {{ $localeInfo['native'] ?? $localeInfo['name'] ?? strtoupper($localeCode) }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <fieldset class="role-section">
+                <legend>{{ __('app.public.roles_label') }}</legend>
+                <p class="help">{{ __('app.public.roles_help') }}</p>
+                <div class="role-grid">
+                    @php
+                        $selectedRoles = old('roles', []);
+                    @endphp
+                    @foreach($roleOptions as $roleKey => $roleInfo)
+                        <label class="role-card">
+                            <input type="checkbox" name="roles[]" value="{{ $roleKey }}" {{ in_array($roleKey, $selectedRoles, true) ? 'checked' : '' }}>
+                            <strong>{{ __($roleInfo['label']) }}</strong>
+                            <span>{{ __($roleInfo['help']) }}</span>
+                        </label>
+                    @endforeach
+                </div>
+            </fieldset>
+
             <div class="grid">
                 <div class="field">
-                    <label for="password">Mot de passe</label>
+                    <label for="password">{{ __('app.public.password') }}</label>
                     <input id="password" type="password" name="password" autocomplete="new-password" minlength="12" required>
-                    <div class="help">12 caracteres minimum, avec au moins 1 majuscule, 1 minuscule, 1 chiffre et 1 caractere special.</div>
+                    <div class="help">{{ __('app.public.password_help') }}</div>
                 </div>
                 <div class="field">
-                    <label for="password_confirmation">Confirmation</label>
+                    <label for="password_confirmation">{{ __('app.public.confirmation') }}</label>
                     <input id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" minlength="12" required>
                 </div>
             </div>
 
             <div class="actions">
-                <button class="btn primary" type="submit">Creer le compte</button>
-                <a class="btn secondary" href="{{ route('login') }}">Deja inscrit ? Connexion</a>
+                <button class="btn primary" type="submit">{{ __('app.public.create_account_submit') }}</button>
+                <a class="btn secondary" href="{{ route('login') }}">{{ __('app.public.already_registered') }}</a>
             </div>
         </form>
 
         <div class="footer-help">
-            En validant, vous accedez directement au panneau de gestion.
+            {{ __('app.public.register_footer') }}
         </div>
     </main>
+    @include('partials.i18n')
 </body>
 </html>
+

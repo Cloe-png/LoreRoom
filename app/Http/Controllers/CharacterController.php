@@ -7,6 +7,8 @@ use App\Models\CharacterEducation;
 use App\Models\CharacterGalleryImage;
 use App\Models\CharacterItem;
 use App\Models\CharacterJob;
+use App\Models\CharacterPower;
+use App\Models\CharacterOutfitImage;
 use App\Models\CharacterRelation;
 use App\Models\Diploma;
 use App\Models\Faction;
@@ -17,6 +19,7 @@ use App\Models\Species;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
@@ -34,9 +37,60 @@ class CharacterController extends Controller
         'Personnage principal',
         'Personnage secondaire',
         'Antagoniste',
+        'Figurant',
         'Allié',
         'Mentor',
         'Figure historique',
+    ];
+    private const SEXUAL_ORIENTATION_OPTIONS = [
+        'Hétérosexuel(le)',
+        'Homosexuel(le)',
+        'Bisexuel(le)',
+        'Pansexuel(le)',
+        'Asexuel(le)',
+        'Aromantique',
+        'Demi-sexuel(le)',
+        'Graysexuel(le)',
+        'Omnisexuel(le)',
+        'Polysexuel(le)',
+        'Queer',
+        'Questionnement',
+        'Autre',
+    ];
+    private const CLOTHING_STYLE_MODE_OPTIONS = [
+        'Par défaut',
+        'Quotidien',
+        'Décontracté',
+        'Travail',
+        'École',
+        'Sport',
+        'Voyage',
+        'Détente',
+        'Sortie',
+        'En soirée',
+        'Cérémonie',
+        'Costumé / cosplay',
+        'Printemps',
+        'Été',
+        'Automne',
+        'Hiver',
+        'Mi-saison',
+        'Autre',
+    ];
+
+    private const TRAUMA_CATEGORY_OPTIONS = [
+        'Abandon',
+        'Deuil',
+        'Violence',
+        'Maltraitance',
+        'Négligence',
+        'Harcèlement',
+        'Guerre',
+        'Kidnapper',
+        'Accident',
+        'Perte de repères',
+        'Captivité',
+        'Autre',
     ];
 
     public function index()
@@ -58,6 +112,12 @@ class CharacterController extends Controller
                         ->orWhere('status', 'like', $like)
                         ->orWhere('role', 'like', $like)
                         ->orWhere('summary', 'like', $like)
+                        ->orWhere('sexual_orientation', 'like', $like)
+                        ->orWhere('clothing_style_mode', 'like', $like)
+                        ->orWhere('appearance_description', 'like', $like)
+                        ->orWhere('psychology_notes', 'like', $like)
+                        ->orWhere('likes', 'like', $like)
+                        ->orWhere('dislikes', 'like', $like)
                         ->orWhere('qualities', 'like', $like)
                         ->orWhere('flaws', 'like', $like)
                         ->orWhere('hair_eyes', 'like', $like)
@@ -170,7 +230,19 @@ class CharacterController extends Controller
         $selectedFullSiblingIds = old('sibling_ids_full', []);
         $selectedTwinSiblingIds = old('sibling_ids_twin', []);
         $selectedHalfSiblingIds = old('sibling_ids_half', []);
+        $outfitRows = old('outfits', [
+            ['mode' => '', 'caption' => '', 'image' => ''],
+        ]);
+        $powerRows = old('powers', [
+            ['name' => '', 'description' => ''],
+        ]);
+        $traumaRows = old('traumas', [
+            ['value' => ''],
+        ]);
         $roleOptions = self::CHARACTER_ROLES;
+        $sexualOrientationOptions = self::SEXUAL_ORIENTATION_OPTIONS;
+        $clothingStyleModeOptions = self::CLOTHING_STYLE_MODE_OPTIONS;
+        $traumaCategoryOptions = self::TRAUMA_CATEGORY_OPTIONS;
         $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
 
         return view('manage.characters.create', compact(
@@ -198,7 +270,13 @@ class CharacterController extends Controller
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
+            'outfitRows',
+            'powerRows',
+            'traumaRows',
             'roleOptions',
+            'sexualOrientationOptions',
+            'clothingStyleModeOptions',
+            'traumaCategoryOptions',
             'factionMemberStatusOptions'
         ));
     }
@@ -218,6 +296,7 @@ class CharacterController extends Controller
             'gender' => ['nullable', Rule::in(['homme', 'femme', 'autre'])],
             'birth_date' => ['nullable', 'date'],
             'death_date' => ['nullable', 'date', 'after_or_equal:birth_date'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:999'],
             'father_id' => ['nullable', 'exists:characters,id'],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id'],
             'spouse_id' => ['nullable', 'exists:characters,id', 'different:father_id', 'different:mother_id'],
@@ -239,18 +318,33 @@ class CharacterController extends Controller
             'eye_color' => ['nullable', 'string', 'max:120'],
             'marks' => ['nullable', 'string', 'max:2000'],
             'clothing_style' => ['nullable', 'string', 'max:2000'],
+            'sexual_orientation' => ['nullable', Rule::in(self::SEXUAL_ORIENTATION_OPTIONS)],
+            'clothing_style_mode' => ['nullable', Rule::in(self::CLOTHING_STYLE_MODE_OPTIONS)],
+            'appearance_description' => ['nullable', 'string', 'max:4000'],
+            'psychology_notes' => ['nullable', 'string', 'max:4000'],
+            'traumas' => ['nullable', 'array'],
+            'traumas.*.value' => ['nullable', 'string', 'max:120'],
+            'likes' => ['nullable', 'string', 'max:4000'],
+            'dislikes' => ['nullable', 'string', 'max:4000'],
+            'powers' => ['nullable', 'array'],
+            'powers.*.name' => ['nullable', 'string', 'max:160'],
+            'powers.*.description' => ['nullable', 'string', 'max:4000'],
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
-            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_audio' => $this->audioFileRules(),
             'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => $this->imageFileRules(),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => $this->imageFileRules(),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
+            'outfits' => ['nullable', 'array'],
+            'outfits.*.mode' => ['nullable', Rule::in(self::CLOTHING_STYLE_MODE_OPTIONS)],
+            'outfits.*.caption' => ['nullable', 'string', 'max:255'],
+            'outfits.*.image' => ['nullable', $this->imageFileRules()],
             'relations' => ['nullable', 'array'],
             'relations.*.to_character_id' => ['nullable', 'exists:characters,id'],
             'relations.*.relation_type' => ['nullable', 'string', 'max:120'],
@@ -300,6 +394,17 @@ class CharacterController extends Controller
         $data['family_name'] = trim((string) ($data['family_name'] ?? '')) !== ''
             ? trim((string) $data['family_name'])
             : (trim((string) ($data['last_name'] ?? '')) ?: null);
+        $data['traumas'] = collect($data['traumas'] ?? [])
+            ->map(function ($row) {
+                if (is_array($row)) {
+                    return trim((string) ($row['value'] ?? ''));
+                }
+
+                return trim((string) $row);
+            })
+            ->filter()
+            ->values()
+            ->all();
         $data['world_id'] = $defaultWorldId;
         $data['preferred_color'] = $this->normalizeHexColor($data['preferred_color'] ?? null);
         $spouseId = isset($data['spouse_id']) && $data['spouse_id'] !== '' ? (int) $data['spouse_id'] : null;
@@ -330,6 +435,9 @@ class CharacterController extends Controller
         $jobRows = $data['jobs'] ?? [];
         $factionRows = $data['faction_memberships'] ?? [];
         $educationRows = $data['educations'] ?? [];
+        $outfitRows = $request->input('outfits', []);
+        $outfitFiles = $request->file('outfits', []);
+        $powerRows = $data['powers'] ?? [];
         $speciesIds = collect($data['species_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
@@ -344,9 +452,28 @@ class CharacterController extends Controller
         unset($data['species_ids']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
+        unset($data['outfits']);
+        unset($data['powers']);
+        $traumaRows = $data['traumas'] ?? [];
+        $preparedTraumas = collect($traumaRows)
+            ->map(function ($row) {
+                if (is_array($row)) {
+                    return trim((string) ($row['value'] ?? ''));
+                }
+
+                return trim((string) $row);
+            })
+            ->filter()
+            ->values()
+            ->all();
+        unset($data['traumas']);
         $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
 
-        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind) {
+        $preparedOutfits = $this->prepareCharacterOutfitRows($outfitRows, $outfitFiles);
+        $preparedPowers = $this->prepareCharacterPowerRows($powerRows);
+
+        DB::transaction(function () use ($request, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $preparedOutfits, $preparedPowers, $preparedTraumas) {
+            $data['traumas'] = $preparedTraumas;
             $character = Character::create($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
@@ -357,6 +484,8 @@ class CharacterController extends Controller
             $this->syncCharacterEducations($character, $educationRows);
             $this->syncCharacterSpecies($character, $speciesIds);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
+            $this->addCharacterOutfitImages($character, $preparedOutfits);
+            $this->syncCharacterPowers($character, $preparedPowers);
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
             $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
             $this->syncAutoFamilyRelationsForCharacters(array_filter([
@@ -372,7 +501,7 @@ class CharacterController extends Controller
 
     public function show(Character $character)
     {
-        $character->load([
+        $relations = [
             'world',
             'father',
             'mother',
@@ -389,14 +518,23 @@ class CharacterController extends Controller
             'educations.diploma',
             'species',
             'galleryImages',
-        ]);
+            'powers',
+            'places',
+            'ledPlaces',
+        ];
+
+        if ($this->hasOutfitImagesTable()) {
+            $relations[] = 'outfitImages';
+        }
+
+        $character->load($relations);
 
         return view('manage.characters.show', compact('character'));
     }
 
     public function exportPdf(Character $character)
     {
-        $character->load([
+        $relations = [
             'world',
             'father',
             'mother',
@@ -413,18 +551,32 @@ class CharacterController extends Controller
             'educations.diploma',
             'species',
             'galleryImages',
-        ]);
+            'powers',
+        ];
+
+        if ($this->hasOutfitImagesTable()) {
+            $relations[] = 'outfitImages';
+        }
+
+        $character->load($relations);
 
         $portraitDataUri = $this->buildDataUriFromPublicDisk($character->image_path);
         $galleryDataUris = [];
         foreach ($character->galleryImages as $img) {
             $galleryDataUris[$img->id] = $this->buildDataUriFromPublicDisk($img->image_path);
         }
+        $outfitDataUris = [];
+        if ($this->hasOutfitImagesTable()) {
+            foreach ($character->outfitImages as $outfit) {
+                $outfitDataUris[$outfit->id] = $this->buildDataUriFromPublicDisk($outfit->image_path);
+            }
+        }
 
         $pdf = Pdf::loadView('manage.characters.export-pdf', [
             'character' => $character,
             'portraitDataUri' => $portraitDataUri,
             'galleryDataUris' => $galleryDataUris,
+            'outfitDataUris' => $outfitDataUris,
         ]);
 
         return $pdf->download('personnage-' . $character->id . '.pdf');
@@ -600,7 +752,48 @@ class CharacterController extends Controller
         }
 
         $existingGallery = $character->galleryImages()->get();
+        $existingOutfits = $this->hasOutfitImagesTable() ? $character->outfitImages()->get() : collect();
+        $existingPowers = $character->powers()->get();
+        $outfitRows = old('outfits');
+        if ($outfitRows === null) {
+            $outfitRows = [];
+        }
+        if (empty($outfitRows)) {
+            $outfitRows = [
+                ['mode' => '', 'caption' => '', 'image' => ''],
+            ];
+        }
+        $powerRows = old('powers');
+        if ($powerRows === null) {
+            $powerRows = $existingPowers->map(function ($power) {
+                return [
+                    'name' => $power->name,
+                    'description' => $power->description,
+                ];
+            })->all();
+        }
+        if (empty($powerRows)) {
+            $powerRows = [
+                ['name' => '', 'description' => ''],
+            ];
+        }
+        $traumaRows = old('traumas');
+        if ($traumaRows === null) {
+            $traumaRows = collect($character->traumas ?? [])
+                ->map(function ($trauma) {
+                    return ['value' => $trauma];
+                })
+                ->all();
+        }
+        if (empty($traumaRows)) {
+            $traumaRows = [
+                ['value' => ''],
+            ];
+        }
         $roleOptions = self::CHARACTER_ROLES;
+        $sexualOrientationOptions = self::SEXUAL_ORIENTATION_OPTIONS;
+        $clothingStyleModeOptions = self::CLOTHING_STYLE_MODE_OPTIONS;
+        $traumaCategoryOptions = self::TRAUMA_CATEGORY_OPTIONS;
         $factionMemberStatusOptions = self::FACTION_MEMBER_STATUSES;
         $jobOptions = Job::query()
             ->when($defaultWorldId, function ($query) use ($defaultWorldId) {
@@ -635,12 +828,20 @@ class CharacterController extends Controller
             'speciesOptions',
             'selectedSpeciesIds',
             'existingGallery',
+            'existingOutfits',
+            'outfitRows',
+            'existingPowers',
+            'powerRows',
+            'traumaRows',
             'childrenLinkType',
             'selectedChildrenIds',
             'selectedFullSiblingIds',
             'selectedTwinSiblingIds',
             'selectedHalfSiblingIds',
             'roleOptions',
+            'sexualOrientationOptions',
+            'clothingStyleModeOptions',
+            'traumaCategoryOptions',
             'factionMemberStatusOptions'
         ));
     }
@@ -660,6 +861,7 @@ class CharacterController extends Controller
             'gender' => ['nullable', Rule::in(['homme', 'femme', 'autre'])],
             'birth_date' => ['nullable', 'date'],
             'death_date' => ['nullable', 'date', 'after_or_equal:birth_date'],
+            'age' => ['nullable', 'integer', 'min:0', 'max:999'],
             'father_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'mother_id' => ['nullable', 'exists:characters,id', 'different:father_id', Rule::notIn([$character->id])],
             'spouse_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id]), 'different:father_id', 'different:mother_id'],
@@ -681,20 +883,37 @@ class CharacterController extends Controller
             'eye_color' => ['nullable', 'string', 'max:120'],
             'marks' => ['nullable', 'string', 'max:2000'],
             'clothing_style' => ['nullable', 'string', 'max:2000'],
+            'sexual_orientation' => ['nullable', Rule::in(self::SEXUAL_ORIENTATION_OPTIONS)],
+            'clothing_style_mode' => ['nullable', Rule::in(self::CLOTHING_STYLE_MODE_OPTIONS)],
+            'appearance_description' => ['nullable', 'string', 'max:4000'],
+            'psychology_notes' => ['nullable', 'string', 'max:4000'],
+            'traumas' => ['nullable', 'array'],
+            'traumas.*.value' => ['nullable', 'string', 'max:120'],
+            'likes' => ['nullable', 'string', 'max:4000'],
+            'dislikes' => ['nullable', 'string', 'max:4000'],
+            'powers' => ['nullable', 'array'],
+            'powers.*.name' => ['nullable', 'string', 'max:160'],
+            'powers.*.description' => ['nullable', 'string', 'max:4000'],
             'qualities' => ['nullable', 'string', 'max:2000'],
             'flaws' => ['nullable', 'string', 'max:2000'],
             'voice_tics' => ['nullable', 'string', 'max:3000'],
-            'voice_audio' => ['nullable', 'file', 'mimetypes:audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/webm', 'max:20480'],
+            'voice_audio' => $this->audioFileRules(),
             'voice_youtube_url' => ['nullable', 'url', 'max:1000', 'regex:/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//i'],
             'summary' => ['nullable', 'string', 'max:3000'],
             'preferred_color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'image' => ['nullable', 'image', 'max:4096'],
+            'image' => $this->imageFileRules(),
             'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
+            'gallery_images.*' => $this->imageFileRules(),
             'gallery_captions' => ['nullable', 'array'],
             'gallery_captions.*' => ['nullable', 'string', 'max:255'],
             'remove_gallery_ids' => ['nullable', 'array'],
             'remove_gallery_ids.*' => ['nullable', 'integer'],
+            'outfits' => ['nullable', 'array'],
+            'outfits.*.mode' => ['nullable', Rule::in(self::CLOTHING_STYLE_MODE_OPTIONS)],
+            'outfits.*.caption' => ['nullable', 'string', 'max:255'],
+            'outfits.*.image' => ['nullable', $this->imageFileRules()],
+            'remove_outfit_ids' => ['nullable', 'array'],
+            'remove_outfit_ids.*' => ['nullable', 'integer'],
             'relations' => ['nullable', 'array'],
             'relations.*.to_character_id' => ['nullable', 'exists:characters,id', Rule::notIn([$character->id])],
             'relations.*.relation_type' => ['nullable', 'string', 'max:120'],
@@ -744,6 +963,17 @@ class CharacterController extends Controller
         $data['family_name'] = trim((string) ($data['family_name'] ?? '')) !== ''
             ? trim((string) $data['family_name'])
             : (trim((string) ($data['last_name'] ?? '')) ?: null);
+        $data['traumas'] = collect($data['traumas'] ?? [])
+            ->map(function ($row) {
+                if (is_array($row)) {
+                    return trim((string) ($row['value'] ?? ''));
+                }
+
+                return trim((string) $row);
+            })
+            ->filter()
+            ->values()
+            ->all();
         $data['world_id'] = $defaultWorldId;
         $data['preferred_color'] = $this->normalizeHexColor($data['preferred_color'] ?? null);
         $spouseId = isset($data['spouse_id']) && $data['spouse_id'] !== '' ? (int) $data['spouse_id'] : null;
@@ -784,6 +1014,9 @@ class CharacterController extends Controller
         $jobRows = $data['jobs'] ?? [];
         $factionRows = $data['faction_memberships'] ?? [];
         $educationRows = $data['educations'] ?? [];
+        $powerRows = $data['powers'] ?? [];
+        $outfitRows = $data['outfits'] ?? [];
+        $outfitFiles = $request->file('outfits', []);
         $speciesIds = collect($data['species_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         $childrenLinkType = $data['children_link_type'] ?? 'father';
         $selectedChildrenIds = collect($data['children_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
@@ -793,19 +1026,39 @@ class CharacterController extends Controller
             'half' => collect($data['sibling_ids_half'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all(),
         ];
         $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
+        $removeOutfitIds = collect($data['remove_outfit_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
         unset($data['relations']);
-        unset($data['items'], $data['jobs'], $data['faction_memberships'], $data['remove_gallery_ids']);
+        unset($data['items'], $data['jobs'], $data['faction_memberships'], $data['remove_gallery_ids'], $data['remove_outfit_ids']);
         unset($data['educations']);
         unset($data['species_ids']);
         unset($data['children_link_type'], $data['children_ids'], $data['sibling_ids_full'], $data['sibling_ids_twin'], $data['sibling_ids_half']);
         unset($data['gallery_images'], $data['gallery_captions']);
+        unset($data['outfits']);
+        unset($data['powers']);
+        unset($data['traumas']);
         $this->assertCharacterFactionRolesBelongToFactions($factionRows, $defaultWorldId);
+
+        $preparedOutfits = $this->prepareCharacterOutfitRows($outfitRows, $outfitFiles);
+        $preparedPowers = $this->prepareCharacterPowerRows($powerRows);
+        $traumaRows = $data['traumas'] ?? [];
+        $preparedTraumas = collect($traumaRows)
+            ->map(function ($row) {
+                if (is_array($row)) {
+                    return trim((string) ($row['value'] ?? ''));
+                }
+
+                return trim((string) $row);
+            })
+            ->filter()
+            ->values()
+            ->all();
 
         $oldFatherId = $character->father_id;
         $oldMotherId = $character->mother_id;
         $oldSpouseId = $character->spouse_id;
 
-        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $oldFatherId, $oldMotherId, $oldSpouseId) {
+        DB::transaction(function () use ($request, $character, $data, $spouseId, $selectedExIds, $relationRows, $itemRows, $jobRows, $factionRows, $educationRows, $speciesIds, $childrenLinkType, $selectedChildrenIds, $siblingIdsByKind, $removeGalleryIds, $removeOutfitIds, $preparedOutfits, $preparedPowers, $preparedTraumas, $oldFatherId, $oldMotherId, $oldSpouseId) {
+            $data['traumas'] = $preparedTraumas;
             $character->update($data);
             $impactedSpouseIds = $this->syncSpouseLink($character, $spouseId);
             $this->syncExPartners($character, $selectedExIds);
@@ -817,6 +1070,9 @@ class CharacterController extends Controller
             $this->syncCharacterSpecies($character, $speciesIds);
             $this->removeCharacterGalleryImages($character, $removeGalleryIds);
             $this->addCharacterGalleryImages($character, $request->file('gallery_images', []), $request->input('gallery_captions', []));
+            $this->removeCharacterOutfitImages($character, $removeOutfitIds);
+            $this->addCharacterOutfitImages($character, $preparedOutfits);
+            $this->syncCharacterPowers($character, $preparedPowers);
             $this->syncChildrenLinks($character, (bool) $data['has_children'], $childrenLinkType, $selectedChildrenIds);
             $this->syncSiblingRelations($character, (bool) $data['has_brother_sister'], $siblingIdsByKind);
 
@@ -1065,9 +1321,14 @@ class CharacterController extends Controller
             ->map(fn ($id) => (int) $id)
             ->filter()
             ->unique()
-            ->values();
+            ->values()
+            ->all();
 
-        foreach ($ids as $id) {
+        if ($ids === []) {
+            return;
+        }
+
+        foreach ($this->expandAutoFamilyImpactIds($ids) as $id) {
             $this->syncAutoFamilyRelationsForCharacter((int) $id);
         }
     }
@@ -1101,34 +1362,18 @@ class CharacterController extends Controller
                 $childType = 'fils';
             }
 
-            CharacterRelation::updateOrCreate(
-                [
-                    'from_character_id' => $characterId,
-                    'to_character_id' => $child->id,
-                    'relation_type' => $parentType,
-                    'description' => self::AUTO_FAMILY_TAG . ' parent->enfant',
-                ],
-                [
-                    'relation_category' => $this->inferRelationMetadata($parentType)[0],
-                    'sibling_kind' => $this->inferRelationMetadata($parentType)[1],
-                    'intensity' => 10,
-                    'is_bidirectional' => false,
-                ]
+            $this->upsertAutoFamilyRelation(
+                $characterId,
+                (int) $child->id,
+                $parentType,
+                self::AUTO_FAMILY_TAG . ' parent->enfant'
             );
 
-            CharacterRelation::updateOrCreate(
-                [
-                    'from_character_id' => $child->id,
-                    'to_character_id' => $characterId,
-                    'relation_type' => $childType,
-                    'description' => self::AUTO_FAMILY_TAG . ' enfant->parent',
-                ],
-                [
-                    'relation_category' => $this->inferRelationMetadata($childType)[0],
-                    'sibling_kind' => $this->inferRelationMetadata($childType)[1],
-                    'intensity' => 10,
-                    'is_bidirectional' => false,
-                ]
+            $this->upsertAutoFamilyRelation(
+                (int) $child->id,
+                $characterId,
+                $childType,
+                self::AUTO_FAMILY_TAG . ' enfant->parent'
             );
         }
 
@@ -1138,35 +1383,116 @@ class CharacterController extends Controller
                 $characterToSpouseType = $this->relationTypeFromGender((string) $character->gender, 'spouse');
                 $spouseToCharacterType = $this->relationTypeFromGender((string) $spouse->gender, 'spouse');
 
-                CharacterRelation::updateOrCreate(
-                    [
-                        'from_character_id' => $character->id,
-                        'to_character_id' => $spouse->id,
-                        'relation_type' => $characterToSpouseType,
-                        'description' => self::AUTO_FAMILY_TAG . ' spouse',
-                    ],
-                    [
-                        'relation_category' => $this->inferRelationMetadata($characterToSpouseType)[0],
-                        'sibling_kind' => $this->inferRelationMetadata($characterToSpouseType)[1],
-                        'intensity' => 10,
-                        'is_bidirectional' => false,
-                    ]
+                $this->upsertAutoFamilyRelation(
+                    (int) $character->id,
+                    (int) $spouse->id,
+                    $characterToSpouseType,
+                    self::AUTO_FAMILY_TAG . ' spouse'
                 );
 
-                CharacterRelation::updateOrCreate(
-                    [
-                        'from_character_id' => $spouse->id,
-                        'to_character_id' => $character->id,
-                        'relation_type' => $spouseToCharacterType,
-                        'description' => self::AUTO_FAMILY_TAG . ' spouse',
-                    ],
-                    [
-                        'relation_category' => $this->inferRelationMetadata($spouseToCharacterType)[0],
-                        'sibling_kind' => $this->inferRelationMetadata($spouseToCharacterType)[1],
-                        'intensity' => 10,
-                        'is_bidirectional' => false,
-                    ]
+                $this->upsertAutoFamilyRelation(
+                    (int) $spouse->id,
+                    (int) $character->id,
+                    $spouseToCharacterType,
+                    self::AUTO_FAMILY_TAG . ' spouse'
                 );
+            }
+        }
+
+        $parentIds = collect([$character->father_id, $character->mother_id])
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        if ($parentIds !== []) {
+            $parents = Character::query()
+                ->whereIn('id', $parentIds)
+                ->get(['id', 'gender', 'spouse_id']);
+
+            $stepParentIds = $parents
+                ->map(fn ($parent) => (int) ($parent->spouse_id ?? 0))
+                ->filter(fn ($id) => $id > 0 && $id !== $characterId && !in_array($id, $parentIds, true))
+                ->unique()
+                ->values()
+                ->all();
+
+            if ($stepParentIds !== []) {
+                $stepParents = Character::query()
+                    ->whereIn('id', $stepParentIds)
+                    ->get(['id', 'gender']);
+
+                foreach ($stepParents as $stepParent) {
+                    $stepParentType = $this->extendedFamilyRelationTypeFromGender((string) $stepParent->gender, 'step_parent');
+                    $stepChildType = $this->extendedFamilyRelationTypeFromGender((string) $character->gender, 'step_child');
+
+                    $this->upsertAutoFamilyRelation(
+                        $characterId,
+                        (int) $stepParent->id,
+                        $stepParentType,
+                        self::AUTO_FAMILY_TAG . ' step-parent'
+                    );
+
+                    $this->upsertAutoFamilyRelation(
+                        (int) $stepParent->id,
+                        $characterId,
+                        $stepChildType,
+                        self::AUTO_FAMILY_TAG . ' step-child'
+                    );
+                }
+            }
+
+            $parentSiblingIds = $this->findSiblingIdsForCharacters($parents, array_merge([$characterId], $parentIds));
+
+            if ($parentSiblingIds !== []) {
+                $siblingIds = $this->findSiblingIdsForCharacters(collect([$character]), [$characterId]);
+                $childIds = $children->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values()
+                    ->all();
+                $blockedIds = array_values(array_unique(array_merge(
+                    [$characterId, (int) ($character->spouse_id ?? 0)],
+                    $parentIds,
+                    $siblingIds,
+                    $childIds
+                )));
+
+                $cousinIds = Character::query()
+                    ->where(function ($query) use ($parentSiblingIds) {
+                        $query->whereIn('father_id', $parentSiblingIds)
+                            ->orWhereIn('mother_id', $parentSiblingIds);
+                    })
+                    ->whereNotIn('id', $blockedIds)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if ($cousinIds !== []) {
+                    $cousins = Character::query()
+                        ->whereIn('id', $cousinIds)
+                        ->get(['id', 'gender']);
+
+                    foreach ($cousins as $cousin) {
+                        $cousinType = $this->extendedFamilyRelationTypeFromGender((string) $cousin->gender, 'cousin');
+                        $reverseType = $this->extendedFamilyRelationTypeFromGender((string) $character->gender, 'cousin');
+
+                        $this->upsertAutoFamilyRelation(
+                            $characterId,
+                            (int) $cousin->id,
+                            $cousinType,
+                            self::AUTO_FAMILY_TAG . ' cousin'
+                        );
+
+                        $this->upsertAutoFamilyRelation(
+                            (int) $cousin->id,
+                            $characterId,
+                            $reverseType,
+                            self::AUTO_FAMILY_TAG . ' cousin'
+                        );
+                    }
+                }
             }
         }
     }
@@ -1186,9 +1512,47 @@ class CharacterController extends Controller
         return '-';
     }
 
+    private function extendedFamilyRelationTypeFromGender(string $gender, string $group): string
+    {
+        if ($group === 'cousin') {
+            if ($gender === 'femme') {
+                return 'cousine';
+            }
+            if ($gender === 'homme') {
+                return 'cousin';
+            }
+
+            return 'cousin/cousine';
+        }
+
+        if ($group === 'step_parent') {
+            if ($gender === 'femme') {
+                return 'belle-mere';
+            }
+            if ($gender === 'homme') {
+                return 'beau-pere';
+            }
+
+            return 'beau-parent';
+        }
+
+        if ($group === 'step_child') {
+            if ($gender === 'femme') {
+                return 'belle-fille';
+            }
+            if ($gender === 'homme') {
+                return 'beau-fils';
+            }
+
+            return 'beau-fils/belle-fille';
+        }
+
+        return '-';
+    }
+
     private function inferRelationMetadata(string $relationType): array
     {
-        $type = mb_strtolower(trim($relationType));
+        $type = $this->normalizeRelationType($relationType);
         $category = 'custom';
         $siblingKind = null;
 
@@ -1205,6 +1569,8 @@ class CharacterController extends Controller
             $siblingKind = 'twin';
         } elseif (in_array($type, ['epoux', 'epouse', 'epoux/epouse', 'amour'], true)) {
             $category = 'family_couple';
+        } elseif (in_array($type, ['cousin', 'cousine', 'cousin/cousine', 'beau-pere', 'belle-mere', 'beau-parent', 'beau-fils', 'belle-fille', 'beau-fils/belle-fille'], true)) {
+            $category = 'family_extended';
         } elseif (in_array($type, ['ami', 'allie', 'ennemi', 'mentor', 'rival'], true)) {
             $category = 'social';
         }
@@ -1248,7 +1614,7 @@ class CharacterController extends Controller
 
     private function siblingKindFromRelationType(string $relationType): string
     {
-        $type = mb_strtolower(trim($relationType));
+        $type = $this->normalizeRelationType($relationType);
         if (in_array($type, ['jumeau', 'jumelle', 'jumeaux'], true)) {
             return 'twin';
         }
@@ -1257,6 +1623,135 @@ class CharacterController extends Controller
         }
 
         return 'full';
+    }
+
+    private function normalizeRelationType(string $relationType): string
+    {
+        return str_replace(
+            ['à', 'â', 'ä', 'ç', 'è', 'é', 'ê', 'ë', 'î', 'ï', 'ô', 'ö', 'ù', 'û', 'ü'],
+            ['a', 'a', 'a', 'c', 'e', 'e', 'e', 'e', 'i', 'i', 'o', 'o', 'u', 'u', 'u'],
+            mb_strtolower(trim($relationType))
+        );
+    }
+
+    private function upsertAutoFamilyRelation(int $fromCharacterId, int $toCharacterId, string $relationType, string $description): void
+    {
+        [$category, $siblingKind] = $this->inferRelationMetadata($relationType);
+
+        CharacterRelation::updateOrCreate(
+            [
+                'from_character_id' => $fromCharacterId,
+                'to_character_id' => $toCharacterId,
+                'description' => $description,
+            ],
+            [
+                'relation_type' => $relationType,
+                'relation_category' => $category,
+                'sibling_kind' => $siblingKind,
+                'intensity' => 10,
+                'is_bidirectional' => false,
+            ]
+        );
+    }
+
+    private function expandAutoFamilyImpactIds(array $characterIds): array
+    {
+        $visited = array_values(array_unique(array_map('intval', array_filter($characterIds))));
+        $frontier = $visited;
+
+        for ($depth = 0; $depth < 3; $depth++) {
+            if ($frontier === []) {
+                break;
+            }
+
+            $neighbors = $this->fetchDirectFamilyNeighborIds($frontier);
+            $newIds = array_values(array_diff($neighbors, $visited));
+            $visited = array_values(array_unique(array_merge($visited, $newIds)));
+            $frontier = $newIds;
+        }
+
+        return $visited;
+    }
+
+    private function fetchDirectFamilyNeighborIds(array $characterIds): array
+    {
+        if ($characterIds === []) {
+            return [];
+        }
+
+        $characters = Character::query()
+            ->whereIn('id', $characterIds)
+            ->get(['id', 'father_id', 'mother_id', 'spouse_id']);
+
+        $relativeIds = $characters
+            ->flatMap(fn ($character) => [
+                (int) ($character->father_id ?? 0),
+                (int) ($character->mother_id ?? 0),
+                (int) ($character->spouse_id ?? 0),
+            ])
+            ->filter()
+            ->values()
+            ->all();
+
+        $childIds = Character::query()
+            ->where(function ($query) use ($characterIds) {
+                $query->whereIn('father_id', $characterIds)
+                    ->orWhereIn('mother_id', $characterIds);
+            })
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
+
+        $siblingIds = $this->findSiblingIdsForCharacters($characters, []);
+
+        return array_values(array_unique(array_merge($relativeIds, $childIds, $siblingIds)));
+    }
+
+    private function findSiblingIdsForCharacters($characters, array $excludeIds): array
+    {
+        $characters = collect($characters);
+        $fatherIds = $characters->pluck('father_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+        $motherIds = $characters->pluck('mother_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($fatherIds === [] && $motherIds === []) {
+            return [];
+        }
+
+        $query = Character::query()
+            ->where(function ($query) use ($fatherIds, $motherIds) {
+                if ($fatherIds !== []) {
+                    $query->whereIn('father_id', $fatherIds);
+                }
+
+                if ($motherIds !== []) {
+                    if ($fatherIds !== []) {
+                        $query->orWhereIn('mother_id', $motherIds);
+                    } else {
+                        $query->whereIn('mother_id', $motherIds);
+                    }
+                }
+            });
+
+        if ($excludeIds !== []) {
+            $query->whereNotIn('id', array_values(array_unique(array_map('intval', array_filter($excludeIds)))));
+        }
+
+        return $query->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private function syncCharacterItems(Character $character, array $rows): void
@@ -1371,7 +1866,7 @@ class CharacterController extends Controller
             })
             ->where(function ($query) {
                 $query->whereNull('type')
-                    ->orWhereNotIn('type', ['Ã©cole', 'ecole']);
+                    ->orWhereNotIn('type', ['école', 'ecole']);
             })
             ->orderBy('name')
             ->get(['id', 'name', 'type', 'roles']);
@@ -1594,6 +2089,152 @@ class CharacterController extends Controller
         }
     }
 
+    private function prepareCharacterOutfitRows(array $outfitRows, array $outfitFiles): array
+    {
+        $prepared = [];
+
+        foreach ($outfitRows as $index => $row) {
+            $mode = trim((string) ($row['mode'] ?? ''));
+            $caption = trim((string) ($row['caption'] ?? '')) ?: null;
+            $file = $outfitFiles[$index]['image'] ?? null;
+            $hasMode = $mode !== '';
+            $hasCaption = $caption !== null;
+            $hasImage = $file !== null;
+
+            if (!$hasMode && !$hasCaption && !$hasImage) {
+                continue;
+            }
+
+            $errors = [];
+            if (!$hasMode) {
+                $errors["outfits.$index.mode"] = 'Choisis un mode vestimentaire pour cette tenue.';
+            }
+            if (!$hasImage) {
+                $errors["outfits.$index.image"] = 'Ajoute une image pour cette tenue.';
+            }
+
+            if (!empty($errors)) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $prepared[] = [
+                'mode' => $mode,
+                'caption' => $caption,
+                'file' => $file,
+            ];
+        }
+
+        return $prepared;
+    }
+
+    private function removeCharacterOutfitImages(Character $character, array $ids): void
+    {
+        if (!$this->hasOutfitImagesTable()) {
+            return;
+        }
+
+        if (empty($ids)) {
+            return;
+        }
+
+        $images = $character->outfitImages()->whereIn('id', $ids)->get();
+        foreach ($images as $image) {
+            if ($image->image_path) {
+                Storage::disk('public')->delete($image->image_path);
+            }
+            $image->delete();
+        }
+    }
+
+    private function addCharacterOutfitImages(Character $character, array $preparedOutfits): void
+    {
+        if (!$this->hasOutfitImagesTable()) {
+            return;
+        }
+
+        if (empty($preparedOutfits)) {
+            return;
+        }
+
+        $startOrder = (int) ($character->outfitImages()->max('sort_order') ?? 0);
+
+        foreach ($preparedOutfits as $outfit) {
+            $file = $outfit['file'] ?? null;
+            if (!$file) {
+                continue;
+            }
+
+            $path = $file->store('characters/outfits', 'public');
+            $startOrder++;
+
+            CharacterOutfitImage::create([
+                'character_id' => $character->id,
+                'mode' => $outfit['mode'],
+                'image_path' => $path,
+                'caption' => $outfit['caption'] ?: null,
+                'sort_order' => $startOrder,
+            ]);
+        }
+    }
+
+    private function prepareCharacterPowerRows(array $powerRows): array
+    {
+        $prepared = [];
+
+        foreach ($powerRows as $index => $row) {
+            $name = trim((string) ($row['name'] ?? ''));
+            $description = trim((string) ($row['description'] ?? '')) ?: null;
+
+            if ($name === '' && $description === null) {
+                continue;
+            }
+
+            if ($name === '') {
+                throw ValidationException::withMessages([
+                    "powers.$index.name" => 'Donne un nom à ce pouvoir.',
+                ]);
+            }
+
+            $prepared[] = [
+                'name' => $name,
+                'description' => $description,
+            ];
+        }
+
+        return $prepared;
+    }
+
+    private function hasOutfitImagesTable(): bool
+    {
+        static $exists = null;
+
+        if ($exists === null) {
+            $exists = Schema::hasTable('character_outfit_images');
+        }
+
+        return $exists;
+    }
+
+    private function syncCharacterPowers(Character $character, array $preparedPowers): void
+    {
+        $character->powers()->delete();
+
+        if (empty($preparedPowers)) {
+            return;
+        }
+
+        $sortOrder = 0;
+        foreach ($preparedPowers as $power) {
+            $sortOrder++;
+            CharacterPower::create([
+                'character_id' => $character->id,
+                'name' => $power['name'],
+                'description' => $power['description'] ?: null,
+                'sort_order' => $sortOrder,
+            ]);
+        }
+    }
+
     private function buildDataUriFromPublicDisk(?string $path): ?string
     {
         if (!$path) {
@@ -1651,5 +2292,6 @@ class CharacterController extends Controller
         return $url;
     }
 }
+
 
 

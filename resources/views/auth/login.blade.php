@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LoreRoom - Connexion</title>
+    <title>{{ __('app.public.login_page_title') }}</title>
     <style>
         :root {
             --ink: #2d2014;
@@ -73,12 +73,18 @@
         }
 
         .meta {
-            font-size: .72rem;
-            text-transform: uppercase;
-            letter-spacing: .12em;
-            color: #755a3a;
-            text-align: right;
-            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .brand-logo {
+            height: 54px;
+            width: auto;
+            max-width: 140px;
+            border-radius: 14px;
+            object-fit: contain;
+            box-shadow: 0 8px 20px rgba(63, 44, 22, .16);
         }
 
         .muted {
@@ -189,11 +195,10 @@
 
     <main class="shell">
         <div class="head">
-            <h1>Connexion</h1>
-            <div class="meta">LoreRoom</div>
+            <h1>{{ __('app.public.login_heading') }}</h1>
+            <div class="meta">@include('partials.brand-logo', ['size' => 54])</div>
         </div>
 
-        <p class="muted">Les messages de succes et d'erreur s'affichent juste ci-dessous.</p>
 
         @if(session('success'))
             <div class="alert ok">{{ session('success') }}</div>
@@ -211,24 +216,25 @@
             @csrf
 
             <div class="field">
-                <label>Email</label>
+                <label>{{ __('app.public.email') }}</label>
                 <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
             </div>
 
             <div class="field">
-                <label>Mot de passe</label>
+                <label>{{ __('app.public.password') }}</label>
                 <input type="password" name="password" required autocomplete="current-password">
             </div>
 
             <label class="remember">
-                <input type="checkbox" name="remember" value="1"> Se souvenir de moi
+                <input type="checkbox" name="remember" value="1"> {{ __('app.public.remember_me') }}
             </label>
 
             <div class="actions">
-                <button class="btn" type="submit">Se connecter</button>
-                <a class="btn secondary" href="{{ route('register') }}">Creer un compte</a>
+                <button class="btn" type="submit">{{ __('app.public.sign_in') }}</button>
+                <a class="btn secondary" href="{{ route('register') }}">{{ __('app.public.create_account') }}</a>
             </div>
         </form>
     </main>
+    @include('partials.i18n')
 </body>
 </html>

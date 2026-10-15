@@ -34,6 +34,11 @@ class World extends Model
         return $this->hasMany(Chronicle::class);
     }
 
+    public function chapters()
+    {
+        return $this->hasMany(Chapter::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -109,9 +109,9 @@
         <section class="trash-hero">
             <h2 class="trash-title">Corbeille de l'application</h2>
             <p class="trash-text">
-                Retrouve ici les éléments supprimés et restaure-les quand tu veux. Tu peux aussi supprimer definitivement un élément, vider toute la corbeille, et les contenus encore présents depuis plus de 30 jours seront nettoyés automatiquement.
+                Retrouve ici les éléments supprimés et restaure-les quand tu veux. Tu peux aussi supprimer définitivement un élément, vider toute la corbeille, et les contenus encore présents depuis plus de 30 jours seront nettoyés automatiquement.
             </p>
-            <form method="POST" action="{{ route('manage.trash.empty') }}" onsubmit="return confirm('Vider toute la corbeille ? Cette action est definitive.');" style="margin-top:14px;">
+            <form method="POST" action="{{ route('manage.trash.empty') }}" onsubmit="return confirm('Vider toute la corbeille ? Cette action est définitive.');" style="margin-top:14px;">
                 @csrf
                 <button class="btn danger" type="submit">Vider la corbeille</button>
             </form>
@@ -146,7 +146,7 @@
                                                 @csrf
                                                 <button class="btn secondary" type="submit">Restaurer</button>
                                             </form>
-                                            <form method="POST" action="{{ route('manage.trash.destroy', ['type' => $section['type'], 'id' => $item->id]) }}" onsubmit="return confirm('Supprimer definitivement cet element ?');">
+                                            <form method="POST" action="{{ route('manage.trash.destroy', ['type' => $section['type'], 'id' => $item->id]) }}" onsubmit="return confirm('Supprimer définitivement cet élément ?');">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn danger" type="submit">Supprimer</button>

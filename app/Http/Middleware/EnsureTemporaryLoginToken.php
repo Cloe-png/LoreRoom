@@ -32,7 +32,7 @@ class EnsureTemporaryLoginToken
             $request->session()->regenerateToken();
 
             return redirect()->route('login')->withErrors([
-                'auth' => 'Session expirée. Reconnecte-toi.',
+                'auth' => __('app.auth.session_expired'),
             ]);
         }
 

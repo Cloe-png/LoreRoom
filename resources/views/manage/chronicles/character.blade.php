@@ -351,18 +351,17 @@
         <div class="poster-head">
             <div>
                 <h3 class="poster-title">Frise - {{ $character->display_name }}</h3>
-                <p class="poster-sub">Événements alternés à gauche et à droite de la ligne centrale.</p>
             </div>
             <div class="stack">
                 <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
                 <a class="btn secondary" href="{{ route('manage.chronicles.global') }}">Vue globale</a>
-                <a class="btn" href="{{ route('manage.chronicles.create') }}">Nouvelle chronique</a>
             </div>
         </div>
 
         @php
             $typeLabels = [
                 'chronicle' => 'Chronique',
+                'chapter' => 'Chapitre',
                 'character_event' => 'Personnage',
                 'birth' => 'Naissance',
                 'death' => 'Décès',
@@ -445,8 +444,11 @@
                                         @if(!empty($event['location']))
                                             <div class="poster-meta">Lieu: {{ $event['location'] }}</div>
                                         @endif
-                                        @if(!empty($event['description']))
-                                            <div class="poster-desc">{{ $event['description'] }}</div>
+                                        @php
+                                            $eventText = $event['summary'] ?? $event['description'] ?? null;
+                                        @endphp
+                                        @if(!empty($eventText))
+                                            <div class="poster-desc">{{ $eventText }}</div>
                                         @else
                                             <div class="poster-desc muted">Aucune description.</div>
                                         @endif
@@ -460,20 +462,7 @@
                                     </div>
                                 </div>
 
-                                <div class="poster-foot">
-                                    <div class="poster-actions">
-                                        @if(!empty($event['can_manage']) && !empty($event['edit_link']))
-                                            <a class="poster-open" href="{{ $event['edit_link'] }}">Modifier</a>
-                                        @endif
-                                        @if(!empty($event['can_manage']) && !empty($event['delete_link']))
-                                            <form method="POST" action="{{ $event['delete_link'] }}" onsubmit="return confirm('Supprimer cet événement ?');" style="margin:0;">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button class="poster-delete" type="submit">Supprimer</button>
-                                            </form>
-                                        @endif
-                                    </div>
-                                </div>
+                                <div class="poster-foot"></div>
                             </div>
                             </div>
                         </div>

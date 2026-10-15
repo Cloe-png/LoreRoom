@@ -1,6 +1,6 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Monde')
+@section('title', __('app.worlds.world_title'))
 @section('header', $world->name)
 
 @section('content')
@@ -291,13 +291,13 @@
                         @if($worldSummary !== '')
                             {{ $worldSummary }}
                         @else
-                            Un espace de travail pour faire exister ce monde, relier ses figures, et transformer ses événements en mémoire vivante.
+                            {{ __('app.worlds.overview_help') }}
                         @endif
                     </p>
                     <div class="world-actions">
-                        <a class="btn secondary" href="{{ route('manage.worlds.edit', $world) }}">Éditer</a>
-                        <a class="btn secondary" href="{{ route('manage.worlds.index') }}">Retour</a>
-                        <a class="btn" href="{{ route('manage.characters.create') }}">Ajouter un personnage</a>
+                        <a class="btn secondary" href="{{ route('manage.worlds.edit', $world) }}">{{ __('app.worlds.edit') }}</a>
+                        <a class="btn secondary" href="{{ route('manage.worlds.index') }}">{{ __('app.worlds.back') }}</a>
+                        <a class="btn" href="{{ route('manage.characters.create') }}">{{ __('app.worlds.add_character') }}</a>
                     </div>
                 </div>
                 <div class="world-constellation" aria-hidden="true">
@@ -312,31 +312,31 @@
                     <div class="world-node is-primary is-1" style="left:50%; top:50%;">
                         <div>
                             <strong>{{ $world->characters->count() + $world->places->count() + $world->chronicles->count() }}</strong>
-                            <span>entrées vivantes</span>
+                            <span>{{ __('app.worlds.active_entries') }}</span>
                         </div>
                     </div>
                     <div class="world-node is-2" style="left:24%; top:24%;">
                         <div>
                             <strong>{{ $world->characters->count() }}</strong>
-                            <span>personnages</span>
+                            <span>{{ __('app.worlds.characters') }}</span>
                         </div>
                     </div>
                     <div class="world-node is-3" style="left:76%; top:22%;">
                         <div>
                             <strong>{{ $world->chronicles->count() }}</strong>
-                            <span>chroniques</span>
+                            <span>{{ __('app.worlds.chronicles') }}</span>
                         </div>
                     </div>
                     <div class="world-node is-4" style="left:24%; top:76%;">
                         <div>
                             <strong>{{ $world->places->count() }}</strong>
-                            <span>lieux</span>
+                            <span>{{ __('app.worlds.places') }}</span>
                         </div>
                     </div>
                     <div class="world-node is-5" style="left:78%; top:72%;">
                         <div>
                             <strong>{{ $factionsCount }}</strong>
-                            <span>factions</span>
+                            <span>{{ __('app.worlds.factions') }}</span>
                         </div>
                     </div>
                 </div>
@@ -345,30 +345,30 @@
 
         <section class="world-card">
             <div class="world-card-head">
-                <h2>Signal du monde</h2>
-                <span class="muted">Lecture rapide du niveau de densité narrative</span>
+                <h2>{{ __('app.worlds.signal_title') }}</h2>
+                <span class="muted">{{ __('app.worlds.signal_help') }}</span>
             </div>
             <div class="world-card-body">
                 <div class="world-stats">
                     <article class="world-stat">
                         <strong>{{ $world->characters->count() }}</strong>
-                        <span>Personnages</span>
+                        <span>{{ __('app.worlds.characters') }}</span>
                     </article>
                     <article class="world-stat">
                         <strong>{{ $world->places->count() }}</strong>
-                        <span>Lieux</span>
+                        <span>{{ __('app.worlds.places') }}</span>
                     </article>
                     <article class="world-stat">
                         <strong>{{ $world->chronicles->count() }}</strong>
-                        <span>Chroniques</span>
+                        <span>{{ __('app.worlds.chronicles') }}</span>
                     </article>
                     <article class="world-stat">
                         <strong>{{ $factionsCount }}</strong>
-                        <span>Factions</span>
+                        <span>{{ __('app.worlds.factions') }}</span>
                     </article>
                     <article class="world-stat">
                         <strong>{{ $relationsCount }}</strong>
-                        <span>Relations</span>
+                        <span>{{ __('app.nav.relations') }}</span>
                     </article>
                 </div>
             </div>
@@ -377,21 +377,21 @@
         <section class="world-grid">
             <article class="world-card" style="grid-column: span 7;">
                 <div class="world-card-head">
-                    <h2>Visages clés</h2>
-                    <a class="btn secondary" href="{{ route('manage.characters.index') }}">Voir tout</a>
+                    <h2>{{ __('app.worlds.key_faces') }}</h2>
+                    <a class="btn secondary" href="{{ route('manage.characters.index') }}">{{ __('app.worlds.see_all') }}</a>
                 </div>
                 <div class="world-card-body">
                     @if($charactersPreview->isEmpty())
-                        <p class="world-empty">Aucun personnage pour l’instant.</p>
+                        <p class="world-empty">{{ __('app.worlds.no_characters') }}</p>
                     @else
                         <div class="world-list">
                             @foreach($charactersPreview as $character)
                                 <article class="world-list-item">
                                     <strong>{{ $character->display_name }}</strong>
                                     <p>
-                                        {{ $character->role ?: 'Rôle non défini' }}
+                                        {{ $character->role ?: __('app.worlds.role_undefined') }}
                                         @if($character->birth_date)
-                                            · né(e) le {{ $character->birth_date->format('d/m/Y') }}
+                                            {{ ' · ' . __('app.worlds.born_on') . ' ' . $character->birth_date->format('d/m/Y') }}
                                         @endif
                                     </p>
                                 </article>
@@ -403,18 +403,18 @@
 
             <article class="world-card" style="grid-column: span 5;">
                 <div class="world-card-head">
-                    <h2>Points d’ancrage</h2>
-                    <a class="btn secondary" href="{{ route('manage.places.index') }}">Explorer</a>
+                    <h2>{{ __('app.worlds.anchors') }}</h2>
+                    <a class="btn secondary" href="{{ route('manage.places.index') }}">{{ __('app.worlds.explore') }}</a>
                 </div>
                 <div class="world-card-body">
                     @if($placesPreview->isEmpty())
-                        <p class="world-empty">Aucun lieu enregistré.</p>
+                        <p class="world-empty">{{ __('app.worlds.no_places') }}</p>
                     @else
                         <div class="world-list">
                             @foreach($placesPreview as $place)
                                 <article class="world-list-item">
                                     <strong>{{ $place->name }}</strong>
-                                    <p>{{ $place->type ?: 'Type libre' }}@if($place->region) · {{ $place->region }} @endif</p>
+                                    <p>{{ $place->type ?: __('app.worlds.free_type') }}@if($place->region) · {{ $place->region }} @endif</p>
                                 </article>
                             @endforeach
                         </div>
@@ -424,12 +424,12 @@
 
             <article class="world-card" style="grid-column: span 12;">
                 <div class="world-card-head">
-                    <h2>Chroniques qui donnent le ton</h2>
-                    <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Ouvrir la frise</a>
+                    <h2>{{ __('app.worlds.chronicles_title') }}</h2>
+                    <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">{{ __('app.worlds.open_timeline') }}</a>
                 </div>
                 <div class="world-card-body">
                     @if($chroniclesPreview->isEmpty())
-                        <p class="world-empty">Aucune chronique disponible.</p>
+                        <p class="world-empty">{{ __('app.worlds.no_chronicles') }}</p>
                     @else
                         <div class="world-columns">
                             @foreach($chroniclesPreview as $chronicle)
@@ -439,7 +439,7 @@
                                         @if($chronicle->event_date)
                                             {{ $chronicle->event_date->format('d/m/Y') }}
                                         @else
-                                            Date libre
+                                            {{ __('app.worlds.free_date') }}
                                         @endif
                                         @if($chronicle->summary)
                                             · {{ \Illuminate\Support\Str::limit($chronicle->summary, 120) }}

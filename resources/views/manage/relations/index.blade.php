@@ -89,22 +89,6 @@
         }
     </style>
 
-    <section class="relations-hero">
-        <div>
-            <h2>Réseau vivant du casting</h2>
-            <p>Le graphe sert de lecture rapide: alliances, rivalités, famille et liens ambigus restent lisibles sur desktop comme sur mobile.</p>
-        </div>
-        <div class="relations-hints">
-            <span class="relations-hint">Glisser pour explorer</span>
-            <span class="relations-hint">Zoom pour isoler</span>
-            <span class="relations-hint">Mode focus conseillé</span>
-        </div>
-    </section>
-
-    <div class="stack" style="justify-content: space-between;">
-        <p class="muted">Module relationnel entre personnages (famille, alliance, rivalite, mentorat...).</p>
-        <a class="btn" href="{{ route('manage.relations.create') }}">Nouvelle relation</a>
-    </div>
 
     <section class="panel" style="margin-top:8px;">
         <form method="GET" action="{{ route('manage.relations.index') }}" class="stack" style="align-items:flex-end;">
@@ -123,6 +107,9 @@
                     @endforeach
                 </select>
             </div>
+            <div class="stack" style="justify-content: space-between;">
+        <a class="btn" href="{{ route('manage.relations.create') }}">Nouvelle relation</a>
+    </div>
             <button class="btn" type="submit">Rechercher</button>
             @if(!empty($q) || !empty($selectedCharacterId))
                 <a class="btn secondary" href="{{ route('manage.relations.index') }}">Effacer</a>
@@ -131,15 +118,11 @@
     </section>
 
     <section class="panel">
-        <h3 style="margin-top:0;">Vue réseau</h3>
         @if($graphRelations->isEmpty())
             <p class="muted">Aucune relation à afficher.</p>
         @else
             <div class="relations-network-wrap">
-                <div class="relations-network-head">
-                    <p>Vue condensée du monde actif.</p>
-                    <span class="muted">Astuce mobile: garde la navigation dans le drawer pour réserver l’écran au graphe.</span>
-                </div>
+
                 <div id="relations-network"></div>
             </div>
             @php

@@ -107,9 +107,9 @@
 
             <div class="field">
                 <label>Logo</label>
-                <input type="file" name="logo" accept="image/*">
+                <input type="file" name="logo" accept=".png,.jpg,.jpeg">
                 @if($faction->logo_path)
-                    <p class="muted">Logo actuel: {{ $faction->logo_path }}</p>
+                    <p class="muted">{{ __('app.factions.current_logo', ['path' => $faction->logo_path]) }}</p>
                 @endif
             </div>
 

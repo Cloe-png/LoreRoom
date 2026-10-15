@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,41 +10,23 @@
             min-height: 100vh;
             display: grid;
             place-items: center;
-            background: linear-gradient(180deg, #1d2430, #111722);
-            color: #f4e7cd;
-            font-family: "Garamond", "Georgia", serif;
+            background: radial-gradient(circle at 50% 30%, rgba(255, 243, 214, .08), transparent 55%), linear-gradient(180deg, #17131b, #0e0c12);
         }
-        .card {
-            width: min(680px, 92vw);
-            border: 1px solid rgba(228, 191, 127, .35);
-            border-radius: 14px;
-            padding: 20px;
-            background: rgba(255,255,255,.06);
-            box-shadow: 0 20px 45px rgba(0,0,0,.35);
+        .logo {
+            width: min(85vw, 720px);
+            display: block;
+            filter: drop-shadow(0 18px 38px rgba(0, 0, 0, .55));
         }
-        h1 {
-            margin: 0 0 8px;
-            font-family: "Cinzel", "Times New Roman", serif;
-            color: #f6e8cb;
-        }
-        p { margin: 0 0 16px; color: #dbc9a8; }
-        a {
-            display: inline-block;
-            text-decoration: none;
-            border: 1px solid rgba(89, 65, 37, .38);
-            color: #2f2418;
-            border-radius: 7px;
-            padding: 8px 12px;
-            background: linear-gradient(180deg, #f9d48f, #e9b461);
-            font-family: "Segoe Print", "Comic Sans MS", cursive;
-            font-weight: 600;
+        .logo img {
+            width: 100%;
+            height: auto;
+            display: block;
         }
     </style>
 </head>
 <body>
-    <section class="card">
-        <h1>Bienvenue sur LoreRoom</h1>
-        <a href="{{ route('login') }}">Aller à la connexion</a>
-    </section>
+    <a class="logo" href="{{ route('login') }}" aria-label="LoreRoom">
+        @include('partials.brand-logo', ['size' => 720])
+    </a>
 </body>
 </html>

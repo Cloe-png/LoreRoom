@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Chapter;
 use App\Models\Character;
 use App\Models\Chronicle;
 use App\Models\Faction;
@@ -9,211 +10,211 @@ use App\Models\Job;
 use App\Models\LoreEntry;
 use App\Models\Place;
 use App\Models\Species;
-use App\Models\User;
 use App\Models\World;
-use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
+use InvalidArgumentException;
 
 class TrashManager
 {
-    public function getSections(?User $user, ?int $worldId): array
+    /**
+     * @return array<string, array{title:string, type:string, name:string, model:class-string<Model>}>
+     */
+    private function sections(): array
     {
         return [
-            [
-                'title' => 'Mondes supprimes',
+            'world' => [
+                'title' => 'Mondes',
                 'type' => 'world',
                 'name' => 'name',
-                'items' => $user ? $user->worlds()->onlyTrashed()->latest('deleted_at')->get() : collect(),
+                'model' => World::class,
             ],
-            [
-                'title' => 'Personnages supprimes',
+            'character' => [
+                'title' => 'Personnages',
                 'type' => 'character',
                 'name' => 'display_name',
-                'items' => $worldId ? Character::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
+                'model' => Character::class,
             ],
-            [
-                'title' => 'Lieux supprimes',
-                'type' => 'place',
-                'name' => 'name',
-                'items' => $worldId ? Place::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
+            'chapter' => [
+                'title' => 'Chapitres',
+                'type' => 'chapter',
+                'name' => 'title',
+                'model' => Chapter::class,
             ],
-            [
-                'title' => 'Chroniques supprimees',
+            'chronicle' => [
+                'title' => 'Chroniques',
                 'type' => 'chronicle',
                 'name' => 'title',
-                'items' => $worldId ? Chronicle::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
+                'model' => Chronicle::class,
             ],
-            [
-                'title' => 'Factions supprimees',
-                'type' => 'faction',
+            'place' => [
+                'title' => 'Lieux',
+                'type' => 'place',
                 'name' => 'name',
-                'items' => $worldId ? Faction::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
+                'model' => Place::class,
             ],
-            [
-                'title' => 'Entrees de lore supprimees',
-                'type' => 'lore',
-                'name' => 'title',
-                'items' => $worldId ? LoreEntry::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
-            ],
-            [
-                'title' => 'Especes supprimees',
-                'type' => 'species',
-                'name' => 'name',
-                'items' => $worldId ? Species::onlyTrashed()->where('world_id', $worldId)->latest('deleted_at')->get() : collect(),
-            ],
-            [
-                'title' => 'Metiers supprimes',
+            'job' => [
+                'title' => 'Métiers',
                 'type' => 'job',
                 'name' => 'name',
-                'items' => $worldId
-                    ? Job::onlyTrashed()->where('world_id', $worldId)->where('is_default', false)->latest('deleted_at')->get()
-                    : collect(),
+                'model' => Job::class,
+            ],
+            'lore' => [
+                'title' => 'Lore',
+                'type' => 'lore',
+                'name' => 'title',
+                'model' => LoreEntry::class,
+            ],
+            'species' => [
+                'title' => 'Espèces',
+                'type' => 'species',
+                'name' => 'name',
+                'model' => Species::class,
+            ],
+            'faction' => [
+                'title' => 'Factions',
+                'type' => 'faction',
+                'name' => 'name',
+                'model' => Faction::class,
             ],
         ];
     }
 
-    public function forceDelete(string $type, int $id, ?User $user, ?int $worldId): void
+    /**
+     * @return array<int, array{title:string,type:string,name:string,items:Collection<int,Model>}>
+     */
+    public function getSections(?User $user, ?int $currentWorldId): array
     {
-        $record = $this->resolveRecord($type, $id, $user, $worldId);
+        $sections = [];
+
+        foreach ($this->sections() as $section) {
+            $model = $section['model'];
+            $query = $model::query()->onlyTrashed();
+
+            if ($model === World::class && $user) {
+                $query->where('user_id', (int) $user->id);
+            } elseif ($currentWorldId && $this->hasWorldIdColumn($model)) {
+                $query->where('world_id', $currentWorldId);
+            }
+
+            $items = $query
+                ->orderBy('deleted_at', 'desc')
+                ->get();
+
+            $sections[] = [
+                'title' => $section['title'],
+                'type' => $section['type'],
+                'name' => $section['name'],
+                'items' => $items,
+            ];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * @return Model
+     */
+    public function restore(string $type, int $id, ?User $user, ?int $currentWorldId): Model
+    {
+        $record = $this->findTrashedRecord($type, $id, $user, $currentWorldId);
+        $record->restore();
+
+        return $record->fresh();
+    }
+
+    public function forceDelete(string $type, int $id, ?User $user, ?int $currentWorldId): void
+    {
+        $record = $this->findTrashedRecord($type, $id, $user, $currentWorldId);
         $record->forceDelete();
     }
 
-    public function restore(string $type, int $id, ?User $user, ?int $worldId): Model
-    {
-        $record = $this->resolveRecord($type, $id, $user, $worldId);
-        $record->restore();
-
-        return $record;
-    }
-
-    public function emptyTrash(?User $user, ?int $worldId): int
+    public function emptyTrash(?User $user, ?int $currentWorldId): int
     {
         $deleted = 0;
 
-        foreach ($this->trashQueries($user, $worldId) as $query) {
-            /** @var \Illuminate\Database\Eloquent\Model $record */
-            foreach ($query->get() as $record) {
-                $record->forceDelete();
-                $deleted++;
+        foreach ($this->sections() as $section) {
+            $model = $section['model'];
+            $query = $model::query()->onlyTrashed();
+
+            if ($model === World::class && $user) {
+                $query->where('user_id', (int) $user->id);
+            } elseif ($currentWorldId && $this->hasWorldIdColumn($model)) {
+                $query->where('world_id', $currentWorldId);
             }
+
+            $deleted += $query->forceDelete();
         }
 
         return $deleted;
     }
 
-    public function pruneOlderThan(CarbonInterface $cutoff): int
+    public function pruneOlderThan(Carbon $threshold): int
     {
         $deleted = 0;
 
-        foreach ($this->trashQueries(null, null, $cutoff, true) as $query) {
-            /** @var \Illuminate\Database\Eloquent\Model $record */
-            foreach ($query->get() as $record) {
-                $record->forceDelete();
-                $deleted++;
-            }
+        foreach ($this->sections() as $section) {
+            $model = $section['model'];
+            $query = $model::query()->onlyTrashed()->where('deleted_at', '<', $threshold);
+            $deleted += $query->forceDelete();
         }
 
         return $deleted;
     }
 
     /**
-     * @return array<int, Builder>
+     * @return Model
      */
-    private function trashQueries(?User $user, ?int $worldId, ?CarbonInterface $cutoff = null, bool $pruneAll = false): array
+    private function findTrashedRecord(string $type, int $id, ?User $user, ?int $currentWorldId): Model
     {
-        $worldsQuery = $user ? $user->worlds()->onlyTrashed() : World::onlyTrashed();
+        $section = $this->sections()[$this->normalizeType($type)] ?? null;
 
-        if ($pruneAll) {
-            return [
-                $this->applyCutoff(World::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Character::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Place::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Chronicle::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Faction::onlyTrashed(), $cutoff),
-                $this->applyCutoff(LoreEntry::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Species::onlyTrashed(), $cutoff),
-                $this->applyCutoff(Job::onlyTrashed()->where('is_default', false), $cutoff),
-            ];
+        if (!$section) {
+            throw new InvalidArgumentException('Type de corbeille inconnu.');
         }
 
-        if (!$worldId) {
-            return [
-                $this->applyCutoff($worldsQuery, $cutoff),
-            ];
+        $model = $section['model'];
+        $query = $model::query()->onlyTrashed()->whereKey($id);
+
+        if ($model === World::class && $user) {
+            $query->where('user_id', (int) $user->id);
+        } elseif ($currentWorldId && $this->hasWorldIdColumn($model)) {
+            $query->where('world_id', $currentWorldId);
         }
 
-        return [
-            $this->applyCutoff($worldsQuery, $cutoff),
-            $this->applyCutoff(Character::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(Place::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(Chronicle::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(Faction::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(LoreEntry::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(Species::onlyTrashed()->where('world_id', $worldId), $cutoff),
-            $this->applyCutoff(Job::onlyTrashed()->where('world_id', $worldId)->where('is_default', false), $cutoff),
-        ];
+        $record = $query->first();
+
+        if (!$record) {
+            throw new InvalidArgumentException('Élément introuvable dans la corbeille.');
+        }
+
+        return $record;
     }
 
-    private function applyCutoff(Builder $query, ?CarbonInterface $cutoff): Builder
+    private function normalizeType(string $type): string
     {
-        if ($cutoff) {
-            $query->where('deleted_at', '<=', $cutoff);
+        $type = trim(strtolower($type));
+
+        if ($type === 'loreentry') {
+            return 'lore';
         }
 
-        return $query->latest('deleted_at');
+        return $type;
     }
 
-    private function resolveRecord(string $type, int $id, ?User $user, ?int $worldId): Model
+    private function hasWorldIdColumn(string $model): bool
     {
-        switch ($type) {
-            case 'world':
-                return $user
-                    ? $user->worlds()->onlyTrashed()->whereKey($id)->firstOrFail()
-                    : World::onlyTrashed()->whereKey($id)->firstOrFail();
-
-            case 'character':
-                return $this->resolveWorldScoped(Character::class, $id, $worldId);
-
-            case 'place':
-                return $this->resolveWorldScoped(Place::class, $id, $worldId);
-
-            case 'chronicle':
-                return $this->resolveWorldScoped(Chronicle::class, $id, $worldId);
-
-            case 'faction':
-                return $this->resolveWorldScoped(Faction::class, $id, $worldId);
-
-            case 'lore':
-                return $this->resolveWorldScoped(LoreEntry::class, $id, $worldId);
-
-            case 'species':
-                return $this->resolveWorldScoped(Species::class, $id, $worldId);
-
-            case 'job':
-                if (!$worldId) {
-                    abort(404);
-                }
-
-                return Job::onlyTrashed()
-                    ->where('world_id', $worldId)
-                    ->where('is_default', false)
-                    ->whereKey($id)
-                    ->firstOrFail();
-        }
-
-        abort(404);
-    }
-
-    private function resolveWorldScoped(string $modelClass, int $id, ?int $worldId): Model
-    {
-        if (!$worldId) {
-            abort(404);
-        }
-
-        return $modelClass::onlyTrashed()
-            ->where('world_id', $worldId)
-            ->whereKey($id)
-            ->firstOrFail();
+        return in_array($model, [
+            Character::class,
+            Chapter::class,
+            Chronicle::class,
+            Place::class,
+            Job::class,
+            LoreEntry::class,
+            Species::class,
+            Faction::class,
+        ], true);
     }
 }

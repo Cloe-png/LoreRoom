@@ -12,7 +12,7 @@ class GenealogyController extends Controller
 {
     public function index()
     {
-        $characters = Character::query()
+        $allCharacters = Character::query()
             ->orderByRaw('birth_date IS NULL')
             ->orderBy('birth_date')
             ->orderBy('first_name')
@@ -33,20 +33,48 @@ class GenealogyController extends Controller
                 'image_path',
             ]);
 
-        $selectedId = (int) request('focus_id', 0);
-        if ($selectedId <= 0 || !$characters->firstWhere('id', $selectedId)) {
-            $selectedId = (int) ($characters->first()->id ?? 0);
+        $viewMode = (string) request('view', 'all');
+        if (!in_array($viewMode, ['all', 'lineage', 'close', 'paternal', 'maternal'], true)) {
+            $viewMode = 'all';
         }
 
-        $rootIds = $characters
-            ->filter(function ($character) {
-                return (int) ($character->father_id ?? 0) === 0 && (int) ($character->mother_id ?? 0) === 0;
-            })
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->filter()
-            ->unique()
-            ->values();
+        $selectedId = (int) request('focus_id', 0);
+        if ($selectedId <= 0 || !$allCharacters->firstWhere('id', $selectedId)) {
+            $selectedId = (int) ($allCharacters->first()->id ?? 0);
+        }
+
+        $characters = $allCharacters;
+        $rootIds = collect();
+
+        if ($viewMode === 'all') {
+            $rootIds = $characters
+                ->filter(function ($character) {
+                    return (int) ($character->father_id ?? 0) === 0 && (int) ($character->mother_id ?? 0) === 0;
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values();
+        } elseif ($selectedId > 0) {
+            $visibleIds = $this->determineVisibleIds($allCharacters, $selectedId, $viewMode);
+            if ($visibleIds->isNotEmpty()) {
+                $characters = $allCharacters->whereIn('id', $visibleIds->all())->values();
+            }
+
+            $rootIds = $characters
+                ->filter(function ($character) use ($visibleIds) {
+                    $fatherId = (int) ($character->father_id ?? 0);
+                    $motherId = (int) ($character->mother_id ?? 0);
+
+                    return !$visibleIds->contains($fatherId) && !$visibleIds->contains($motherId);
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values();
+        }
 
         if ($rootIds->isEmpty() && $selectedId > 0) {
             $rootIds->push($selectedId);
@@ -58,8 +86,9 @@ class GenealogyController extends Controller
         $layout = $this->buildLayout($nodes);
 
         return view('manage.genealogy.index', [
-            'characters' => $characters,
+            'characters' => $allCharacters,
             'selectedId' => $selectedId,
+            'viewMode' => $viewMode,
             'nodes' => $nodes,
             'edges' => $edges,
             'layout' => $layout,
@@ -224,6 +253,7 @@ class GenealogyController extends Controller
                 return [
                     'id' => (int) $id,
                     'name' => $character ? $character->display_name : ('#' . $id),
+                    'family_name' => $character ? (string) ($character->family_name ?: $character->last_name ?: $character->name ?: '') : '',
                     'gender' => $character->gender ?? null,
                     'status' => $character->status ?? null,
                     'is_ghost' => $ghostIds->contains((int) $id),
@@ -559,5 +589,120 @@ class GenealogyController extends Controller
         }
 
         return strcmp((string) $a->display_name, (string) $b->display_name);
+    }
+
+    private function determineVisibleIds(Collection $characters, int $selectedId, string $viewMode): Collection
+    {
+        $selected = $characters->firstWhere('id', $selectedId);
+        if (!$selected) {
+            return collect();
+        }
+
+        $byId = $characters->keyBy('id');
+        $ids = collect([$selectedId]);
+
+        $collectAncestors = function (?Character $character, ?string $branch = null) use (&$collectAncestors, $byId, $ids) {
+            if (!$character) {
+                return;
+            }
+
+            $parentIds = [];
+            if ($branch === 'father') {
+                $parentIds[] = (int) ($character->father_id ?? 0);
+            } elseif ($branch === 'mother') {
+                $parentIds[] = (int) ($character->mother_id ?? 0);
+            } else {
+                $parentIds[] = (int) ($character->father_id ?? 0);
+                $parentIds[] = (int) ($character->mother_id ?? 0);
+            }
+
+            foreach ($parentIds as $parentId) {
+                if ($parentId <= 0 || $ids->contains($parentId)) {
+                    continue;
+                }
+
+                $ids->push($parentId);
+                $collectAncestors($byId->get($parentId), $branch);
+            }
+        };
+
+        $collectDescendants = function (int $characterId) use (&$collectDescendants, $characters, $ids) {
+            $children = $characters
+                ->filter(function (Character $character) use ($characterId) {
+                    return (int) ($character->father_id ?? 0) === $characterId
+                        || (int) ($character->mother_id ?? 0) === $characterId;
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->values();
+
+            foreach ($children as $childId) {
+                if ($ids->contains($childId)) {
+                    continue;
+                }
+
+                $ids->push($childId);
+                $collectDescendants($childId);
+            }
+        };
+
+        if ($viewMode === 'lineage') {
+            $collectAncestors($selected);
+            $collectDescendants($selectedId);
+        } elseif ($viewMode === 'close') {
+            foreach ([
+                (int) ($selected->father_id ?? 0),
+                (int) ($selected->mother_id ?? 0),
+                (int) ($selected->spouse_id ?? 0),
+            ] as $relatedId) {
+                if ($relatedId > 0) {
+                    $ids->push($relatedId);
+                }
+            }
+
+            $characters->each(function (Character $character) use ($selected, $ids) {
+                $sameFather = (int) ($selected->father_id ?? 0) > 0 && (int) $selected->father_id === (int) ($character->father_id ?? 0);
+                $sameMother = (int) ($selected->mother_id ?? 0) > 0 && (int) $selected->mother_id === (int) ($character->mother_id ?? 0);
+                $isChild = (int) ($character->father_id ?? 0) === (int) $selected->id || (int) ($character->mother_id ?? 0) === (int) $selected->id;
+
+                if ($sameFather || $sameMother || $isChild) {
+                    $ids->push((int) $character->id);
+                }
+            });
+        } elseif ($viewMode === 'paternal') {
+            $collectAncestors($selected, 'father');
+            $collectDescendants($selectedId);
+        } elseif ($viewMode === 'maternal') {
+            $collectAncestors($selected, 'mother');
+            $collectDescendants($selectedId);
+        }
+
+        $ids = $ids
+            ->filter(fn ($id) => (int) $id > 0 && $byId->has((int) $id))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($ids->isEmpty()) {
+            return $ids;
+        }
+
+        $characters->each(function (Character $character) use ($ids) {
+            if (!$ids->contains((int) $character->id)) {
+                return;
+            }
+
+            foreach ([
+                (int) ($character->spouse_id ?? 0),
+                (int) ($character->father_id ?? 0),
+                (int) ($character->mother_id ?? 0),
+            ] as $relatedId) {
+                if ($relatedId > 0) {
+                    $ids->push($relatedId);
+                }
+            }
+        });
+
+        return $ids->unique()->values();
     }
 }

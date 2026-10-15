@@ -40,7 +40,7 @@ class TrashController extends Controller
 
         UserLog::logAction((int) $request->user()->id, 'trash_restore', 'manage.trash.restore', $type);
 
-        return back()->with('success', 'Element restaure depuis la corbeille.');
+        return back()->with('success', 'Élément restauré depuis la corbeille.');
     }
 
     public function destroy(Request $request, string $type, int $id): RedirectResponse
@@ -48,7 +48,7 @@ class TrashController extends Controller
         $this->trashManager->forceDelete($type, $id, $request->user(), $this->currentWorldId());
         UserLog::logAction((int) $request->user()->id, 'trash_force_delete', 'manage.trash.destroy', $type);
 
-        return back()->with('success', 'Element supprime definitivement.');
+        return back()->with('success', 'Élément supprimé définitivement.');
     }
 
     public function empty(Request $request): RedirectResponse
@@ -56,6 +56,6 @@ class TrashController extends Controller
         $deleted = $this->trashManager->emptyTrash($request->user(), $this->currentWorldId());
         UserLog::logAction((int) $request->user()->id, 'trash_emptied', 'manage.trash.empty', (string) $deleted);
 
-        return back()->with('success', sprintf('Corbeille videe. %d element(s) supprime(s) definitivement.', $deleted));
+        return back()->with('success', sprintf('Corbeille vidée. %d élément(s) supprimé(s) définitivement.', $deleted));
     }
 }

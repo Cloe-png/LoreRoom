@@ -2,191 +2,153 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePlaceRequest;
+use App\Http\Requests\UpdatePlaceRequest;
+use App\Models\Chapter;
+use App\Models\Character;
+use App\Models\Chronicle;
+use App\Models\Faction;
 use App\Models\Place;
+use App\Models\Species;
+use App\Models\UserLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class PlaceController extends Controller
 {
-    private const PLACE_TYPES = [
-        'ville',
-        'village',
-        'capitale',
-        'quartier',
-        'region',
-        'province',
-        'ile',
-        'continent',
-        'montagne',
-        'foret',
-        'desert',
-        'ocean',
-        'ruines',
-        'donjon',
-        'temple',
-        'royaume',
-    ];
+    private const TYPES = ['ville','village','forteresse','foret','montagne','taverne','temple','ruines','region','royaume','continent','dimension','autre'];
+    private const STATUSES = ['prospere','en_ruine','disparu','cache','conteste','inconnu'];
 
-    public function index()
+    public function index(Request $request)
     {
-        $places = Place::with('world')->latest()->paginate(10);
-
-        return view('manage.places.index', compact('places'));
+        $this->authorize('viewAny', Place::class);
+        $places = Place::query()->when($request->filled('q'), fn ($q) => $q->where(fn ($s) => $s->where('name','like','%'.$request->q.'%')->orWhere('short_description','like','%'.$request->q.'%')))
+            ->when($request->filled('type'), fn ($q) => $q->where('type',$request->type))
+            ->when($request->filled('status'), fn ($q) => $q->where('status',$request->status))
+            ->with('parent')->orderBy('name')->get();
+        $tree = $this->tree($places);
+        return view('manage.places.index', ['places'=>$places,'tree'=>$tree,'types'=>self::TYPES,'statuses'=>self::STATUSES]);
     }
 
     public function create()
     {
-        $defaultWorld = $this->currentWorld();
-
-        return view('manage.places.create', [
-            'defaultWorld' => $defaultWorld,
-            'placeTypeOptions' => self::PLACE_TYPES,
-        ]);
+        $this->authorize('create', Place::class);
+        return view('manage.places.create', $this->formData());
     }
 
-    public function store(Request $request)
+    public function store(StorePlaceRequest $request)
     {
-        $defaultWorldId = $this->requireCurrentWorldId();
-
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'type' => ['nullable', Rule::in(self::PLACE_TYPES)],
-            'region' => ['nullable', 'string', 'max:120'],
-            'summary' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'image', 'max:4096'],
-            'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
-            'gallery_captions' => ['nullable', 'array'],
-            'gallery_captions.*' => ['nullable', 'string', 'max:255'],
-        ]);
-        $data['world_id'] = $defaultWorldId;
-
-        if ($request->hasFile('image')) {
-            $data['image_path'] = $request->file('image')->store('places', 'public');
-        }
-
-        unset($data['gallery_images'], $data['gallery_captions']);
-
-        $place = Place::create($data);
-        $this->addPlaceGalleryImages($place, $request->file('gallery_images', []), $request->input('gallery_captions', []));
-
-        return redirect()->route('manage.places.index')->with('success', 'Lieu créé.');
+        $worldId = $this->requireCurrentWorldId();
+        $data = $this->validatedData($request->validated());
+        $data['world_id'] = $worldId;
+        if ($request->hasFile('image')) $data['image_path'] = $request->file('image')->store('places', 'public');
+        $quickOnly = !$request->boolean('complete');
+        $place = DB::transaction(function () use ($data, $request) {
+            $place = Place::create($data);
+            $this->syncRelations($place, $request);
+            return $place;
+        });
+        UserLog::logAction((int)$request->user()->id, 'lieu_cree', 'manage.places.store', (string)$place->id);
+        return $quickOnly
+            ? redirect()->route('manage.places.index')->with('success', 'Lieu créé.')
+            : redirect()->route('manage.places.edit', $place)->with('success', 'Lieu créé. Complétez sa fiche.');
     }
 
     public function show(Place $place)
     {
         $this->abortIfOutsideCurrentWorld((int) $place->world_id);
-        $place->load([
-            'world',
-            'galleryImages',
-            'eventChronicles' => fn ($q) => $q->latest()->take(8),
-            'birthCharacters' => fn ($q) => $q->orderBy('name')->take(12),
-            'residentCharacters' => fn ($q) => $q->orderBy('name')->take(12),
-        ]);
-
-        return view('manage.places.show', [
-            'place' => $place,
-            'eventChroniclesCount' => $place->eventChronicles()->count(),
-            'birthCharactersCount' => $place->birthCharacters()->count(),
-            'residentCharactersCount' => $place->residentCharacters()->count(),
-        ]);
+        $this->authorize('view', $place);
+        $place->load(['parent','children','connectedPlaces','connectedFromPlaces','leaders','factions','species','characters','chronicles','chapters','pointsOfInterest','galleryImages','eventChronicles','birthCharacters','residentCharacters']);
+        $place->setRelation('connectedPlaces', $place->connectedPlaces->merge($place->connectedFromPlaces)->unique('id')->values());
+        $ancestors = collect(); $parent = $place->parent; $seen = [];
+        while ($parent && !isset($seen[$parent->id])) { $ancestors->prepend($parent); $seen[$parent->id] = true; $parent = $parent->parent; }
+        return view('manage.places.show', compact('place','ancestors'));
     }
 
     public function edit(Place $place)
     {
         $this->abortIfOutsideCurrentWorld((int) $place->world_id);
-        $defaultWorld = $this->currentWorld();
-
-        return view('manage.places.edit', [
-            'place' => $place,
-            'defaultWorld' => $defaultWorld,
-            'placeTypeOptions' => self::PLACE_TYPES,
-        ]);
+        $this->authorize('update', $place);
+        $place->load(['connectedPlaces','connectedFromPlaces','leaders','factions','species','characters','chronicles','chapters','pointsOfInterest','galleryImages']);
+        $place->setRelation('connectedPlaces', $place->connectedPlaces->merge($place->connectedFromPlaces)->unique('id')->values());
+        return view('manage.places.edit', array_merge($this->formData($place), ['place'=>$place]));
     }
 
-    public function update(Request $request, Place $place)
+    public function update(UpdatePlaceRequest $request, Place $place)
     {
         $this->abortIfOutsideCurrentWorld((int) $place->world_id);
-        $defaultWorldId = $this->requireCurrentWorldId();
-
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
-            'type' => ['nullable', Rule::in(self::PLACE_TYPES)],
-            'region' => ['nullable', 'string', 'max:120'],
-            'summary' => ['nullable', 'string', 'max:2000'],
-            'image' => ['nullable', 'image', 'max:4096'],
-            'gallery_images' => ['nullable', 'array'],
-            'gallery_images.*' => ['nullable', 'image', 'max:4096'],
-            'gallery_captions' => ['nullable', 'array'],
-            'gallery_captions.*' => ['nullable', 'string', 'max:255'],
-            'remove_gallery_ids' => ['nullable', 'array'],
-            'remove_gallery_ids.*' => ['nullable', 'integer'],
-        ]);
-        $data['world_id'] = $defaultWorldId;
-
+        $data = $this->validatedData($request->validated());
         if ($request->hasFile('image')) {
-            if ($place->image_path) {
-                Storage::disk('public')->delete($place->image_path);
-            }
+            if ($place->image_path) Storage::disk('public')->delete($place->image_path);
             $data['image_path'] = $request->file('image')->store('places', 'public');
         }
-
-        $removeGalleryIds = collect($data['remove_gallery_ids'] ?? [])->map(fn ($id) => (int) $id)->filter()->unique()->values()->all();
-        unset($data['gallery_images'], $data['gallery_captions'], $data['remove_gallery_ids']);
-
-        $place->update($data);
-        $this->removePlaceGalleryImages($place, $removeGalleryIds);
-        $this->addPlaceGalleryImages($place, $request->file('gallery_images', []), $request->input('gallery_captions', []));
-
-        return redirect()->route('manage.places.index')->with('success', 'Lieu mis à jour.');
+        DB::transaction(function () use ($place, $data, $request) { $place->update($data); $this->syncRelations($place, $request); });
+        UserLog::logAction((int)$request->user()->id, 'lieu_modifie', 'manage.places.update', (string)$place->id);
+        return redirect()->route('manage.places.show', $place)->with('success', 'Lieu mis à jour.');
     }
 
-    public function destroy(Place $place)
+    public function destroy(Request $request, Place $place)
     {
         $this->abortIfOutsideCurrentWorld((int) $place->world_id);
-
-        $place->delete();
-
+        $this->authorize('delete', $place);
+        DB::transaction(function () use ($place) { $place->children()->update(['parent_id'=>$place->parent_id]); $place->delete(); });
+        UserLog::logAction((int)$request->user()->id, 'lieu_supprime', 'manage.places.destroy', (string)$place->id);
         return redirect()->route('manage.places.index')->with('success', 'Lieu supprimé.');
     }
 
-    private function removePlaceGalleryImages(Place $place, array $ids): void
+    public function duplicate(Place $place)
     {
-        if (empty($ids)) {
-            return;
-        }
-
-        $images = $place->galleryImages()->whereIn('id', $ids)->get();
-        foreach ($images as $image) {
-            if ($image->image_path) {
-                Storage::disk('public')->delete($image->image_path);
-            }
-            $image->delete();
-        }
+        $this->authorize('view', $place);
+        $copy = $place->replicate(['name','created_at','updated_at','deleted_at']);
+        $copy->name = $place->name.' (copie)'; $copy->parent_id = $place->parent_id; $copy->save();
+        return redirect()->route('manage.places.edit', $copy)->with('success', 'Copie créée.');
     }
 
-    private function addPlaceGalleryImages(Place $place, array $uploadedFiles, array $captions): void
+    private function formData(?Place $place = null): array
     {
-        if (empty($uploadedFiles)) {
-            return;
+        $worldId = $this->requireCurrentWorldId();
+        return [
+            'defaultWorld'=>$this->currentWorld(), 'placeTypeOptions'=>self::TYPES, 'statusOptions'=>self::STATUSES,
+            'parentOptions'=>Place::where('world_id',$worldId)->when($place,fn($q)=>$q->where('id','!=',$place->id))->orderBy('name')->get(['id','name','parent_id']),
+            'characters'=>Character::where('world_id',$worldId)->orderBy('name')->get(['id','name','first_name','last_name']),
+            'factions'=>Faction::where('world_id',$worldId)->orderBy('name')->get(['id','name']),
+            'speciesOptions'=>Species::where('world_id',$worldId)->orderBy('name')->get(['id','name']),
+            'chronicles'=>Chronicle::where('world_id',$worldId)->orderBy('title')->get(['id','title']),
+            'chapters'=>Chapter::where('world_id',$worldId)->orderBy('title')->get(['id','title']),
+        ];
+    }
+
+    private function validatedData(array $data): array
+    {
+        unset($data['image'], $data['connected_places'], $data['leaders'], $data['factions'], $data['species'], $data['characters'], $data['chronicles'], $data['chapters'], $data['travel_notes'], $data['leader_titles'], $data['points']);
+        foreach (['description','short_description','economy','dangers','history','private_notes'] as $field) if (isset($data[$field])) $data[$field] = trim(strip_tags($data[$field]));
+        foreach (['atmosphere','alt_names','languages'] as $field) if (isset($data[$field])) $data[$field] = array_values(array_filter(array_map('trim',$data[$field]), fn($v)=>$v!==''));
+        return $data;
+    }
+
+    private function syncRelations(Place $place, Request $request): void
+    {
+        $idList = fn($key) => array_values(array_unique(array_map('intval', (array)$request->input($key, []))));
+        $connected = collect($idList('connected_places'))->reject(fn($id)=>(int)$place->id===$id)->all();
+        $place->connectedPlaces()->detach();
+        $place->connectedFromPlaces()->detach();
+        $travelPivots = collect($connected)->mapWithKeys(fn($id,$i)=>[$id=>['travel_note'=>$request->input('travel_notes.'.$id) ?? $request->input('travel_notes.'.$i) ?? $request->input('travel_notes.0')]]);
+        $place->connectedPlaces()->sync($travelPivots);
+        foreach ($travelPivots as $id => $pivot) {
+            Place::whereKey($id)->first()->connectedPlaces()->syncWithoutDetaching([$place->id => $pivot]);
         }
+        $place->leaders()->sync(collect($idList('leaders'))->mapWithKeys(fn($id)=>[$id=>['title'=>$request->input('leader_titles.'.$id)]]));
+        foreach (['factions','species','characters','chronicles','chapters'] as $relation) $place->{$relation}()->sync($idList($relation));
+        $place->pointsOfInterest()->delete();
+        foreach ((array)$request->input('points', []) as $position=>$point) if (trim($point['name'] ?? '') !== '') $place->pointsOfInterest()->create(['name'=>trim($point['name']),'description'=>trim(strip_tags($point['description'] ?? '')),'position'=>$position]);
+    }
 
-        $startOrder = (int) ($place->galleryImages()->max('sort_order') ?? 0);
-
-        foreach ($uploadedFiles as $index => $file) {
-            if (!$file) {
-                continue;
-            }
-
-            $path = $file->store('places/gallery', 'public');
-            $startOrder++;
-
-            $place->galleryImages()->create([
-                'image_path' => $path,
-                'caption' => trim((string) ($captions[$index] ?? '')) ?: null,
-                'sort_order' => $startOrder,
-            ]);
-        }
+    private function tree($places): array
+    {
+        $ids = $places->pluck('id')->map(fn ($id)=>(int)$id)->flip();
+        $byParent = $places->groupBy(fn($place)=>(int)($place->parent_id && $ids->has((int)$place->parent_id) ? $place->parent_id : 0));
+        $walk = function ($parentId,$depth) use (&$walk,$byParent) { $rows=[]; foreach($byParent->get((int)$parentId,collect()) as $item) { $rows[]=['place'=>$item,'depth'=>$depth]; $rows=array_merge($rows,$walk($item->id,$depth+1)); } return $rows; };
+        return $walk(0,0);
     }
 }

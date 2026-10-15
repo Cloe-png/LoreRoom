@@ -62,5 +62,10 @@ class Chronicle extends Model
     {
         return $this->belongsTo(Place::class, 'event_place_id');
     }
+
+    public function places()
+    {
+        return $this->belongsToMany(Place::class, 'chronicle_place')->withTimestamps()->orderBy('name');
+    }
 }
 

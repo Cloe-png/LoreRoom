@@ -96,4 +96,9 @@ class Faction extends Model
     {
         return $this->hasMany(Diploma::class)->orderBy('name');
     }
+
+    public function places()
+    {
+        return $this->belongsToMany(Place::class, 'place_faction')->withTimestamps()->orderBy('name');
+    }
 }

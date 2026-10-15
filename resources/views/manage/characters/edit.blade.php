@@ -52,10 +52,11 @@
 
             <div class="field">
                 <label>Image (portrait principal)</label>
-                <input type="file" name="image" accept="image/*">
+                <input type="file" name="image" accept=".png,.jpg,.jpeg">
                 @if($character->image_path)
                     <p class="muted">Image actuelle: {{ $character->image_path }}</p>
                 @endif
+                <p class="muted">PNG ou JPG. Tu peux aussi laisser cette zone vide et décrire le personnage plus bas.</p>
             </div>
 
             <div class="field">
@@ -97,13 +98,66 @@
                 <div class="field"><label>Date de mort</label><input type="date" name="death_date" value="{{ old('death_date', optional($character->death_date)->format('Y-m-d')) }}"></div>
             </div>
 
-            <details class="accordion">
-                <summary>Famille</summary>
-                <div class="accordion-body">
-                    <div class="field">
-                        <label>Famille (pivot)</label>
-                        <input type="text" name="family_name" value="{{ old('family_name', $character->family_name) }}" placeholder="Ex: Stark">
+            <div class="grid-4">
+                <div class="field">
+                    <label>Âge</label>
+                    <input type="number" min="0" max="999" name="age" value="{{ old('age', $character->age) }}" placeholder="Optionnel">
+                </div>
+                <div class="field">
+                    <label>Orientation sexuelle</label>
+                    <select name="sexual_orientation">
+                        <option value="">-</option>
+                        @foreach($sexualOrientationOptions as $orientation)
+                            <option value="{{ $orientation }}" {{ old('sexual_orientation', $character->sexual_orientation) === $orientation ? 'selected' : '' }}>{{ $orientation }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                
+                <div class="field">
+                    <label>Famille / clan</label>
+                    <input type="text" name="family_name" value="{{ old('family_name', $character->family_name) }}" placeholder="Ex: Stark">
+                </div>
+            </div>
+
+            
+
+            <div class="stack" style="margin-bottom:12px;">
+                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power', $character->has_power) ? 'checked' : '' }}> Pouvoir actif</label>
+                <label><input type="checkbox" id="has_private_secret" name="secrets_is_private" value="1" {{ old('secrets_is_private', $character->secrets_is_private ?? true) ? 'checked' : '' }}> Secret privé</label>
+            </div>
+
+            <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
+                <div class="field">
+                    <label>Pouvoirs du personnage</label>
+                    <div id="powers-list">
+                        @foreach(($powerRows ?? []) as $i => $row)
+                            <div class="panel" data-power-row style="margin-top:10px; padding:10px;">
+                                <div class="grid-4">
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Nom du pouvoir</label>
+                                        <input type="text" name="powers[{{ $i }}][name]" value="{{ $row['name'] ?? '' }}">
+                                    </div>
+                                    <div class="field" style="grid-column: span 2;">
+                                        <label>Description</label>
+                                        <input type="text" name="powers[{{ $i }}][description]" value="{{ $row['description'] ?? '' }}">
+                                    </div>
+                                </div>
+                                <button class="btn danger" type="button" data-remove-power>Retirer</button>
+                            </div>
+                        @endforeach
                     </div>
+                    <div class="stack" style="margin-top:8px;"><button class="btn secondary" type="button" id="add-power-btn">Ajouter un pouvoir</button></div>
+                </div>
+            </div>
+
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;"><label>Objectif court terme</label><textarea name="short_term_goal">{{ old('short_term_goal', $character->short_term_goal) }}</textarea></div>
+                <div class="field" style="grid-column: span 2;"><label>Objectif long terme</label><textarea name="long_term_goal">{{ old('long_term_goal', $character->long_term_goal) }}</textarea></div>
+            </div>
+            <div class="field" id="secret-panel" style="display:none;"><label>Secret privé</label><textarea name="secrets">{{ old('secrets', $character->secrets) }}</textarea></div>
+<details class="accordion">
+                <summary>Famille biologique</summary>
+                <div class="accordion-body">
             <div class="grid-4">
                 <div class="field">
                     <label>Père</label>
@@ -248,25 +302,6 @@
 
                 </div>
             </details>
-
-            <div class="stack" style="margin-bottom:12px;">
-                <label><input type="checkbox" id="has_power" name="has_power" value="1" {{ old('has_power', $character->has_power) ? 'checked' : '' }}> Pouvoir actif</label>
-                <label><input type="checkbox" id="has_private_secret" name="secrets_is_private" value="1" {{ old('secrets_is_private', $character->secrets_is_private ?? true) ? 'checked' : '' }}> Secret privé</label>
-            </div>
-
-            <div id="power-panel" class="panel" style="margin-top:0; margin-bottom:12px; padding:10px; display:none;">
-                <div class="grid-4">
-                    <div class="field"><label>Niveau de puissance (1-10)</label><input type="number" min="1" max="10" name="power_level" value="{{ old('power_level', $character->power_level) }}"></div>
-                    <div class="field" style="grid-column: span 3;"><label>Pouvoir (si oui, details)</label><textarea name="power_description">{{ old('power_description', $character->power_description) }}</textarea></div>
-                </div>
-            </div>
-
-            <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Objectif court terme</label><textarea name="short_term_goal">{{ old('short_term_goal', $character->short_term_goal) }}</textarea></div>
-                <div class="field" style="grid-column: span 2;"><label>Objectif long terme</label><textarea name="long_term_goal">{{ old('long_term_goal', $character->long_term_goal) }}</textarea></div>
-            </div>
-            <div class="field" id="secret-panel" style="display:none;"><label>Secret privé</label><textarea name="secrets">{{ old('secrets', $character->secrets) }}</textarea></div>
-
             <details class="accordion">
                 <summary>Apparence</summary>
                 <div class="accordion-body">
@@ -287,18 +322,48 @@
                         <p class="muted">Liste alimentée avec les races définies dans le Lore.</p>
                     </div>
                     <div class="field"><label>Cicatrices / tatouages / marques</label><textarea name="marks">{{ old('marks', $character->marks) }}</textarea></div>
-                    <div class="field"><label>Manière de s'habiller</label><textarea name="clothing_style">{{ old('clothing_style', $character->clothing_style) }}</textarea></div>
+                    <div class="field"><label>Description de l'apparence</label><textarea name="appearance_description" placeholder="Décris le personnage si tu ne veux pas ajouter d'image.">{{ old('appearance_description', $character->appearance_description) }}</textarea></div>
                 </div>
             </details>
 
             <details class="accordion">
                 <summary>Psychologie</summary>
                 <div class="accordion-body">
+                    <div class="field">
+                        <label>Traumas</label>
+                        <div id="traumas-list">
+                            @foreach(($traumaRows ?? []) as $i => $row)
+                                <div class="panel" data-trauma-row style="margin-top:10px; padding:10px;">
+                                    <div class="field">
+                                        <input
+                                            type="text"
+                                            name="traumas[{{ $i }}][value]"
+                                            value="{{ $row['value'] ?? '' }}"
+                                            data-field="value"
+                                            list="trauma-category-options"
+                                            placeholder="Ex: abandon, guerre, harcèlement"
+                                        >
+                                    </div>
+                                    <button class="btn danger" type="button" data-remove-trauma>Retirer</button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div class="stack" style="margin-top:8px;"><button class="btn secondary" type="button" id="add-trauma-btn">Ajouter un trauma</button></div>
+                        <p class="muted">Tu peux choisir une suggestion ou écrire ta propre catégorie, et en ajouter plusieurs.</p>
+                    </div>
+                    <datalist id="trauma-category-options">
+                        @foreach($traumaCategoryOptions as $traumaCategoryOption)
+                            <option value="{{ $traumaCategoryOption }}"></option>
+                        @endforeach
+                    </datalist>
+                    <div class="field"><label>Personnalité</label><textarea name="psychology_notes" placeholder="Tempérament, réactions, traits marquants, etc.">{{ old('psychology_notes', $character->psychology_notes) }}</textarea></div>
                     <div class="field"><label>Qualités</label><textarea name="qualities">{{ old('qualities', $character->qualities) }}</textarea></div>
                     <div class="field"><label>Défauts</label><textarea name="flaws">{{ old('flaws', $character->flaws) }}</textarea></div>
+                    <div class="field"><label>Aime</label><textarea name="likes" placeholder="Nourriture, activités, lieux, etc.">{{ old('likes', $character->likes) }}</textarea></div>
+                    <div class="field"><label>N'aime pas</label><textarea name="dislikes" placeholder="Nourriture, activités, lieux, etc.">{{ old('dislikes', $character->dislikes) }}</textarea></div>
                     <div class="field">
                         <label>Voix (audio téléversé)</label>
-                        <input type="file" name="voice_audio" accept="audio/*">
+                        <input type="file" name="voice_audio" accept=".mp3">
                         @if($character->voice_audio_path)
                             <audio controls preload="none" style="margin-top:8px; width:100%;">
                                 <source src="{{ route('media.show', ['path' => $character->voice_audio_path]) }}">
@@ -309,7 +374,6 @@
                         <label>Lien YouTube (à la place de l'audio)</label>
                         <input type="url" name="voice_youtube_url" value="{{ old('voice_youtube_url', $character->voice_youtube_url) }}" placeholder="https://www.youtube.com/watch?v=...">
                     </div>
-                    <div class="field"><label>Résumé général</label><textarea name="summary">{{ old('summary', $character->summary) }}</textarea></div>
                 </div>
             </details>
 
@@ -516,13 +580,64 @@
             <div id="gallery-list">
                 <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
                     <div class="grid-4">
-                        <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                        <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".png,.jpg,.jpeg"></div>
                         <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
                     </div>
                     <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
                 </div>
             </div>
             <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-gallery-btn">Ajouter une image</button></div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary>Tenues vestimentaires</summary>
+                <div class="accordion-body">
+            @if(!empty($existingOutfits) && $existingOutfits->count() > 0)
+                <div class="panel" style="margin-top:0;">
+                    <strong>Tenues enregistrées</strong>
+                    <div class="grid-4" style="margin-top:8px;">
+                        @foreach($existingOutfits as $outfit)
+                            <div class="card" data-existing-outfit-card data-outfit-id="{{ $outfit->id }}" style="padding:8px;">
+                                <img src="{{ route('media.show', ['path' => $outfit->image_path]) }}" alt="tenue" style="width:100%; border-radius:6px; margin-bottom:6px;">
+                                <div class="muted">{{ $outfit->mode ?: 'Sans mode' }}</div>
+                                <div>{{ $outfit->caption ?: 'Sans description' }}</div>
+                                <button class="btn danger" type="button" data-remove-existing-outfit data-outfit-id="{{ $outfit->id }}">Retirer</button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+            <div id="remove-outfit-ids"></div>
+
+            <p class="muted" style="margin-top:0;">Ajoute une ligne par tenue: choisis un mode vestimentaire, puis uploade l'image correspondante.</p>
+            <div id="outfits-list">
+                @foreach(($outfitRows ?? []) as $i => $row)
+                    <div class="panel" data-outfit-row style="margin-top:10px; padding:10px;">
+                        <div class="grid-4">
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Mode vestimentaire</label>
+                                <select name="outfits[{{ $i }}][mode]">
+                                    <option value="">-</option>
+                                    @foreach($clothingStyleModeOptions as $modeOption)
+                                        <option value="{{ $modeOption }}" {{ (string)($row['mode'] ?? '') === (string)$modeOption ? 'selected' : '' }}>{{ $modeOption }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="field" style="grid-column: span 2;">
+                                <label>Image</label>
+                                <input type="file" name="outfits[{{ $i }}][image]" accept=".png,.jpg,.jpeg">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label>Description de la tenue</label>
+                            <input type="text" name="outfits[{{ $i }}][caption]" value="{{ $row['caption'] ?? '' }}">
+                        </div>
+                        <button class="btn danger" type="button" data-remove-outfit>Retirer</button>
+                    </div>
+                @endforeach
+            </div>
+            <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-outfit-btn">Ajouter une tenue</button></div>
                 </div>
             </details>
 
@@ -555,6 +670,11 @@
             <div class="stack" style="margin-bottom:10px;"><button class="btn secondary" type="button" id="add-relation-btn">Ajouter une relation</button></div>
                 </div>
             </details>
+
+            <div class="field" style="margin-top:16px;">
+                <label>Zone libre</label>
+                <textarea name="summary" rows="6">{{ old('summary', $character->summary) }}</textarea>
+            </div>
 
             <div class="stack">
                 <button class="btn" type="submit">Enregistrer</button>
@@ -702,10 +822,57 @@
     <template id="gallery-row-template">
         <div class="panel" data-gallery-row style="margin-top:10px; padding:10px;">
             <div class="grid-4">
-                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept="image/*"></div>
+                <div class="field" style="grid-column: span 2;"><label>Image</label><input type="file" name="gallery_images[]" accept=".png,.jpg,.jpeg"></div>
                 <div class="field" style="grid-column: span 2;"><label>Légende</label><input type="text" name="gallery_captions[]" value=""></div>
             </div>
             <button class="btn danger" type="button" data-remove-gallery>Retirer</button>
+        </div>
+    </template>
+    <template id="outfit-row-template">
+        <div class="panel" data-outfit-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Mode vestimentaire</label>
+                    <select data-field="mode">
+                        <option value="">-</option>
+                        @foreach($clothingStyleModeOptions as $modeOption)
+                            <option value="{{ $modeOption }}">{{ $modeOption }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Image</label>
+                    <input type="file" data-field="image" accept=".png,.jpg,.jpeg">
+                </div>
+            </div>
+            <div class="field">
+                <label>Description de la tenue</label>
+                <input type="text" data-field="caption" value="">
+            </div>
+            <button class="btn danger" type="button" data-remove-outfit>Retirer</button>
+        </div>
+    </template>
+    <template id="power-row-template">
+        <div class="panel" data-power-row style="margin-top:10px; padding:10px;">
+            <div class="grid-4">
+                <div class="field" style="grid-column: span 2;">
+                    <label>Nom du pouvoir</label>
+                    <input type="text" data-field="name">
+                </div>
+                <div class="field" style="grid-column: span 2;">
+                    <label>Description</label>
+                    <input type="text" data-field="description">
+                </div>
+            </div>
+            <button class="btn danger" type="button" data-remove-power>Retirer</button>
+        </div>
+    </template>
+    <template id="trauma-row-template">
+        <div class="panel" data-trauma-row style="margin-top:10px; padding:10px;">
+            <div class="field">
+                <input type="text" data-field="value" list="trauma-category-options" placeholder="Ex: abandon, guerre, harcèlement">
+            </div>
+            <button class="btn danger" type="button" data-remove-trauma>Retirer</button>
         </div>
     </template>
     <template id="relation-row-template">
@@ -762,6 +929,9 @@
             bindCollection('jobs-list', 'add-job-btn', 'job-row-template', 'data-job-row', 'data-remove-job', 'jobs');
             bindCollection('factions-list', 'add-faction-btn', 'faction-row-template', 'data-faction-row', 'data-remove-faction', 'faction_memberships');
             bindCollection('educations-list', 'add-education-btn', 'education-row-template', 'data-education-row', 'data-remove-education', 'educations');
+            bindCollection('outfits-list', 'add-outfit-btn', 'outfit-row-template', 'data-outfit-row', 'data-remove-outfit', 'outfits');
+            bindCollection('powers-list', 'add-power-btn', 'power-row-template', 'data-power-row', 'data-remove-power', 'powers');
+            bindCollection('traumas-list', 'add-trauma-btn', 'trauma-row-template', 'data-trauma-row', 'data-remove-trauma', 'traumas');
 
             const factionRoleMap = @json($factionRoleMap ?? []);
 
@@ -829,6 +999,24 @@
                 });
                 bindGalleryRemove();
             }
+
+            const removeOutfitIds = document.getElementById('remove-outfit-ids');
+            document.querySelectorAll('[data-remove-existing-outfit]').forEach((btn) => {
+                btn.onclick = function () {
+                    const id = btn.dataset.outfitId;
+                    const card = btn.closest('[data-existing-outfit-card]');
+                    if (removeOutfitIds && id) {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'remove_outfit_ids[]';
+                        hidden.value = id;
+                        removeOutfitIds.appendChild(hidden);
+                    }
+                    if (card) {
+                        card.remove();
+                    }
+                };
+            });
 
             const hasChildren = document.getElementById('has_children');
             const childrenPanel = document.getElementById('children-panel');

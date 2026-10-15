@@ -37,23 +37,23 @@ class UserLog extends Model
             case 'connexion':
                 return 'Connexion';
             case 'deconnexion':
-                return 'Deconnexion';
+                return 'Déconnexion';
             case 'page_consulte':
                 return 'Consultation de page';
             case 'failed_login':
-                return 'Echec de connexion';
+                return 'Échec de connexion';
             case 'account_locked':
-                return 'Compte bloque';
+                return 'Compte bloqué';
             case 'trash_restore':
-                return 'Restauration corbeille';
+                return 'Restauration de la corbeille';
             case 'trash_force_delete':
-                return 'Suppression definitive';
+                return 'Suppression définitive';
             case 'trash_emptied':
-                return 'Corbeille videe';
+                return 'Corbeille vidée';
             case 'admin_password_reset':
-                return 'Reinitialisation admin du mot de passe';
+                return 'Réinitialisation admin du mot de passe';
             case 'password_changed':
-                return 'Mot de passe modifie';
+                return 'Mot de passe modifié';
             default:
                 return ucfirst(str_replace('_', ' ', (string) $this->action_user));
         }

@@ -45,6 +45,7 @@ class Character extends Model
         'gender',
         'birth_date',
         'death_date',
+        'age',
         'status',
         'has_children',
         'has_brother_sister',
@@ -71,9 +72,15 @@ class Character extends Model
         'posture',
         'marks',
         'clothing_style',
+        'clothing_style_mode',
+        'sexual_orientation',
+        'appearance_description',
+        'likes',
+        'dislikes',
         'qualities',
         'flaws',
         'psychology_notes',
+        'traumas',
         'voice_tics',
         'voice_audio_path',
         'voice_youtube_url',
@@ -83,10 +90,12 @@ class Character extends Model
     protected $casts = [
         'birth_date' => 'date',
         'death_date' => 'date',
+        'age' => 'integer',
         'has_children' => 'boolean',
         'has_brother_sister' => 'boolean',
         'has_power' => 'boolean',
         'secrets_is_private' => 'boolean',
+        'traumas' => 'array',
     ];
 
     public function world()
@@ -124,6 +133,16 @@ class Character extends Model
     public function residencePlace()
     {
         return $this->belongsTo(Place::class, 'residence_place_id');
+    }
+
+    public function places()
+    {
+        return $this->belongsToMany(Place::class, 'place_character')->withTimestamps()->orderBy('name');
+    }
+
+    public function ledPlaces()
+    {
+        return $this->belongsToMany(Place::class, 'place_leaders')->withPivot('title')->withTimestamps()->orderBy('name');
     }
 
     public function childrenFromFather()
@@ -196,6 +215,16 @@ class Character extends Model
         return $this->hasMany(CharacterGalleryImage::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function outfitImages()
+    {
+        return $this->hasMany(CharacterOutfitImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function powers()
+    {
+        return $this->hasMany(CharacterPower::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function primaryGalleryImage()
     {
         return $this->hasOne(CharacterGalleryImage::class)->orderBy('sort_order')->orderBy('id');
@@ -204,8 +233,18 @@ class Character extends Model
     public function chronicles()
     {
         return $this->belongsToMany(Chronicle::class, 'chronicle_character', 'character_id', 'chronicle_id')
+            ->select('chronicles.*')
             ->withTimestamps()
             ->orderBy('event_date')
+            ->orderBy('id');
+    }
+
+    public function chapters()
+    {
+        return $this->belongsToMany(Chapter::class, 'chapter_character', 'character_id', 'chapter_id')
+            ->select('chapters.*')
+            ->withTimestamps()
+            ->orderBy('chapter_date')
             ->orderBy('id');
     }
 
@@ -243,6 +282,10 @@ class Character extends Model
 
     public function getCalculatedAgeAttribute()
     {
+        if ($this->age !== null) {
+            return (int) $this->age;
+        }
+
         if (!$this->birth_date) {
             return null;
         }

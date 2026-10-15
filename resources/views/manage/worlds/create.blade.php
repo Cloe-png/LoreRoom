@@ -1,23 +1,23 @@
 @extends('manage.layout')
 
-@section('title', 'Gestion - Nouveau monde')
-@section('header', 'Nouveau monde')
+@section('title', __('app.worlds.page_title'))
+@section('header', __('app.worlds.new_world'))
 
 @section('content')
     <section class="panel">
         <form method="POST" action="{{ route('manage.worlds.store') }}">
             @csrf
             <div class="field">
-                <label>Nom</label>
+                <label>{{ __('app.worlds.name') }}</label>
                 <input type="text" name="name" value="{{ old('name') }}" required>
             </div>
             <div class="field">
-                <label>Description du monde</label>
-                <textarea name="summary" rows="6" placeholder="Histoire, ambiance, règles, culture...">{{ old('summary') }}</textarea>
+                <label>{{ __('app.worlds.description') }}</label>
+                <textarea name="summary" rows="6" placeholder="{{ __('app.worlds.summary_placeholder') }}">{{ old('summary') }}</textarea>
             </div>
             <div class="stack">
-                <button class="btn" type="submit">Créer</button>
-                <a class="btn secondary" href="{{ route('manage.worlds.index') }}">Annuler</a>
+                <button class="btn" type="submit">{{ __('app.worlds.create') }}</button>
+                <a class="btn secondary" href="{{ route('manage.worlds.index') }}">{{ __('app.worlds.cancel') }}</a>
             </div>
         </form>
     </section>

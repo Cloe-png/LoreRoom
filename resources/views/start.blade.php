@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>LoreRoom - Accueil</title>
+        <title>{{ __('app.public.start_page_title') }}</title>
         <style>
             :root {
                 --bg-abyss: #121018;
@@ -231,7 +231,7 @@
                 border: 1px solid rgba(199, 164, 106, 0.4);
                 box-shadow: 0 30px 90px rgba(0, 0, 0, 0.65);
                 border-radius: 10px;
-                padding: 44px 48px 40px;
+                padding: 36px 28px 32px;
                 position: relative;
                 overflow: hidden;
                 backdrop-filter: blur(16px);
@@ -248,61 +248,24 @@
             }
 
             .logo {
-                letter-spacing: 0.35em;
-                text-transform: uppercase;
-                font-size: 0.8rem;
-                color: var(--mist);
+                display: flex;
+                justify-content: center;
+                margin-bottom: 18px;
             }
 
-            .title-ornament {
-                position: relative;
-                margin: 8px auto 10px;
-                width: min(260px, 70%);
-                height: 32px;
-            }
-
-            .title-ornament::before,
-            .title-ornament::after {
-                content: "";
-                position: absolute;
-                top: 50%;
-                width: 38%;
-                height: 1px;
-                background: linear-gradient(90deg, transparent, rgba(199, 164, 106, 0.8), transparent);
-            }
-
-            .title-ornament::before { left: 0; }
-            .title-ornament::after { right: 0; }
-
-            .title-ornament span {
-                position: absolute;
-                left: 50%;
-                top: 50%;
-                transform: translate(-50%, -50%);
-                color: rgba(199, 164, 106, 0.85);
-                font-size: 1.2rem;
-                letter-spacing: 0.4em;
-            }
-
-            h1 {
-                font-family: "Cinzel", "Trajan Pro", "Times New Roman", serif;
-                font-size: clamp(2.2rem, 6vw, 3.6rem);
-                margin: 12px 0 6px;
-                text-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-            }
-
-            .subtitle {
-                color: var(--mist);
-                font-size: 1.1rem;
-                margin-bottom: 24px;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
+            .brand-logo {
+                height: clamp(180px, 30vw, 320px);
+                width: auto;
+                max-width: min(100%, 520px);
+                border-radius: 24px;
+                object-fit: contain;
+                box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
             }
 
             .menu {
                 display: grid;
                 gap: 10px;
-                margin: 18px auto 10px;
+                margin: 6px auto 10px;
                 width: min(320px, 90%);
             }
 
@@ -494,27 +457,25 @@
                 </div>
             </div>
         </div>
-        <div class="top-controls" aria-label="Audio">
+        <div class="top-controls" aria-label="{{ __('app.public.audio') }}">
             <button class="toggle-btn" id="soundToggle" type="button">
                 <span class="dot" aria-hidden="true"></span>
-                Son
+                {{ __('app.public.sound') }}
             </button>
             <button class="toggle-btn" id="musicToggle" type="button">
                 <span class="dot" aria-hidden="true"></span>
-                Musique
+                {{ __('app.public.music') }}
             </button>
         </div>
         <div class="wrap">
             <main class="panel">
-                <div class="logo">Grimoire d'Univers</div>
-                <h1>LoreRoom</h1>
-                <div class="title-ornament"><span>*</span></div>
-                <nav class="menu" aria-label="Menu principal">
-                    <a id="startBtn" href="{{ route('login') }}"><span>Entrer</span></a>
+                <div class="logo">@include('partials.brand-logo', ['size' => 320])</div>
+                <nav class="menu" aria-label="{{ __('app.public.main_menu') }}">
+                    <a id="startBtn" href="{{ route('login') }}"><span>{{ __('app.public.enter') }}</span></a>
                 </nav>
-                <div class="version">v0.1</div>
             </main>
         </div>
+        @include('partials.i18n')
         <script>
             const soundToggle = document.getElementById('soundToggle');
             const musicToggle = document.getElementById('musicToggle');
