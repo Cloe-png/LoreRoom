@@ -341,9 +341,11 @@ class ManageController extends Controller
         ];
 
         foreach ($typeConfigs as $config) {
-            $query = $config['class']::withTrashed()
-                ->with('world')
-                ->where(function ($builder) use ($since) {
+            $query = $config['class']::withTrashed();
+            if ($config['class'] !== World::class) {
+                $query->with('world');
+            }
+            $query->where(function ($builder) use ($since) {
                     $builder->where('created_at', '>=', $since)
                         ->orWhere('updated_at', '>=', $since)
                         ->orWhere('deleted_at', '>=', $since);
