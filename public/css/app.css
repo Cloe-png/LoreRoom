@@ -1,0 +1,91 @@
+/* Auth pages: shared paper journal styling */
+.auth-bg {
+    z-index: -1;
+    background-image:
+        radial-gradient(ellipse at center, transparent 25%, rgba(0, 0, 0, .6) 100%),
+        linear-gradient(rgba(27, 21, 17, .55), rgba(27, 21, 17, .55)),
+        url('/museum_background.jpg');
+    background-position: center;
+    background-size: cover;
+    filter: blur(4px) saturate(.8);
+    transform: scale(1.03);
+}
+
+.auth-page {
+    min-height: 100vh;
+    min-height: 100dvh;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.auth-card {
+    width: min(440px, 100%);
+    padding: 40px;
+    border: 1px solid #9a7f48;
+    border-radius: 3px;
+    outline: 1px solid #c7ac72;
+    outline-offset: -5px;
+    background: repeating-linear-gradient(0deg, rgba(90, 60, 30, .035) 0 1px, transparent 1px 3px), #f1e6cc;
+    box-shadow: 4px 6px 0 rgba(0, 0, 0, .35);
+}
+
+.auth-card--wide { width: min(480px, 100%); }
+.auth-brand, .auth-heading { color: #2b1d14; }
+.auth-subtitle, .auth-footer { color: #5a4532; }
+.auth-heading { margin-top: 19px; }
+.auth-card .field label, .auth-card .role-section legend {
+    font: 700 11px/1.4 'Cinzel', serif;
+    letter-spacing: .24em;
+    color: #5a4532;
+}
+
+.auth-card input:not([type=checkbox]), .auth-card select {
+    height: 46px;
+    padding: 8px 11px;
+    border: 1px solid #9a7f48;
+    border-radius: 2px;
+    background: rgba(255, 250, 236, .85);
+    color: #2b1d14;
+    font: 18px/1.3 'Cormorant Garamond', serif;
+}
+
+.auth-card input::-moz-placeholder { color: #5a4532; font-style: italic; }
+
+.auth-card input::placeholder { color: #5a4532; font-style: italic; }
+.auth-card input:focus-visible, .auth-card select:focus-visible,
+.auth-card button:focus-visible, .auth-card a:focus-visible {
+    outline: 2px solid #6b1e2a;
+    outline-offset: 3px;
+}
+
+.auth-card input:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px #fbf4df inset;
+    -webkit-text-fill-color: #2b1d14;
+    caret-color: #2b1d14;
+}
+
+.auth-card .password-wrap input { padding-right: 92px; }
+.auth-card .toggle-password { font: 700 10px 'Cinzel', serif; letter-spacing: .04em; }
+.auth-card .field-error { color: #6b1e2a; line-height: 1.3; }
+.auth-card .help, .auth-card .footer-help { color: #5a4532; font: italic 15px/1.35 'Cormorant Garamond', serif; }
+.auth-card .help { margin: 5px 0 0; }
+.auth-card .field input[aria-invalid=true], .auth-card select[aria-invalid=true] { border-color: #6b1e2a; }
+.auth-card .auth-message { color: #2b1d14; }
+.auth-card .remember input, .auth-card .role-card input {
+    width: 18px;
+    height: 18px;
+    border-radius: 1px;
+}
+.auth-card .role-section { margin: 8px 0 18px; }
+.auth-card .role-card { background: rgba(255, 250, 236, .45); }
+.auth-card .role-card:focus-within { outline: 2px solid #6b1e2a; outline-offset: 2px; }
+.auth-card .btn { min-height: 46px; border-radius: 2px; }
+.auth-card .btn.secondary { box-shadow: none; }
+.auth-card .or { font: italic 16px 'Cormorant Garamond', serif; }
+
+@media (max-width: 480px) {
+    .auth-card, .auth-card--wide { width: 100%; margin: 0; padding: 24px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .auth-card *, .auth-card *::before, .auth-card *::after { scroll-behavior: auto !important; transition: none !important; }
+}

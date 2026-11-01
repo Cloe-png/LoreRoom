@@ -1,240 +1,32 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ __('app.public.login_page_title') }}</title>
-    <style>
-        :root {
-            --ink: #2d2014;
-            --ink-soft: #6b5338;
-            --night-1: #101826;
-            --night-2: #22324e;
-            --danger-bg: #f8dddd;
-            --danger-border: #b45a5a;
-            --danger-text: #6a1f1f;
-            --ok-bg: #e4f1df;
-            --ok-border: #6f9464;
-            --ok-text: #2f5c23;
-        }
+@extends('layouts.auth')
 
-        * { box-sizing: border-box; }
+@section('title', __('app.public.login_page_title'))
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: "Garamond", "Georgia", serif;
-            color: var(--ink);
-            background:
-                radial-gradient(1000px 420px at 50% -12%, rgba(255, 231, 188, .34), transparent 72%),
-                linear-gradient(180deg, var(--night-2), var(--night-1));
-            display: grid;
-            place-items: center;
-            padding: 20px;
-        }
-
-        .bg {
-            position: fixed;
-            inset: 0;
-            background-image: url('{{ asset('museum_background.jpg') }}');
-            background-size: cover;
-            background-position: center;
-            opacity: .16;
-            filter: blur(4px) saturate(.88);
-            z-index: 0;
-        }
-
-        .shell {
-            width: min(560px, 96vw);
-            border-radius: 18px;
-            border: 1px solid rgba(212, 176, 117, .55);
-            background: linear-gradient(160deg, rgba(244, 233, 210, .96), rgba(233, 219, 192, .95));
-            box-shadow: 0 28px 96px rgba(0,0,0,.46);
-            overflow: hidden;
-            position: relative;
-            z-index: 1;
-            padding: 28px 24px;
-        }
-
-        .head {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 14px;
-            margin-bottom: 14px;
-        }
-
-        h1 {
-            margin: 0;
-            color: #3f2c16;
-            font-size: 1.86rem;
-            letter-spacing: .03em;
-            font-family: "Cinzel", "Times New Roman", serif;
-        }
-
-        .meta {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-        }
-
-        .brand-logo {
-            height: 54px;
-            width: auto;
-            max-width: 140px;
-            border-radius: 14px;
-            object-fit: contain;
-            box-shadow: 0 8px 20px rgba(63, 44, 22, .16);
-        }
-
-        .muted {
-            margin: 0 0 15px;
-            color: var(--ink-soft);
-            font-size: .95rem;
-        }
-
-        .alert {
-            border-radius: 10px;
-            padding: 10px 12px;
-            margin-bottom: 14px;
-            border: 1px solid var(--danger-border);
-            background: var(--danger-bg);
-            color: var(--danger-text);
-            font-size: .92rem;
-        }
-
-        .alert.ok {
-            border-color: var(--ok-border);
-            background: var(--ok-bg);
-            color: var(--ok-text);
-        }
-
-        .field { margin-bottom: 11px; }
-
-        .field label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 700;
-            font-size: .9rem;
-            color: #3a2a18;
-            letter-spacing: .03em;
-        }
-
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            border: 1px solid rgba(108,77,43,.38);
-            border-radius: 10px;
-            padding: 11px 12px;
-            background: #fffdf8;
-            font: inherit;
-            color: #2a1d12;
-        }
-
-        input:focus {
-            outline: 2px solid rgba(177,126,65,.44);
-            outline-offset: 1px;
-        }
-
-        .remember {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 12px 0 16px;
-            font-size: .92rem;
-            color: #4b3720;
-            font-weight: 600;
-            letter-spacing: .01em;
-        }
-
-        .remember input { width: auto; margin: 0; accent-color: #9a6a2f; }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            appearance: none;
-            border: 1px solid rgba(102,72,36,.52);
-            border-radius: 11px;
-            background: linear-gradient(180deg, #f2c678, #e5ae54);
-            color: #2d1f10;
-            padding: 10px 14px;
-            font-weight: 700;
-            letter-spacing: .03em;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .btn.secondary {
-            background: rgba(255,255,255,.58);
-            color: #3b2a17;
-        }
-
-        .btn:hover { transform: translateY(-1px); }
-
-        @media (max-width: 560px) {
-            .shell {
-                padding: 20px 16px;
-                border-radius: 14px;
-            }
-            .actions {
-                flex-direction: column;
-            }
-            .btn {
-                width: 100%;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="bg"></div>
-
-    <main class="shell">
-        <div class="head">
-            <h1>{{ __('app.public.login_heading') }}</h1>
-            <div class="meta">@include('partials.brand-logo', ['size' => 54])</div>
+@section('content')
+<x-auth-card :title="__('app.public.login_heading')">
+    @if(session('success'))<div class="auth-message" role="status"><x-auth-error-message :message="session('success')" /></div>@endif
+    @if($errors->any())<div class="auth-message error" role="alert"><x-auth-error-message :message="$errors->first()" /></div>@endif
+    <form method="POST" action="{{ route('login.attempt') }}" data-auth-form>
+        @csrf
+        <div class="field">
+            <label for="email">{{ __('app.public.email') }}</label>
+            <input id="email" type="email" name="email" value="{{ old('email') }}" required autocomplete="email" @if($errors->has('email')) aria-invalid="true" aria-describedby="email-error" @endif>
+            @error('email')<p class="field-error" id="email-error"><x-auth-error-message :message="$message" /></p>@enderror
         </div>
-
-
-        @if(session('success'))
-            <div class="alert ok">{{ session('success') }}</div>
-        @endif
-
-        @if($errors->any())
-            <div class="alert">
-                @foreach($errors->all() as $error)
-                    <div>{{ $error }}</div>
-                @endforeach
+        <div class="field">
+            <label for="password">{{ __('app.public.password') }}</label>
+            <div class="password-wrap">
+                <input id="password" type="password" name="password" required autocomplete="current-password" @if($errors->has('password')) aria-invalid="true" aria-describedby="password-error" @endif>
+                <button class="toggle-password" type="button" data-password-toggle aria-controls="password" aria-pressed="false">{{ __('app.public.show_password') }}</button>
             </div>
-        @endif
-
-        <form method="POST" action="{{ route('login.attempt') }}">
-            @csrf
-
-            <div class="field">
-                <label>{{ __('app.public.email') }}</label>
-                <input type="email" name="email" value="{{ old('email') }}" required autocomplete="email">
-            </div>
-
-            <div class="field">
-                <label>{{ __('app.public.password') }}</label>
-                <input type="password" name="password" required autocomplete="current-password">
-            </div>
-
-            <label class="remember">
-                <input type="checkbox" name="remember" value="1"> {{ __('app.public.remember_me') }}
-            </label>
-
-            <div class="actions">
-                <button class="btn" type="submit">{{ __('app.public.sign_in') }}</button>
-                <a class="btn secondary" href="{{ route('register') }}">{{ __('app.public.create_account') }}</a>
-            </div>
-        </form>
-    </main>
-    @include('partials.i18n')
-</body>
-</html>
+            @error('password')<p class="field-error" id="password-error"><x-auth-error-message :message="$message" /></p>@enderror
+        </div>
+        <label class="remember" for="remember"><input id="remember" type="checkbox" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}> {{ __('app.public.remember_me') }}</label>
+        <div class="actions">
+            <button class="btn" type="submit" data-submit-button data-loading-text="{{ __('app.public.signing_in') }}">{{ __('app.public.sign_in') }}</button>
+            <div class="or">{{ __('app.public.or') }}</div>
+            <a class="btn secondary" href="{{ route('register') }}">{{ __('app.public.create_account') }}</a>
+        </div>
+    </form>
+</x-auth-card>
+@endsection
