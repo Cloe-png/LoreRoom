@@ -1,6 +1,6 @@
 @props(['title', 'subtitle' => __('app.public.auth_subtitle'), 'wide' => false])
 <main class="auth-card{{ $wide ? ' auth-card--wide' : '' }}">
-    <div class="auth-brand">LOREROOM</div>
+    @include('partials.brand-logo', ['size' => 80, 'class' => 'auth-brand'])
     <div class="ornament" aria-hidden="true">✦</div>
     <h1 class="auth-heading">{{ $title }}</h1>
     <div class="ornament" aria-hidden="true">❧</div>

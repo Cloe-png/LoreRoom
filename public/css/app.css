@@ -30,6 +30,7 @@
 
 .auth-card--wide { width: min(480px, 100%); }
 .auth-brand, .auth-heading { color: #2b1d14; }
+.auth-card img.auth-brand { display: block; width: min(180px, 100%) !important; height: auto !important; margin: 0 auto; padding: 0; }
 .auth-subtitle, .auth-footer { color: #5a4532; }
 .auth-heading { margin-top: 19px; }
 .auth-card .field label, .auth-card .role-section legend {
@@ -89,3 +90,4 @@
 @media (prefers-reduced-motion: reduce) {
     .auth-card *, .auth-card *::before, .auth-card *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
