@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
         // \App\Models\User::factory(10)->create();
         $this->call(JobSeeder::class);
         $this->call(PlaceSeeder::class);
+        $this->call(WritingPromptSeeder::class);
     }
 }

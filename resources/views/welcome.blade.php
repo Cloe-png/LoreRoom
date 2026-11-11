@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html data-theme="{{ auth()->check() ? (auth()->user()->theme ?? 'dark') : (in_array(request()->cookie('theme'), ['dark','light','auto'], true) ? request()->cookie('theme') : 'dark') }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,10 +23,15 @@
             display: block;
         }
     </style>
+<link rel="stylesheet" href="{{ asset('css/theme.css') }}">
+<meta name="theme-color" content="{{ (auth()->check() ? auth()->user()->theme : request()->cookie('theme')) === 'light' ? '#efe2c9' : '#111723' }}" data-theme-color>
+<script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
 </head>
 <body>
+    <div class="cover-theme-toggle">@include('partials.theme-toggle')</div>
     <a class="logo" href="{{ route('login') }}" aria-label="LoreRoom">
         @include('partials.brand-logo', ['size' => 720])
     </a>
+    <script>(function(){var b=document.querySelector('[data-theme-toggle]');var r=document.documentElement;function paint(t){r.dataset.theme=t;b.setAttribute('aria-checked',String(t==='light'));b.querySelector('[data-theme-label]').textContent=t==='light'?'Nuit':'Jour';var m=document.querySelector('[data-theme-color]');if(m)m.content=t==='light'?'#efe2c9':'#111723';}paint(r.dataset.theme);b.addEventListener('click',function(){var t=r.dataset.theme==='light'?'dark':'light';paint(t);document.cookie='theme='+t+'; path=/; max-age=31536000; SameSite=Lax';});})();</script>
 </body>
 </html>

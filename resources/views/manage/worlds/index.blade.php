@@ -188,6 +188,13 @@
         .sidebar-bottom form button.back-portals-link { padding:9px 28px; color:var(--soft); font:italic 16px/1.3 "Cormorant Garamond",serif; letter-spacing:0; text-transform:none; }
         .sidebar :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
         .worlds-page :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+        /* Keep this intentionally paper-colored sidebar and its world cards legible
+           after the shared dark-theme rules load. */
+        body .sidebar .nav-link,body .sidebar .back-portals-link { color:var(--paper-ink)!important; }
+        body .sidebar .nav-link:hover,body .sidebar .nav-link.active { color:var(--accent)!important; }
+        .content .worlds-page .world-card,.content .worlds-page .world-card.is-active { background:var(--note-bg); background-image:none; color:var(--note-ink); box-shadow:3px 4px 0 var(--shadow); }
+        .content .worlds-page .world-card .world-name { color:var(--note-ink); }
+        .content .worlds-page .world-card .world-name::after { color:var(--note-accent); }
         @media(max-width:700px) { .worlds-head { grid-template-columns:1fr; align-items:start; } .worlds-title { font-size:34px; } .worlds-cta { justify-self:start; } .worlds-grid { grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr)); gap:18px; } .worlds-meta { letter-spacing:.12em; } .world-card-actions { flex-wrap:wrap; } }
     </style>
 

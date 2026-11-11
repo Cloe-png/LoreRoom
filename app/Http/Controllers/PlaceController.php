@@ -34,7 +34,7 @@ class PlaceController extends Controller
     public function create()
     {
         $this->authorize('create', Place::class);
-        return view('manage.places.create', $this->formData());
+        return view('manage.places.create', $this->formData(new Place()));
     }
 
     public function store(StorePlaceRequest $request)
@@ -109,6 +109,7 @@ class PlaceController extends Controller
     {
         $worldId = $this->requireCurrentWorldId();
         return [
+            'place' => $place ?? new Place(),
             'defaultWorld'=>$this->currentWorld(), 'placeTypeOptions'=>self::TYPES, 'statusOptions'=>self::STATUSES,
             'parentOptions'=>Place::where('world_id',$worldId)->when($place,fn($q)=>$q->where('id','!=',$place->id))->orderBy('name')->get(['id','name','parent_id']),
             'characters'=>Character::where('world_id',$worldId)->orderBy('name')->get(['id','name','first_name','last_name']),

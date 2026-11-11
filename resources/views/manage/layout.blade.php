@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<!DOCTYPE html>
+<html data-theme="{{ auth()->check() ? (auth()->user()->theme ?? 'dark') : (in_array(request()->cookie('theme'), ['dark','light','auto'], true) ? request()->cookie('theme') : 'dark') }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,24 +7,33 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <style>
+        @unless(request()->routeIs('manage.index'))<link rel="stylesheet" href="{{ asset('css/theme.css') }}">@endunless
+        @if(request()->routeIs('manage.index'))<link rel="stylesheet" href="{{ asset('css/shell.css') }}?v=20261109-2"><link rel="stylesheet" href="{{ mix('css/home.css') }}">@endif
+        @unless(request()->routeIs('manage.index'))<style>
             :root {
-                --ink: #2b1d14;
-                --paper: #f1e6cc;
-                --paper-2: #ecd8b2;
-                --accent: #6b1e2a;
-                --leather: #1b1511;
-                --line-blue: rgba(73, 120, 177, 0.26);
-                --line-red: rgba(188, 72, 72, 0.4);
-                --museum-1: #101722;
-                --museum-2: #1a2432;
-                --gold: #a8842f;
-                --gold-line: rgba(228, 191, 127, 0.34);
-                --nav-1: #f2c879;
-                --nav-2: #8dc7b0;
-                --nav-3: #93add9;
-                --nav-4: #e3a0a0;
-                --nav-5: #c9b1e4;
+                --paper: #efe2c9;
+                --paper-ink: #3b2d1c;
+                --gold: #caa46a;
+                --gold-dark: #7a5931;
+                --stone-1: #111723;
+                --stone-2: #1c2432;
+                --emerald: #2f6158;
+                --danger: #a93232;
+                --ink: var(--paper-ink);
+                --paper-2: rgba(255,255,255,.35);
+                --accent: var(--gold-dark);
+                --leather: var(--stone-1);
+                --line-blue: color-mix(in srgb, var(--gold) 26%, transparent);
+                --line-red: color-mix(in srgb, var(--danger) 40%, transparent);
+                --soft: var(--gold-dark);
+                --museum-1: var(--stone-1);
+                --museum-2: var(--stone-2);
+                --gold-line: rgba(202,164,106,.34);
+                --nav-1: var(--gold-dark);
+                --nav-2: var(--emerald);
+                --nav-3: var(--gold-dark);
+                --nav-4: var(--danger);
+                --nav-5: var(--gold-dark);
                 --sidebar-width: 290px;
                 --header-height: 72px;
             }
@@ -32,7 +41,7 @@
             html, body { min-height: 100%; }
             body {
                 margin:0;
-                color:#f1e7d3;
+                color:var(--paper);
                 font-family:"Cormorant Garamond","EB Garamond","Garamond",Georgia,serif;
                 background:
                     radial-gradient(900px 460px at 50% -6%, rgba(255, 223, 167, 0.2), transparent 66%),
@@ -77,12 +86,12 @@
                 overflow:hidden;
             }
             /* Scholar's folio surface: compact edges, restrained relief, and aligned tabs. */
-            body { background-color:var(--leather); background-image:radial-gradient(ellipse at center, transparent 42%, rgba(8,5,5,.7) 100%), repeating-linear-gradient(37deg,rgba(255,255,255,.018) 0 1px,transparent 1px 5px),linear-gradient(145deg,#523832,#241817 72%); }
+            body { background-color:var(--leather); background-image:radial-gradient(ellipse at center, transparent 42%, rgba(8,5,5,.7) 100%), repeating-linear-gradient(37deg,rgba(255,255,255,.018) 0 1px,transparent 1px 5px),linear-gradient(145deg,var(--stone-2),var(--stone-1) 72%); }
             .wrap { width:100%; min-height:100vh; margin:0; border:0; border-radius:0; background:transparent; box-shadow:none; }
             .chrome { min-height:100vh; }
-            .sidebar { background-color:#e9d8b8; background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(61,41,27,.09) 27px 28px),linear-gradient(90deg,rgba(61,41,27,.12),transparent 10px),url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E"); }
-            .brand-wordmark { position:relative; display:flex; align-items:baseline; gap:.16em; margin:0; color:#38271e; font:700 1.45rem/1 "Cinzel",serif; letter-spacing:.12em; white-space:nowrap; }
-            .brand-wordmark i { align-self:flex-start; margin-left:2px; color:#8b6938; font-size:.58rem; font-style:normal; }
+            .sidebar { background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(61,41,27,.09) 27px 28px),linear-gradient(90deg,rgba(61,41,27,.12),transparent 10px),url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E"); }
+            .brand-wordmark { position:relative; display:flex; align-items:baseline; gap:.16em; margin:0; color:var(--paper-ink); font:700 1.45rem/1 "Cinzel",serif; letter-spacing:.12em; white-space:nowrap; }
+            .brand-wordmark i { align-self:flex-start; margin-left:2px; color:var(--gold-dark); font-size:.58rem; font-style:normal; }
             .nav-link,.back-portals-link { width:100%; min-height:32px; flex-direction:row; align-items:center; text-align:left; justify-content:flex-start; padding:6px 10px 6px 14px; margin:0 0 3px; border-radius:2px; font-family:"Cormorant Garamond","EB Garamond","Garamond",Georgia,serif; font-size:1rem; }
             .nav-link.active { color:var(--accent); background:linear-gradient(90deg,var(--accent) 0 4px,rgba(107,30,42,.1) 4px); transform:none; }
             .nav-link.active .nav-name { text-decoration:none; font-weight:700; }
@@ -90,14 +99,14 @@
             .sidebar-bottom .nav-link, .sidebar-bottom form { margin:0; }
             .sidebar-bottom form button { font:inherit; }
             .sidebar-bottom { border-top:1px dashed rgba(111,86,57,.5); }
-            header { background:#3a2823; border-bottom:1px solid rgba(228,191,127,.4); }
+            header { background:var(--stone-1); border-bottom:1px solid rgba(228,191,127,.4); }
             .title { font-family:"Cinzel", "Cormorant Garamond",serif; }
             .sidebar-toggle { width:28px; height:28px; border-radius:2px; border-color:rgba(228,191,127,.38); background:transparent; }
-            .topline { display:inline-block; padding:6px 9px; border:1px solid rgba(228,191,127,.58); color:#f1dfbd; border-radius:2px; }
-            .topline a { color:#fff0d0; }
+            .topline { display:inline-block; padding:6px 9px; border:1px solid rgba(228,191,127,.58); color:var(--paper); border-radius:2px; }
+            .topline a { color:var(--paper); }
             .content { flex:1; background-color:var(--paper); background-image:repeating-linear-gradient(0deg,transparent 0 27px,rgba(73,120,177,.12) 27px 28px),url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E"); }
             .content::before { left:42px; width:3px; background:rgba(147,39,52,.62); }
-            .content::after { background:radial-gradient(circle at 50% 4px,#49362d 0 4px,#967e66 4.5px 5px,transparent 5.5px 22px),radial-gradient(circle at 50% 26px,#49362d 0 4px,#967e66 4.5px 5px,transparent 5.5px 22px); opacity:.9; }
+            .content::after { background:radial-gradient(circle at 50% 4px,var(--gold-dark) 0 4px,var(--gold-dark) 4.5px 5px,transparent 5.5px 22px),radial-gradient(circle at 50% 26px,var(--gold-dark) 0 4px,var(--gold-dark) 4.5px 5px,transparent 5.5px 22px); opacity:.9; }
             .card,.panel { border-radius:4px; box-shadow:2px 3px 0 rgba(60,40,20,.2); }
             .chrome {
                 display:grid;
@@ -143,7 +152,7 @@
                 padding: 0 2px;
             }
             .sidebar-mobile-label {
-                color: #694d2d;
+                color: var(--gold-dark);
                 font-size: .78rem;
                 text-transform: uppercase;
                 letter-spacing: .1em;
@@ -154,7 +163,7 @@
                 border-radius: 10px;
                 border: 1px solid rgba(112, 82, 47, .24);
                 background: rgba(255,255,255,.68);
-                color: #5e472c;
+                color: var(--gold-dark);
                 font-size: 1rem;
             }
             .chrome.is-collapsed .sidebar {
@@ -183,14 +192,14 @@
             .brand p {
                 margin:5px 0 0;
                 font-size:.78rem;
-                color:#6d5537;
+                color:var(--gold-dark);
                 text-transform:uppercase;
                 letter-spacing:.08em;
             }
             .nav-group { margin-top:9px; }
             .nav-title {
                 margin:10px 8px 7px;
-                color:#6f5639;
+                color:var(--gold-dark);
                 text-transform:uppercase;
                 letter-spacing:.1em;
                 font-size:.74rem;
@@ -200,7 +209,7 @@
                 flex-direction:column;
                 gap:2px;
                 text-decoration:none;
-                color:#191410;
+                color:var(--stone-1);
                 border:0;
                 border-radius:0;
                 padding:5px 8px 6px;
@@ -274,7 +283,7 @@
             .nav-accordion > summary::after {
                 content: "\25B8";
                 font-size: .9rem;
-                color: #6b4b2a;
+                color: var(--gold-dark);
                 transition: transform 140ms ease;
                 margin-left: 8px;
             }
@@ -291,7 +300,7 @@
             }
             .nav-faction-item:last-child { border-bottom: 0; }
             .nav-faction-name {
-                color: #2f2418;
+                color: var(--paper-ink);
                 text-decoration: none;
                 font-size: .9rem;
             }
@@ -304,7 +313,7 @@
             .btn-mini {
                 border: 1px solid rgba(89, 65, 37, .38);
                 background: rgba(255,255,255,.7);
-                color: #2f2418;
+                color: var(--paper-ink);
                 border-radius: 6px;
                 padding: 4px 8px;
                 font-size: .78rem;
@@ -312,8 +321,8 @@
                 text-decoration: none;
                 display: inline-block;
             }
-            .btn-mini.danger { background: rgba(236, 184, 184, .85); color:#4a1f1f; }
-            .btn-mini.secondary { background: rgba(189, 208, 237, .85); color:#1f2a3d; }
+            .btn-mini.danger { background: rgba(236, 184, 184, .85); color:var(--danger); }
+            .btn-mini.secondary { background: rgba(189, 208, 237, .85); color:var(--stone-2); }
             .main { display:flex; flex-direction:column; min-width:0; }
             header {
                 padding:14px 18px;
@@ -341,7 +350,7 @@
                 border-radius:8px;
                 border:1px solid rgba(228,191,127,.45);
                 background:rgba(255,255,255,.06);
-                color:#f6e8cb;
+                color:var(--paper);
                 cursor:pointer;
                 font-size:1rem;
                 line-height:1;
@@ -363,17 +372,17 @@
                 font-family:"Segoe Print","Comic Sans MS",cursive;
                 letter-spacing:.02em;
                 font-size:clamp(1.2rem,2.1vw,1.65rem);
-                color:#f6e8cb;
+                color:var(--paper);
                 min-width: 0;
             }
             .topline {
-                color:#dbc9a8;
+                color:var(--paper);
                 font-size:.76rem;
                 letter-spacing:.1em;
                 text-transform:uppercase;
             }
             .topline a {
-                color:#f6e8cb;
+                color:var(--paper);
             }
             .header-context {
                 display: flex;
@@ -397,7 +406,7 @@
                 border-radius: 999px;
                 border: 1px solid rgba(228,191,127,.22);
                 background: rgba(255,255,255,.07);
-                color: #f2e5ca;
+                color: var(--paper);
                 text-decoration: none;
                 font-size: .78rem;
                 letter-spacing: .05em;
@@ -405,7 +414,7 @@
                 white-space: nowrap;
             }
             .glance-chip strong {
-                color: #fff2d4;
+                color: var(--paper);
                 font-weight: 700;
             }
             .sidebar-bottom {
@@ -416,7 +425,7 @@
             .back-portals-link {
                 display:block;
                 text-decoration:none;
-                color:#191410;
+                color:var(--stone-1);
                 font-size:.9rem;
                 font-family:"Segoe Print","Comic Sans MS",cursive;
                 padding:5px 8px 6px;
@@ -466,7 +475,7 @@
             }
             .content * {
                 scrollbar-width: thin;
-                scrollbar-color: #7f6238 rgba(80, 58, 32, .18);
+                scrollbar-color: var(--gold-dark) rgba(80, 58, 32, .18);
             }
             .content *::-webkit-scrollbar {
                 width: 12px;
@@ -479,13 +488,13 @@
             .content *::-webkit-scrollbar-thumb {
                 border-radius: 10px;
                 border: 2px solid rgba(56, 38, 18, .35);
-                background: linear-gradient(180deg, #d4b07a, #8e6a3b);
+                background: linear-gradient(180deg, var(--gold), var(--gold-dark));
             }
             .content *::-webkit-scrollbar-thumb:hover {
-                background: linear-gradient(180deg, #e2c08c, #a37942);
+                background: linear-gradient(180deg, var(--gold), var(--gold-dark));
             }
             /* Final editorial details for the folio dashboard. */
-            .nav-link,.back-portals-link { box-sizing:border-box; width:100%; min-height:0; padding:15px 28px; margin:0; border:0; border-radius:0; color:#30251d; font:400 13px/1.25 "Cinzel",serif; letter-spacing:.16em; text-align:left; text-transform:uppercase; transition:padding-left 180ms ease,color 180ms ease,background 180ms ease; }
+            .nav-link,.back-portals-link { box-sizing:border-box; width:100%; min-height:0; padding:15px 28px; margin:0; border:0; border-radius:0; color:var(--paper-ink); font:400 13px/1.25 "Cinzel",serif; letter-spacing:.16em; text-align:left; text-transform:uppercase; transition:padding-left 180ms ease,color 180ms ease,background 180ms ease; }
             .nav-link { display:flex; flex-direction:row; align-items:center; justify-content:flex-start; }
             .nav-link:hover,.back-portals-link:hover { padding-left:34px; color:var(--accent); text-decoration:none; background:transparent; box-shadow:none; transform:none; }
             .nav-link.active { position:relative; padding-left:28px; color:var(--accent); font-weight:700; background:linear-gradient(90deg,rgba(107,30,42,.1),transparent); box-shadow:none; }
@@ -494,10 +503,10 @@
             .nav-accordion-body { padding:0; }
             .sidebar-bottom { padding-top:12px; }
             .sidebar-bottom form button.back-portals-link { font:400 13px/1.25 "Cinzel",serif; letter-spacing:.16em; text-transform:uppercase; }
-            header { background:linear-gradient(110deg,#2a1f18,#1f1712); border-bottom:2px solid var(--gold); }
+            header { background:linear-gradient(110deg,var(--stone-1),var(--stone-1)); border-bottom:2px solid var(--gold); }
             .sidebar-toggle { width:38px; height:38px; border:1px solid var(--gold); border-radius:2px; background:transparent; }
-            .content::before { width:2px; background:#b4535b; }
-            .content::after { background:radial-gradient(circle at 50% 7px,#17110e 0 5px,var(--gold) 5.5px 7px,transparent 7.5px); background-size:22px 46px; background-repeat:repeat-y; opacity:1; }
+            .content::before { width:2px; background:var(--danger); }
+            .content::after { background:radial-gradient(circle at 50% 7px,var(--stone-1) 0 5px,var(--gold) 5.5px 7px,transparent 7.5px); background-size:22px 46px; background-repeat:repeat-y; opacity:1; }
             body::before,body::after,.content { background-attachment:scroll!important; }
             .grid-4 { display:grid; gap:12px; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); }
             .card,.panel {
@@ -520,35 +529,35 @@
             .panel { margin-top:14px; padding:14px; }
             .metric {
                 font-size:2rem;
-                color:#6f4c26;
+                color:var(--gold-dark);
                 margin:4px 0 2px;
                 font-family:"Cinzel","Times New Roman",serif;
             }
             table { width:100%; border-collapse:collapse; }
             th,td { border-bottom:1px dashed rgba(114,84,49,.32); padding:8px; text-align:left; vertical-align:top; }
             th {
-                color:#674620;
+                color:var(--gold-dark);
                 font-family:"Cinzel","Times New Roman",serif;
                 font-size:.82rem; letter-spacing:.05em; text-transform:uppercase;
             }
             .btn {
                 display:inline-block; text-decoration:none;
                 border:1px solid rgba(89, 65, 37, .38);
-                color:#2f2418;
+                color:var(--paper-ink);
                 border-radius:7px;
                 padding:7px 10px;
-                background:linear-gradient(180deg, #f9d48f, #e9b461);
+                background:linear-gradient(180deg, var(--gold), var(--gold));
                 font-size:.9rem;
                 font-family:"Segoe Print","Comic Sans MS",cursive;
                 font-weight:600;
             }
-            .btn.secondary { background:linear-gradient(180deg,#bdd0ed,#8ea8d0); color:#1f2a3d; }
-            .btn.danger { background:linear-gradient(180deg,#ecb8b8,#d48989); color:#4a1f1f; }
+            .btn.secondary { background:linear-gradient(180deg,var(--paper),var(--gold-dark)); color:var(--stone-2); }
+            .btn.danger { background:linear-gradient(180deg,var(--danger),var(--danger)); color:var(--danger); }
             .stack { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
             .field { margin-bottom:12px; }
             .field label {
                 display:block; margin-bottom:6px;
-                color:#5b4328; font-size:.92rem;
+                color:var(--gold-dark); font-size:.92rem;
                 font-family:"Segoe Print","Comic Sans MS",cursive;
             }
             .field input,.field select,.field textarea {
@@ -556,7 +565,7 @@
                 border:1px solid rgba(101,74,42,.28);
                 border-radius:8px;
                 background:rgba(255,255,255,.55);
-                color:#2d2318;
+                color:var(--paper-ink);
                 padding:9px 10px;
                 font-family:inherit;
             }
@@ -570,15 +579,15 @@
                 margin-bottom:12px; padding:10px 12px; border-radius:8px;
                 border:1px solid rgba(83,173,120,.45);
                 background:rgba(180, 236, 200, .55);
-                color:#204a32;
+                color:var(--emerald);
             }
             .errors {
                 margin-bottom:12px; padding:10px 12px; border-radius:8px;
                 border:1px solid rgba(169,50,50,.45);
                 background:rgba(246, 206, 206, .62);
-                color:#5c2121;
+                color:var(--danger);
             }
-            .muted { color:#70573a; font-size:.9rem; }
+            .muted { color:var(--gold-dark); font-size:.9rem; }
             form.inline { display:inline; }
             .touch-surface {
                 overflow: auto;
@@ -728,9 +737,44 @@
                     padding: 0;
                 }
             }
-        </style>
-    </head>
-    <body>
+        </style>@endunless
+<meta name="theme-color" content="{{ (auth()->check() ? auth()->user()->theme : request()->cookie('theme')) === 'light' ? '#efe2c9' : '#111723' }}" data-theme-color>
+<script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
+</head>
+    <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif">
+        @if(request()->routeIs('manage.index'))
+        <div class="app">
+            <aside class="side">
+                <a class="logo" href="{{ route('manage.index') }}" aria-label="LoreRoom — accueil">LOREROOM</a><div class="orn" aria-hidden="true"><i></i><span>&#10022;</span><i></i></div>
+                <nav class="nav">
+                    <a class="on" href="{{ route('manage.index') }}">Accueil</a>
+                    <details @if(request()->routeIs('manage.worlds.*','manage.characters.*','manage.places.*','manage.chapters.*','manage.lore.*','manage.jobs.*','manage.factions.*','manage.species.*')) open @endif>
+                        <summary class="par">Gestion <small>&#9662;</small></summary>
+                        <a class="sub" href="{{ route('manage.worlds.index') }}">Mondes</a><a class="sub" href="{{ route('manage.characters.index') }}">Personnages</a><a class="sub" href="{{ route('manage.places.index') }}">Lieux</a>
+                        @if(auth()->user()->canAccessModule('chapters'))<a class="sub" href="{{ route('manage.chapters.index') }}">Chapitres</a>@endif
+                        @if(auth()->user()->canAccessModule('lore'))<a class="sub" href="{{ route('manage.species.index') }}">Esp&egrave;ces</a><a class="sub" href="{{ route('manage.lore.index') }}">Lore</a>@endif
+                        @if(auth()->user()->canAccessModule('jobs'))<a class="sub" href="{{ route('manage.jobs.index') }}">M&eacute;tiers</a>@endif
+                        @if(auth()->user()->canAccessModule('factions'))<a class="sub" href="{{ route('manage.factions.index') }}">Factions</a>@endif
+                    </details>
+                    <details @if(request()->routeIs('manage.chronicles.*','manage.relations.*','manage.genealogy.*','manage.gallery.*')) open @endif><summary class="par">Lore <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.chronicles.index') }}">Chronologie</a><a class="sub" href="{{ route('manage.relations.index') }}">Relations</a>@if(auth()->user()->canAccessModule('genealogy'))<a class="sub" href="{{ route('manage.genealogy.index') }}">G&eacute;n&eacute;alogie</a>@endif @if(auth()->user()->canAccessModule('gallery'))<a class="sub" href="{{ route('manage.gallery.index') }}">Galerie</a>@endif</details>
+                    <details @if(request()->routeIs('manage.account.*','manage.suggestions.*','manage.trash.*')) open @endif><summary class="par">Outils <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.account.edit') }}">Param&egrave;tres</a>@if(auth()->user()->canAccessModule('suggestions'))<a class="sub" href="{{ route('manage.suggestions.index') }}">Suggestions</a>@endif @if(auth()->user()->canAccessModule('trash'))<a class="sub" href="{{ route('manage.trash.index') }}">Corbeille</a>@endif</details>
+                </nav>
+                <div class="sep"></div><nav class="nav">
+                    @if(auth()->user()->canAccessModule('analytics'))<a href="{{ route('manage.analytics.index') }}">Analytics</a>@endif
+                    @if(auth()->user()->canAccessModule('users'))<a href="{{ route('manage.users.index') }}">Comptes</a>@endif
+                    <a class="q" href="#" onclick="event.preventDefault();this.nextElementSibling.submit()">D&eacute;connexion</a><form method="POST" action="{{ route('logout') }}" hidden>@csrf</form>
+                </nav>
+            </aside>
+            <div class="main"><header class="top"><a class="back" href="{{ route('manage.index') }}" aria-label="Retour">&#9664;</a><h2>Carnet de bord</h2>
+                <button class="tg" type="button" role="switch" aria-checked="false" aria-label="Th&egrave;me actuel"><svg class="moon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span></span></button>
+                <div class="ex"><span>Monde actif : {{ $activeWorld->name ?? 'Aucun' }} ? <a href="{{ route('manage.worlds.index') }}">Changer</a></span>@if(auth()->user()->isChef())<span class="chef">CHEF</span>@endif</div>
+            </header><div class="page">
+                @if(session('success'))<div role="status">{{ session('success') }}</div>@endif
+                @if($errors->any())<div role="alert">{{ $errors->first() }}</div>@endif
+                @yield('content')
+            </div></div>
+        </div>
+        @else
         <button class="drawer-backdrop" type="button" id="drawer-backdrop" aria-hidden="true" tabindex="-1"></button>
         <div class="wrap">
             <div class="chrome">
@@ -743,9 +787,13 @@
                     <div class="brand">
                         <h1>
                             @if(request()->routeIs('manage.analytics.*'))
-                                <span class="analytics-wordmark">LOREROOM</span>
+                                <a class="analytics-wordmark" href="{{ route('manage.index') }}" aria-label="LoreRoom — accueil">LOREROOM</a>
+                            @elseif(request()->routeIs('manage.index'))
+                                <span class="brand-wordmark">LORE<span>ROOM</span></span>
+                                <div class="brand-rule" aria-hidden="true"><span></span>◆<span></span></div>
                             @else
-                                @include('partials.brand-logo', ['size' => 80])
+                                <a class="brand-wordmark" href="{{ route('manage.index') }}" aria-label="LoreRoom — accueil">LOREROOM</a>
+                                <div class="brand-rule" aria-hidden="true"><span></span><i>✦</i><span></span></div>
                             @endif
                         </h1>
                     </div>
@@ -857,6 +905,17 @@
                             @csrf
                             <button type="submit" class="back-portals-link">{{ __('app.nav.logout') }}</button>
                         </form>
+                        @php($memorialVisible = (bool) config('memorial.force_visible') || now(config('app.timezone'))->format('m-d') === sprintf('%02d-%02d', config('memorial.month'), config('memorial.day')))
+                        @if($memorialVisible)
+                            <button class="memorial-secret" type="button" aria-label="Hayate" data-destination="{{ route('manage.memorial.show') }}">
+                                @if(file_exists(public_path('images/mascot/icone.png')))
+                                    <img src="{{ asset('images/mascot/icone.png') }}" alt="">
+                                @else
+                                    <svg viewBox="0 0 40 40" aria-hidden="true" fill="currentColor"><path d="M8 17c-3-4-2-9 1-10 4-1 6 4 6 8 2-1 4-1 6-1 0-4 2-8 5-7 3 1 2 6 0 9 4 2 7 6 7 11 0 7-6 11-14 11S5 34 5 27c0-4 1-7 3-10Z"/><circle cx="14" cy="24" r="1.4" fill="var(--stone-1)"/><circle cx="25" cy="24" r="1.4" fill="var(--stone-1)"/><path d="M17 28h5l-2.5 2.5Z" fill="var(--stone-1)"/></svg>
+                                @endif
+                            </button>
+                            <script src="{{ asset('js/memorial.js') }}" defer></script>
+                        @endif
                     </div>
                 </aside>
                 <section class="main">
@@ -867,6 +926,7 @@
                             <h1 class="title">@yield('header', __('app.layout.default_title'))</h1>
                         </div>
                         <div class="header-context">
+                            @include('partials.theme-toggle')
                             <div class="topline">
                                 @if(!empty($activeWorld))
                                     {{ __('app.layout.active_world', ['world' => $activeWorld->name]) }} ·
@@ -874,15 +934,16 @@
                                 @else
                                     {{ __('app.layout.no_active_world') }}
                                 @endif
+                                @if(auth()->user() && auth()->user()->isChef()) <span class="chef-badge">CHEF</span> @endif
                             </div>
                         </div>
                     </header>
-                    <main class="content">
+                    <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif">
                         @if (session('success'))
-                            <div class="flash">{{ session('success') }}</div>
+                            <div class="flash" role="status" aria-live="polite">{{ session('success') }}</div>
                         @endif
                         @if ($errors->any())
-                            <div class="errors">
+                            <div class="errors" role="alert" aria-live="assertive">
                                 <strong>{{ __('app.layout.errors_label') }}</strong>
                                 <ul>
                                     @foreach ($errors->all() as $error)
@@ -896,13 +957,13 @@
                 </section>
             </div>
         </div>
-        <style>
+        @endif
+        @unless(request()->routeIs('manage.index'))<style>
             /* Shared folio theme for every management screen. */
-            :root { --paper:#f1e6cc; --ink:#2b1d14; --soft:#5a4532; --accent:#6b1e2a; --gold:#a8842f; --leather:#1b1511; }
-            body { color:var(--ink); font-family:"Cormorant Garamond",serif; background-color:var(--leather); }
-            .main > header { background:linear-gradient(110deg,#2a1f18,#1f1712); border-bottom:2px solid var(--gold); }
+            body { color:var(--paper-ink); font-family:"Cormorant Garamond",serif; background-color:var(--stone-1); }
+            .main > header { background:linear-gradient(110deg,var(--stone-1),var(--stone-2)); border-bottom:2px solid var(--gold); }
             .main > header::before,.main > header::after { display:none; }
-            .main > header .title { color:#f1e6cc; font:700 clamp(1.2rem,2.1vw,1.65rem)/1.2 "Cinzel",serif; }
+            .main > header .title { color:var(--paper); font:700 clamp(1.2rem,2.1vw,1.65rem)/1.2 "Cinzel",serif; }
             .analytics-wordmark { display:block; color:var(--ink); font:700 22px/1.2 "Cinzel",serif; letter-spacing:.32em; text-align:center; }
             .analytics-wordmark::after { content:"──── ✦ ────"; display:block; margin-top:7px; color:var(--gold); font:600 11px/1 "Cinzel",serif; letter-spacing:.08em; }
             .sidebar { background:var(--paper); }
@@ -914,39 +975,67 @@
             .sidebar .nav-accordion-body .nav-link { width:100%; min-height:0; margin:0; padding:9px 28px 9px 46px; border:0; border-radius:0; color:var(--ink); font:500 12px/1.3 "Cinzel",serif; letter-spacing:.13em; text-transform:uppercase; }
             .sidebar .nav-link:hover { padding-left:34px; color:var(--accent); background:transparent; box-shadow:none; transform:none; }
             .sidebar .nav-accordion-body .nav-link:hover { padding-left:52px; }
-            .sidebar .nav-link.active { position:relative; padding-left:28px; color:var(--accent); font-weight:700; background:linear-gradient(90deg,rgba(107,30,42,.1),transparent); box-shadow:none; }
+            .sidebar .nav-link.active { position:relative; padding-left:28px; color:var(--accent); font-weight:700; background:transparent; box-shadow:none; }
             .sidebar .nav-accordion-body .nav-link.active { padding-left:46px; }
-            .sidebar .nav-link.active::before { content:""; position:absolute; left:0; top:50%; width:14px; height:40px; transform:translateY(-50%); background:var(--accent); clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); }
+            .sidebar .nav-link.active::before { content:""; position:absolute; left:0; top:50%; width:14px; height:40px; transform:translateY(-50%); background:var(--gold-dark); clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); }
             .sidebar .nav-accordion-body .nav-link.active::before { left:0; }
             .sidebar .nav-accordion > summary.nav-link.active { color:var(--soft); font-weight:500; background:transparent; }
             .sidebar .nav-accordion > summary.nav-link.active::before { display:none; }
             .sidebar .nav-accordion > summary.nav-link.active .nav-name { text-decoration:none; font-weight:500; }
             .sidebar .nav-accordion > summary.nav-link.active:hover { color:var(--accent); }
-            .sidebar .sidebar-bottom { border-top:1px dashed rgba(168,132,47,.65); }
-            .sidebar-bottom form { margin-top:4px; border-top:1px dashed rgba(168,132,47,.48); }
+            .sidebar .sidebar-bottom { border-top:1px dashed var(--gold); }
+            .sidebar-bottom form { margin-top:4px; border-top:0; }
+            .chef-badge { display:inline-block; margin-left:8px; padding:2px 6px; border:1px solid var(--gold); background:var(--stone-1); color:var(--gold); font:600 10px/1.2 "Cinzel",serif; letter-spacing:.24em; }
+            .memorial-secret { display:grid; place-items:center; width:38px; height:38px; margin:8px auto 0; padding:4px; border:0; background:transparent; color:var(--gold); opacity:.5; touch-action:manipulation; }
+            .memorial-secret img,.memorial-secret svg { width:30px; height:30px; }
+            .memorial-secret.wiggle { animation: memorial-wiggle 120ms ease-in-out; }
+            @keyframes memorial-wiggle { 50% { transform:rotate(7deg); } }
+            @media(prefers-reduced-motion:reduce) { .memorial-secret.wiggle { animation:none; } }
             .sidebar-bottom form button.back-portals-link { width:100%; padding:9px 28px; color:var(--soft); font:italic 16px/1.3 "Cormorant Garamond",serif; letter-spacing:0; text-transform:none; }
             .sidebar :focus-visible,.main :focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
             .content { color:var(--ink); font-family:"Cormorant Garamond",serif; }
             .content h1,.content h2,.content h3,.content h4,.content legend { color:var(--ink); font-family:"Cinzel",serif; }
-            .content .card,.content .panel,.content .dashboard-card,.content .stat-card,.content .world-card,.content .first-world,.content .sheet,.content .journal-cover { border-radius:3px; border-color:#9a7f48; background-color:rgba(255,250,236,.55); background-image:none; box-shadow:3px 4px 0 rgba(70,45,20,.22); }
-            .content .card,.content .panel,.content .dashboard-card,.content .world-card { outline:1px solid #c7ac72; outline-offset:-5px; }
-            .content .btn,.content .btn-mini,.content button:not(.sidebar-toggle):not(.sidebar-close),.content input[type="submit"] { min-height:36px; padding:9px 16px; border:1px solid var(--accent); border-radius:2px; background:var(--accent); color:#f6e7c4; box-shadow:2px 3px 0 rgba(40,15,10,.35); font:600 11px/1.2 "Cinzel",serif; letter-spacing:.16em; text-decoration:none; text-transform:uppercase; transition:transform 180ms ease,box-shadow 180ms ease,background 180ms ease; }
+            .content .card,.content .panel,.content .dashboard-card,.content .stat-card,.content .world-card,.content .first-world,.content .sheet,.content .journal-cover { border-radius:3px; border-color:var(--gold-dark); background-color:rgba(255,255,255,.35); background-image:none; box-shadow:3px 4px 0 rgba(59,45,28,.28); }
+            .content .card,.content .panel,.content .dashboard-card,.content .world-card { outline:1px solid var(--gold); outline-offset:-5px; }
+            .content .btn,.content .btn-mini,.content button:not(.sidebar-toggle):not(.sidebar-close),.content input[type="submit"] { min-height:36px; padding:9px 16px; border:1px solid var(--gold-dark); border-radius:2px; background:var(--gold-dark); color:var(--paper); box-shadow:2px 3px 0 rgba(59,45,28,.35); font:600 11px/1.2 "Cinzel",serif; letter-spacing:.16em; text-decoration:none; text-transform:uppercase; transition:transform 180ms ease,box-shadow 180ms ease,background 180ms ease; }
             .content .btn:hover,.content .btn-mini:hover,.content button:not(.sidebar-toggle):not(.sidebar-close):hover,.content input[type="submit"]:hover { transform:translate(1px,1px); box-shadow:1px 2px 0 rgba(40,15,10,.25); }
-            .content .btn.secondary,.content .btn-mini.secondary { background:transparent; color:var(--accent); box-shadow:none; }
-            .content .btn.secondary:hover,.content .btn-mini.secondary:hover { background:rgba(107,30,42,.06); box-shadow:none; }
-            .content .btn.danger,.content .btn-mini.danger { background:transparent; color:var(--accent); box-shadow:none; }
+            .content .btn.secondary,.content .btn-mini.secondary { background:transparent; color:var(--gold-dark); box-shadow:none; }
+            .content .btn.secondary:hover,.content .btn-mini.secondary:hover { background:rgba(202,164,106,.12); box-shadow:none; }
+            .content .btn.danger,.content .btn-mini.danger { background:transparent; color:var(--danger); border-color:var(--danger); box-shadow:none; }
             .content .field label,.content label { color:var(--soft); font:600 12px/1.35 "Cinzel",serif; letter-spacing:.08em; }
-            .content .field input,.content .field select,.content .field textarea,.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),.content select,.content textarea { border:1px solid rgba(90,69,50,.5); border-radius:2px; background:rgba(255,250,236,.7); color:var(--ink); font-family:"Cormorant Garamond",serif; }
+            .content .field input,.content .field select,.content .field textarea,.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),.content select,.content textarea { border:1px solid color-mix(in srgb,var(--gold-dark) 50%,transparent); border-radius:2px; background:rgba(255,255,255,.35); color:var(--ink); font-family:"Cormorant Garamond",serif; }
             .content .muted,.content .text-muted { color:var(--soft); }
             .content table th { color:var(--soft); font:600 11px/1.35 "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; }
-            .content .flash { border-color:#537b52; border-radius:3px; background:#e6eddc; color:#294329; }
-            .content .errors { border-color:#8b3540; border-radius:3px; background:#f1dfd8; color:#5a1d27; }
+            .content .flash { border-color:var(--emerald); border-radius:3px; background:rgba(255,255,255,.35); color:var(--emerald); }
+            .content .errors { border-color:var(--danger); border-radius:3px; background:rgba(255,255,255,.35); color:var(--danger); }
+            body { color:var(--paper); background:linear-gradient(180deg,var(--stone-2),var(--stone-1)); }
+            body::before,body::after { display:none; }
+            .wrap { border:1px solid var(--gold-dark); border-radius:3px; background:var(--paper); box-shadow:none; }
+            .sidebar { background:var(--paper); color:var(--paper-ink); }
+            .main > header { color:var(--paper); }
+            .content { min-height:calc(100vh - var(--header-height)); background:var(--paper); color:var(--paper-ink); }
+            .content::before,.content::after { display:none!important; }
+            .sidebar .sidebar-bottom { border-top:0; }
+            .sidebar-bottom form { margin-top:4px; padding-top:4px; border-top:1px dashed var(--gold); }
+            .content time,.content .users-date,.content .home-count { font-variant-numeric:lining-nums tabular-nums; }
+            .main > header :focus-visible { outline-color:var(--gold); }
+            @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; scroll-behavior:auto!important; transition:none!important; } }
             @media(max-width:700px) {
                 .sidebar > .nav-group > .nav-link,.sidebar > .nav-accordion > summary.nav-link,.sidebar-bottom > .nav-link { padding:11px 20px; }
                 .sidebar .nav-accordion-body .nav-link { padding:9px 20px 9px 36px; }
                 .sidebar .nav-accordion-body .nav-link:hover { padding-left:42px; }
             }
-        </style>
+        </style>@endunless
+        @if(request()->routeIs('manage.index'))
+        <script>(function(){var b=document.querySelector('.tg'),r=document.documentElement;if(!b)return;function paint(t){r.dataset.theme=t;b.setAttribute('aria-checked',String(t==='dark'));b.querySelector('span').textContent=t==='dark'?'Nuit':'Jour';}paint(r.dataset.theme);b.addEventListener('click',function(){var t=r.dataset.theme==='dark'?'light':'dark';paint(t);document.cookie='theme='+t+'; path=/; max-age=31536000; SameSite=Lax';fetch(@json(route('manage.preferences.theme')),{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json'},body:JSON.stringify({theme:t})}).catch(function(){});});})();</script>
+        @endif
+        <script>
+        (function(){var b=document.querySelector('[data-theme-toggle]');if(!b)return;var root=document.documentElement;function paint(t){root.dataset.theme=t;b.setAttribute('aria-checked',String(t==='light'));b.querySelector('[data-theme-label]').textContent=t==='light'?'Jour':'Nuit';var m=document.querySelector('[data-theme-color]');if(m)m.content=t==='light'?'#efe2c9':'#111723';}paint(root.dataset.theme);b.addEventListener('click',function(){var t=root.dataset.theme==='light'?'dark':'light';paint(t);document.cookie='theme='+t+'; path=/; max-age=31536000; SameSite=Lax';fetch(@json(route('manage.preferences.theme')),{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':@json(csrf_token()),'Accept':'application/json'},body:JSON.stringify({theme:t})}).catch(function(){});});})();
+        </script>
+        @yield('head')
+        <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
+        @yield('page-styles')
+        @unless(request()->routeIs('manage.index'))<link rel="stylesheet" href="{{ asset('css/manage-theme.css') }}?v=20261109-5">@endunless
         <script>
             (function () {
                 const body = document.body;

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html data-theme="{{ auth()->check() ? (auth()->user()->theme ?? 'dark') : (in_array(request()->cookie('theme'), ['dark','light','auto'], true) ? request()->cookie('theme') : 'dark') }}" lang="fr">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,8 +39,12 @@
         @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
     </style>
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
+    <link rel="stylesheet" href="{{ mix('css/auth-mascot.css') }}">
+<link rel="stylesheet" href="{{ asset('css/theme.css') }}">
+<meta name="theme-color" content="{{ (auth()->check() ? auth()->user()->theme : request()->cookie('theme')) === 'light' ? '#efe2c9' : '#111723' }}" data-theme-color>
+<script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
 </head>
-<body class="auth-page">
+<body class="auth-page"><div class="auth-theme-toggle">@include('partials.theme-toggle')</div>
     <div class="auth-bg" aria-hidden="true"></div>
     @yield('content')
     @include('partials.i18n')
@@ -49,5 +53,6 @@
         document.querySelectorAll('form[data-auth-form]').forEach(function(form){form.addEventListener('submit',function(){var button=form.querySelector('[data-submit-button]');if(button){button.disabled=true;button.textContent=button.dataset.loadingText;}});});
         var firstInvalid=document.querySelector('.auth-card [aria-invalid="true"]');if(firstInvalid){firstInvalid.focus();}
     </script>
-</body>
+<script>(function(){var b=document.querySelector('[data-theme-toggle]');if(!b)return;var root=document.documentElement;function paint(t){root.dataset.theme=t;b.setAttribute('aria-checked',String(t==='light'));b.querySelector('[data-theme-label]').textContent=t==='light'?'Nuit':'Jour';var m=document.querySelector('[data-theme-color]');if(m)m.content=t==='light'?'#efe2c9':'#111723';}paint(root.dataset.theme);b.addEventListener('click',function(){var t=root.dataset.theme==='light'?'dark':'light';paint(t);document.cookie='theme='+t+'; path=/; max-age=31536000; SameSite=Lax';});})();</script>
+<script src="{{ mix('js/auth-mascot.js') }}" defer></script></body>
 </html>

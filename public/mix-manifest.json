@@ -1,4 +1,9 @@
 {
     "/js/app.js": "/js/app.js",
+    "/js/auth-mascot.js": "/js/auth-mascot.js",
+    "/css/manage-theme.css": "/css/manage-theme.css",
+    "/css/home.css": "/css/home.css",
+    "/css/shell.css": "/css/shell.css",
+    "/css/auth-mascot.css": "/css/auth-mascot.css",
     "/css/app.css": "/css/app.css"
 }

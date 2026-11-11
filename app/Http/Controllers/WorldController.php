@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\World;
+use App\Models\Faction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;

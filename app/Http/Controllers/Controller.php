@@ -74,7 +74,7 @@ class Controller extends BaseController
     protected function requireAdmin(): void
     {
         $user = Auth::user();
-        if (!$user || !$user->isAdmin()) {
+        if (!$user || !$user->isAdminOrChef()) {
             throw new AccessDeniedHttpException(__('app.messages.admin_required'));
         }
     }

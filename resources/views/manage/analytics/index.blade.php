@@ -362,6 +362,21 @@
         .analytics-group-title::after { text-align:center; background:linear-gradient(to right,var(--gold),var(--gold) calc(50% - 12px),transparent calc(50% - 12px),transparent calc(50% + 12px),var(--gold) calc(50% + 12px)); }
         .analytics-shell .analytics-table--actions td:nth-child(2) .analytics-strong { font-family:"Cormorant Garamond",serif; }
         html body .sidebar .nav-link.active { background:linear-gradient(90deg,rgba(107,30,42,.12),transparent); }
+        /* Analytics panels use the dark management surface in dark mode. Keep their data readable. */
+        .analytics-wordmark { color:var(--heading); }
+        .analytics-shell .analytics-group-title { color:var(--heading); }
+        .analytics-shell .analytics-route-label,
+        .analytics-shell .analytics-table .analytics-strong,
+        .analytics-shell .analytics-badge,
+        .analytics-shell .analytics-empty-state h4 { color:var(--text); }
+        .analytics-shell .analytics-route-technical,
+        .analytics-shell .analytics-soft,
+        .analytics-shell .analytics-empty,
+        .analytics-shell .analytics-empty-state .analytics-empty-note,
+        .analytics-shell .analytics-empty-state .analytics-subtitle { color:var(--text-soft); }
+        .analytics-shell .analytics-badge::before { color:var(--heading); }
+        .analytics-shell .analytics-action--modification::before { color:var(--success-text); }
+        .analytics-shell .analytics-action--suppression::before { color:var(--danger-text); }
         @media(max-width:980px) { .sidebar { position:fixed; top:0; height:100vh; } }
     </style>
 
@@ -593,9 +608,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php($previousActionUserId = '__initial__')
+                            @php
+                                $previousActionUserId = '__initial__';
+                            @endphp
                             @foreach($recentActions as $log)
-                                @php($showActionUserEmail = $log->user_id !== $previousActionUserId)
+                                @php
+                                    $showActionUserEmail = $log->user_id !== $previousActionUserId;
+                                @endphp
                                 <tr>
                                     <td><div class="analytics-strong">{{ optional($log->action_at)->format('d/m/Y H:i') }}</div></td>
                                     <td>
@@ -616,7 +635,9 @@
                                     <td><span class="analytics-badge {{ $actionStyle }}">{{ $log->action_label }}</span></td>
                                     <td><div class="analytics-soft" title="{{ $log->route_path ?: '-' }}">{{ $log->route_name ?: '-' }}</div></td>
                                 </tr>
-                                @php($previousActionUserId = $log->user_id)
+                                @php
+                                    $previousActionUserId = $log->user_id;
+                                @endphp
                             @endforeach
                         </tbody>
                     </table>

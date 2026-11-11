@@ -9,8 +9,8 @@
  <header class="place-head"><div><div class="place-label">Gestion</div><h1 class="place-title">Lieux</h1><div class="place-rule">──────── ❦ ────────</div><p>Cartographie des territoires et des lieux de votre monde.</p></div><a class="btn" href="{{ route('manage.places.create') }}">+ Nouveau lieu</a></header>
  <form class="place-filters" method="GET" action="{{ route('manage.places.index') }}">
   <div><label for="place-q">Recherche</label><br><input id="place-q" name="q" value="{{ request('q') }}" placeholder="Nom ou description"></div>
-  <div><label for="place-type">Type</label><br><select id="place-type" name="type"><option value="">Tous</option>@foreach($types as $type)<option value="{{ $type }}" @selected(request('type')===$type)>{{ ucfirst($type) }}</option>@endforeach</select></div>
-  <div><label for="place-status">Statut</label><br><select id="place-status" name="status"><option value="">Tous</option>@foreach($statuses as $status)<option value="{{ $status }}" @selected(request('status')===$status)>{{ str_replace('_',' ',ucfirst($status)) }}</option>@endforeach</select></div>
+  <div><label for="place-type">Type</label><br><select id="place-type" name="type"><option value="">Tous</option>@foreach($types as $type)<option value="{{ $type }}" {{ request('type')===$type ? 'selected' : '' }}>{{ ucfirst($type) }}</option>@endforeach</select></div>
+  <div><label for="place-status">Statut</label><br><select id="place-status" name="status"><option value="">Tous</option>@foreach($statuses as $status)<option value="{{ $status }}" {{ request('status')===$status ? 'selected' : '' }}>{{ str_replace('_',' ',ucfirst($status)) }}</option>@endforeach</select></div>
   <button class="btn secondary" type="submit">Filtrer</button>
   <a class="btn secondary" href="{{ route('manage.places.index') }}">Effacer</a>
   <a class="btn secondary" href="{{ route('manage.places.index',array_merge(request()->query(),['view'=>request('view')==='flat'?'tree':'flat'])) }}">{{ request('view')==='flat' ? 'Vue arborescente' : 'Vue à plat' }}</a>

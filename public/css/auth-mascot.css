@@ -1,0 +1,13 @@
+.auth-card{position:relative}
+.auth-card-mascot-wrap{position:relative;width:min(480px,100%)}
+.auth-card-mascot-wrap .auth-card{width:100%}
+.auth-mascot{position:fixed;right:0;bottom:0;width:var(--mascot-width,425px);height:calc(var(--mascot-width,425px) * 1.412);pointer-events:none;z-index:5}
+.auth-mascot img{position:absolute;inset:0;width:100%;height:100%;-o-object-fit:contain;object-fit:contain}
+.auth-mascot .f2{opacity:0;animation:am-blink 8s steps(1,end) infinite}
+@keyframes am-blink{0%,49.99%{opacity:0}50%,100%{opacity:1}}
+.auth-mascot.talk .f2{animation:am-talk .35s infinite}
+@keyframes am-talk{0%,49%{opacity:0}50%,100%{opacity:1}}
+.auth-mascot--medallion{border-radius:50%;background:radial-gradient(var(--surface-2,var(--surface)),var(--surface));border:2px solid var(--ornament);box-shadow:2px 3px 0 var(--shadow)}
+@media(max-width:480px){.auth-mascot{width:min(210px,48vw)!important;height:auto!important;aspect-ratio:100/141.2}}
+@media(prefers-reduced-motion:reduce){.auth-mascot .f2,.auth-mascot.talk .f2{animation:none;opacity:0}}
+

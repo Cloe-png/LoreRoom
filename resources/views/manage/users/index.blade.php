@@ -46,7 +46,7 @@
 
         .users-hero-title {
             margin: 0;
-            color: #4a3117;
+            color: var(--gold-dark);
             font-family: "Cinzel", "Times New Roman", serif;
             letter-spacing: .04em;
             font-size: clamp(1.2rem, 2vw, 1.7rem);
@@ -54,7 +54,7 @@
 
         .users-hero-text {
             margin: 6px 0 0;
-            color: #6d5234;
+            color: var(--gold-dark);
             max-width: 780px;
             line-height: 1.45;
         }
@@ -65,7 +65,7 @@
             border-radius: 999px;
             padding: 7px 12px;
             background: rgba(255, 248, 233, .78);
-            color: #624424;
+            color: var(--gold-dark);
             font-size: .78rem;
             text-transform: uppercase;
             letter-spacing: .08em;
@@ -113,14 +113,14 @@
 
         .users-panel-title {
             margin: 0;
-            color: #56391b;
+            color: var(--gold-dark);
             font-family: "Cinzel", "Times New Roman", serif;
             font-size: 1rem;
             letter-spacing: .04em;
         }
 
         .users-panel-meta {
-            color: #75583a;
+            color: var(--gold-dark);
             font-size: .86rem;
         }
 
@@ -158,18 +158,18 @@
         }
 
         .users-name {
-            color: #342415;
+            color: var(--gold-dark);
             font-size: 1.05rem;
             font-weight: 700;
         }
 
         .users-email {
-            color: #584028;
+            color: var(--gold-dark);
             word-break: break-word;
         }
 
         .users-date {
-            color: #503823;
+            color: var(--gold-dark);
             white-space: nowrap;
         }
 
@@ -187,7 +187,7 @@
             border: 1px solid rgba(101,74,42,.28);
             border-radius: 10px;
             background: rgba(255,255,255,.82);
-            color: #2d2318;
+            color: var(--gold-dark);
             padding: 0 12px;
             font-family: inherit;
         }
@@ -203,7 +203,7 @@
             text-transform: uppercase;
             border: 1px solid rgba(95, 69, 37, .2);
             background: rgba(255,255,255,.54);
-            color: #6e512f;
+            color: var(--gold-dark);
         }
 
         .users-actions {
@@ -287,7 +287,7 @@
             .users-mobile-meta {
                 display: grid;
                 gap: 4px;
-                color: #5f4730;
+                color: var(--gold-dark);
             }
         }
 
@@ -380,14 +380,14 @@
                                             @csrf
                                             @method('PUT')
                                             <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
-                                            <select name="role">
+                                            <select name="role" {{ $item->isChef() ? 'disabled' : '' }}>
                                                 @foreach($roleOptions as $roleOption)
                                                     <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
                                                         {{ ucfirst($roleOption) }}
                                                     </option>
                                                 @endforeach
                                             </select>
-                                            <button class="btn secondary" type="submit">Mettre à jour</button>
+                                            <button class="btn secondary" type="submit" {{ $item->isChef() ? 'disabled' : '' }}>Mettre à jour</button>
                                         </form>
                                     </td>
                                     <td>
@@ -398,9 +398,9 @@
                                             <form method="POST" action="{{ route('manage.users.destroy', $item) }}" class="inline" onsubmit="return confirm('Supprimer ce compte utilisateur ?');">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button class="btn danger" type="submit" {{ auth()->id() === $item->id ? 'disabled' : '' }}>Supprimer</button>
+                                                <button class="btn danger" type="submit" {{ auth()->id() === $item->id || $item->isChef() ? 'disabled' : '' }}>Supprimer</button>
                                             </form>
-                                            @if($item->locked_at || $item->password_reset_pending_at)
+                                            @if(($item->locked_at || $item->password_reset_pending_at) && !$item->isChef())
                                                 <form method="POST" action="{{ route('manage.users.password', $item) }}" class="users-password-form">
                                                     @csrf
                                                     @method('PUT')
@@ -436,22 +436,22 @@
                                 @csrf
                                 @method('PUT')
                                 <span class="role-chip">Rôle actuel : {{ ucfirst($item->role) }}</span>
-                                <select name="role">
+                                <select name="role" {{ $item->isChef() ? 'disabled' : '' }}>
                                     @foreach($roleOptions as $roleOption)
                                         <option value="{{ $roleOption }}" {{ $item->role === $roleOption ? 'selected' : '' }}>
                                             {{ ucfirst($roleOption) }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <button class="btn secondary" type="submit">Mettre à jour</button>
+                                <button class="btn secondary" type="submit" {{ $item->isChef() ? 'disabled' : '' }}>Mettre à jour</button>
                             </form>
                             <div class="users-actions">
                                 <form method="POST" action="{{ route('manage.users.destroy', $item) }}" class="inline" onsubmit="return confirm('Supprimer ce compte utilisateur ?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button class="btn danger" type="submit" {{ auth()->id() === $item->id ? 'disabled' : '' }}>Supprimer</button>
+                                    <button class="btn danger" type="submit" {{ auth()->id() === $item->id || $item->isChef() ? 'disabled' : '' }}>Supprimer</button>
                                 </form>
-                                @if($item->locked_at || $item->password_reset_pending_at)
+                                @if(($item->locked_at || $item->password_reset_pending_at) && !$item->isChef())
                                     <div class="muted">L'utilisateur doit te contacter par mail avant réinitialisation.</div>
                                     <form method="POST" action="{{ route('manage.users.password', $item) }}" class="users-password-form">
                                         @csrf

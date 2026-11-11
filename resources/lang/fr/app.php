@@ -96,7 +96,7 @@ return [
         'register_footer' => 'En validant, vous accédez directement au panneau de gestion.',
         'start_page_title' => 'LoreRoom - Accueil',
         'welcome_title' => 'Bienvenue sur LoreRoom',
-        'welcome_login' => 'Aller à  la connexion',
+        'welcome_login' => 'Aller à la connexion',
         'audio' => 'Audio',
         'sound' => 'Son',
         'music' => 'Musique',

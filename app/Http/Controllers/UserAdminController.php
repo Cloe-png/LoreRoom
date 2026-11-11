@@ -51,6 +51,7 @@ class UserAdminController extends Controller
     public function update(Request $request, User $user): RedirectResponse
     {
         $this->requireAdmin();
+        abort_if($user->isChef(), 403, 'Un compte chef ne peut pas être modifié depuis les pages Comptes.');
 
         $data = $request->validate([
             'role' => ['required', Rule::in(self::ROLE_OPTIONS)],
@@ -68,6 +69,7 @@ class UserAdminController extends Controller
     public function updatePassword(Request $request, User $user): RedirectResponse
     {
         $this->requireAdmin();
+        abort_if($user->isChef(), 403, 'Un compte chef ne peut pas être modifié depuis les pages Comptes.');
 
         if (!$user->locked_at && !$user->password_reset_pending_at) {
             return redirect()
@@ -111,12 +113,10 @@ class UserAdminController extends Controller
         $this->requireAdmin();
 
         $authUser = request()->user();
+        abort_if($user->isChef(), 403, 'Un compte chef ne peut pas être supprimé depuis les pages Comptes.');
         if ($authUser && (int) $authUser->id === (int) $user->id) {
-            return redirect()
-                ->route('manage.users.index')
-                ->withErrors(['user' => 'Tu ne peux pas supprimer ton propre compte.']);
+            return redirect()->route('manage.users.index')->withErrors(['user' => 'Tu ne peux pas supprimer ton propre compte.']);
         }
-
         if ($user->worlds()->exists()) {
             return redirect()
                 ->route('manage.users.index')

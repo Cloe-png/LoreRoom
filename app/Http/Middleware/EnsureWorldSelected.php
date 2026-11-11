@@ -26,6 +26,10 @@ class EnsureWorldSelected
         if ($worlds->isEmpty()) {
             if (
                 !$request->routeIs('manage.worlds.*')
+                && !$request->routeIs('manage.index')
+                && !$request->routeIs('manage.nouveautes.*')
+                && !$request->routeIs('manage.memorial.*')
+                && !$request->routeIs('manage.suggestions.*')
                 && !$request->routeIs('manage.account.*')
                 && !$request->routeIs('manage.users.*')
                 && !$request->routeIs('manage.trash.*')

@@ -3,7 +3,7 @@
 @section('title', __('app.public.register_page_title'))
 
 @section('content')
-<x-auth-card :title="__('app.public.register_heading')" :subtitle="__('app.public.register_intro')" :wide="true">
+<x-auth-card :title="__('app.public.register_heading')" :subtitle="__('app.public.register_intro')" :wide="true" :mascot="true">
     @if(session('success'))<div class="auth-message" role="status"><x-auth-error-message :message="session('success')" /></div>@endif
     @if($errors->any())<div class="auth-message error" role="alert"><x-auth-error-message :message="$errors->first()" /></div>@endif
     <form method="POST" action="{{ route('register.store') }}" data-auth-form>

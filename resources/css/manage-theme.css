@@ -1,0 +1,479 @@
+/* Compatibility layer for older management views that use the original folio tokens. */
+html[data-theme] {
+    --sidebar-width: 240px;
+    --paper: var(--surface);
+    --paper-ink: var(--text);
+    --ink: var(--text);
+    --soft: var(--text-soft);
+    --accent: var(--accent-solid);
+    --gold-dark: var(--border);
+    --leather: var(--bg);
+}
+
+html[data-theme="dark"] {
+    --gold: #caa46a;
+}
+
+html[data-theme="light"] {
+    --gold: #a77b3c;
+}
+
+/* Match the shared management sidebar to the dashboard reference. */
+.sidebar {
+    width: 240px;
+    padding: 24px 0 20px !important;
+    border-right: 1px solid var(--border) !important;
+    background: var(--surface) !important;
+}
+
+.sidebar .brand {
+    min-height: 112px;
+    margin: 0 0 20px !important;
+    padding: 5px 10px 20px !important;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.sidebar .brand h1 {
+    width: 100%;
+    margin: 0 !important;
+    text-align: center;
+}
+
+.sidebar .brand-wordmark,
+.sidebar .analytics-wordmark {
+    display: inline-block;
+    color: var(--heading) !important;
+    -webkit-text-fill-color: var(--heading) !important;
+    font: 700 19px/1.2 "Cinzel", serif !important;
+    letter-spacing: .3em !important;
+    text-align: center !important;
+    text-decoration: none !important;
+    white-space: nowrap;
+}
+
+.sidebar .brand-rule {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px 0 0;
+    color: var(--ornament);
+    font: 12px/1 "Cinzel", serif;
+}
+
+.sidebar .brand-rule span {
+    width: 44px;
+    height: 1px;
+    background: var(--border-soft);
+}
+
+.sidebar .nav-group,
+.sidebar .nav-accordion {
+    margin: 0 !important;
+}
+
+.sidebar > .nav-group > .nav-link,
+.sidebar > .nav-accordion > summary.nav-link {
+    min-height: 44px !important;
+    height: 44px !important;
+    padding: 0 26px !important;
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-soft) !important;
+    font: 500 12px/1.2 "Cinzel", serif !important;
+    letter-spacing: .16em !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.sidebar .nav-accordion > summary.nav-link::after {
+    color: var(--text-soft) !important;
+    font-size: 10px !important;
+}
+
+.sidebar .nav-accordion-body {
+    padding: 0 !important;
+}
+
+.sidebar .nav-accordion-body .nav-link {
+    min-height: 38px !important;
+    height: 38px !important;
+    padding: 0 26px 0 46px !important;
+    display: flex;
+    flex-direction: row !important;
+    align-items: center;
+    color: var(--text-soft) !important;
+    font: 500 11.5px/1.2 "Cinzel", serif !important;
+    letter-spacing: .12em !important;
+    text-decoration: none !important;
+    text-transform: uppercase;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-accordion > summary.nav-link:hover,
+.sidebar .nav-accordion-body .nav-link:hover {
+    padding-left: 32px !important;
+    color: var(--heading) !important;
+    background: color-mix(in srgb, var(--heading) 8%, transparent) !important;
+}
+
+.sidebar .nav-accordion-body .nav-link:hover {
+    padding-left: 52px !important;
+}
+
+.sidebar > .nav-group > .nav-link.active,
+.sidebar .nav-accordion-body .nav-link.active {
+    position: relative;
+    color: var(--heading) !important;
+    font-weight: 700 !important;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--heading) 16%, transparent), transparent) !important;
+}
+
+.sidebar > .nav-group > .nav-link.active::before,
+.sidebar .nav-accordion-body .nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: -2px;
+    width: 12px;
+    height: 40px;
+    background: var(--heading);
+    clip-path: polygon(0 0,100% 0,100% 100%,50% 80%,0 100%);
+}
+
+.sidebar .nav-accordion > summary.nav-link.active {
+    color: var(--text-soft) !important;
+    font-weight: 700 !important;
+    background: transparent !important;
+}
+
+.sidebar .nav-accordion > summary.nav-link.active::before {
+    display: none;
+}
+
+.sidebar .sidebar-bottom {
+    margin-top: auto !important;
+    padding: 18px 0 0 !important;
+    border-top: 1px dotted var(--border) !important;
+}
+
+.sidebar-bottom form {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
+.sidebar-bottom form button.back-portals-link {
+    min-height: 44px;
+    padding: 0 26px !important;
+    color: var(--text-soft) !important;
+    font: italic 16px/1.2 "Cormorant Garamond", serif !important;
+    letter-spacing: .03em !important;
+    text-transform: none !important;
+}
+
+/* Keep the management frame and common legacy surfaces on one active palette. */
+.chrome,
+.main,
+.content,
+.sidebar,
+.wrap {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+}
+
+.main > header {
+    background: linear-gradient(110deg, var(--band-from), var(--band-to)) !important;
+    color: var(--on-band) !important;
+}
+
+.main > header .title,
+.main > header .topline,
+.main > header .topline a,
+.main > header .theme-toggle {
+    color: var(--on-band) !important;
+}
+
+.main > header .sidebar-toggle {
+    color: var(--on-band) !important;
+    -webkit-text-fill-color: var(--on-band) !important;
+}
+
+.sidebar > .nav-group > .nav-link,
+.sidebar > .nav-accordion > summary.nav-link,
+.sidebar .nav-accordion-body .nav-link,
+.sidebar-bottom > .nav-link,
+.sidebar-bottom form button.back-portals-link {
+    color: var(--text) !important;
+}
+
+.sidebar .nav-link:hover,
+.sidebar .nav-link.active,
+.sidebar .nav-accordion > summary.nav-link.active:hover {
+    color: var(--heading) !important;
+}
+
+.content .card,
+.content .panel,
+.content .dashboard-card,
+.content .stat-card,
+.content .world-card,
+.content .first-world,
+.content .sheet,
+.content .journal-cover,
+.content .table-wrap,
+.content fieldset {
+    background-color: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+.content p,
+.content li,
+.content dd,
+.content dt,
+.content td,
+.content th,
+.content small,
+.content time,
+.content .help,
+.content .muted,
+.content .text-muted,
+.content label,
+.content legend,
+.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.content select,
+.content textarea {
+    color: var(--text) !important;
+}
+
+.content h1,
+.content h2,
+.content h3,
+.content h4,
+.content h5,
+.content a:not(.btn):not(.btn-mini) {
+    color: var(--heading) !important;
+}
+
+.content .btn,
+.content .btn-mini,
+.content button:not(.sidebar-toggle):not(.sidebar-close),
+.content input[type="submit"],
+.content .worlds-cta,
+.content .world-action--view,
+.content .plus-btn {
+    color: var(--on-accent) !important;
+    -webkit-text-fill-color: currentColor !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.content .btn.secondary,
+.content .btn-mini.secondary,
+.content .world-action--edit {
+    color: var(--heading) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Explicit page-level button colors prevent legacy inline palettes from hiding labels. */
+.content .worlds-page .worlds-cta,
+.content .worlds-page .world-action--view,
+.content .worlds-page .world-card-actions .btn,
+.content .place-page a.btn:not(.secondary),
+.content .place-page button.btn:not(.secondary),
+.content .trash-shell .btn:not(.secondary) {
+    color: var(--on-accent) !important;
+    -webkit-text-fill-color: var(--on-accent) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.content .place-page .btn.secondary,
+.content .trash-shell .btn.secondary {
+    color: var(--heading) !important;
+    -webkit-text-fill-color: var(--heading) !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Restore button variant contrast when a page uses a native <button>. */
+.content button.btn.secondary,
+.content button.btn-mini.secondary,
+.content button.secondary,
+.content input[type="submit"].secondary,
+.content .place-page a.btn.secondary {
+    background: transparent !important;
+    color: var(--heading) !important;
+    -webkit-text-fill-color: var(--heading) !important;
+    border-color: var(--border) !important;
+    box-shadow: none !important;
+}
+
+.content button.btn.danger,
+.content button.btn-mini.danger,
+.content .trash-shell button.btn.danger {
+    background: var(--danger) !important;
+    color: #fffaf0 !important;
+    -webkit-text-fill-color: #fffaf0 !important;
+    border-color: var(--danger) !important;
+}
+
+/* The legacy place screen used a dark nested header and fixed paper-colored panels. */
+.content .place-page .place-head {
+    background: linear-gradient(110deg, var(--band-from), var(--band-to)) !important;
+    color: var(--on-band) !important;
+    border-bottom: 2px solid var(--border) !important;
+}
+
+.content .place-page .place-head .place-label,
+.content .place-page .place-head .place-title,
+.content .place-page .place-head p {
+    color: var(--on-band) !important;
+}
+
+.content .place-page .place-head .place-rule {
+    color: var(--band-accent) !important;
+}
+
+.content .place-page .place-filters,
+.content .place-page .place-row,
+.content .place-page .place-card,
+.content .place-page .place-form details,
+.content .place-page .place-form .form-card {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+    outline-color: var(--border-soft) !important;
+    box-shadow: 3px 4px 0 var(--shadow) !important;
+}
+
+.content .place-page .place-label,
+.content .place-page .place-meta,
+.content .place-page label {
+    color: var(--text-soft) !important;
+}
+
+.content .place-page .place-row-title,
+.content .place-page .place-stamp {
+    color: var(--heading) !important;
+}
+
+.content .place-page button.btn:not(.secondary),
+.content .place-page a.btn:not(.secondary) {
+    background: var(--accent-solid) !important;
+    color: var(--on-accent) !important;
+    -webkit-text-fill-color: var(--on-accent) !important;
+    border-color: var(--accent-solid) !important;
+}
+
+.content .place-page button.btn.secondary,
+.content .place-page a.btn.secondary {
+    background: transparent !important;
+    color: var(--heading) !important;
+    -webkit-text-fill-color: var(--heading) !important;
+    border-color: var(--border) !important;
+}
+
+/* Analytics mixes pastel metric cards with dark data panels. Give each surface its own readable ink. */
+.content .analytics-shell .analytics-hero {
+    background: var(--surface-2) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+}
+
+.content .analytics-shell .analytics-title,
+.content .analytics-shell .analytics-group-title {
+    color: var(--heading) !important;
+}
+
+.content .analytics-shell .analytics-text,
+.content .analytics-shell .analytics-range {
+    color: var(--text) !important;
+}
+
+.content .analytics-shell .analytics-card-label,
+.content .analytics-shell .analytics-card-value,
+.content .analytics-shell .analytics-card-note {
+    color: var(--note-ink) !important;
+    -webkit-text-fill-color: var(--note-ink) !important;
+}
+
+.content .analytics-shell .analytics-card-value.analytics-error {
+    color: var(--danger-text) !important;
+    -webkit-text-fill-color: var(--danger-text) !important;
+}
+
+.content .analytics-shell .analytics-panel-top {
+    background: var(--note-bg) !important;
+}
+
+.content .analytics-shell .analytics-panel-title {
+    color: var(--note-ink) !important;
+    -webkit-text-fill-color: var(--note-ink) !important;
+}
+
+.content .analytics-shell .analytics-panel-meta {
+    color: var(--note-accent) !important;
+    -webkit-text-fill-color: var(--note-accent) !important;
+}
+
+.content .analytics-shell .analytics-table thead th {
+    background: var(--note-bg) !important;
+    color: var(--note-ink) !important;
+    -webkit-text-fill-color: var(--note-ink) !important;
+}
+
+.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.content select,
+.content textarea {
+    background-color: var(--surface-2) !important;
+    border-color: var(--border-soft) !important;
+}
+
+.content input::placeholder,
+.content textarea::placeholder {
+    color: var(--text-soft) !important;
+    opacity: 1;
+}
+
+.content .btn.secondary,
+.content .btn-mini.secondary {
+    color: var(--heading) !important;
+}
+
+.content .flash,
+.content .errors {
+    background-color: var(--surface-2) !important;
+}
+
+.content .alert-success,
+.content .text-success {
+    color: var(--success-text) !important;
+}
+
+.content .alert-danger,
+.content .text-danger,
+.content .field-error {
+    color: var(--danger-text) !important;
+}
+
+.content .alert-success,
+.content .text-success,
+.content .active-badge {
+    color: var(--success-text) !important;
+}

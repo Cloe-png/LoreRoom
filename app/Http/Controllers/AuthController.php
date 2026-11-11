@@ -18,6 +18,7 @@ class AuthController extends Controller
 {
     public function showLogin()
     {
+        app()->setLocale('fr');
         if (Auth::check()) {
             return redirect()->route('manage.index');
         }
@@ -68,13 +69,13 @@ class AuthController extends Controller
 
     public function showRegister()
     {
+        app()->setLocale('fr');
         if (Auth::check()) {
             return redirect()->route('manage.index');
         }
 
         if (request()->hasSession() && !request()->session()->has('locale')) {
-            request()->session()->put('locale', 'en');
-            app()->setLocale('en');
+            request()->session()->put('locale', 'fr');
         }
 
         return view('register', [

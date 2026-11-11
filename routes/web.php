@@ -8,10 +8,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\FactionController;
 use App\Http\Controllers\ManageController;
+use App\Http\Controllers\DashboardHomeController;
+use App\Http\Controllers\MemorialController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TrashController;
+use App\Http\Controllers\ThemePreferenceController;
 use App\Http\Controllers\UserAnalyticsController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\WorldController;
@@ -38,12 +41,28 @@ Route::get('/register', function () {
 Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::middleware(['auth', 'temp.token', 'session.activity'])->post('/manage/preferences/theme', [ThemePreferenceController::class, 'update'])->name('manage.preferences.theme');
+
+Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
+    Route::get('/manage/hommage', [MemorialController::class, 'show'])->name('manage.memorial.show');
+    Route::post('/manage/hommage/offrande', [MemorialController::class, 'offer'])->middleware('throttle:30,1')->name('manage.memorial.offer');
+    Route::get('/manage/hommage/stats', [MemorialController::class, 'stats'])->name('manage.memorial.stats');
+    Route::get('/manage/nouveautes', [\App\Http\Controllers\ChangelogController::class, 'index'])->name('manage.nouveautes.index');
+    Route::post('/manage/nouveautes/lues', [\App\Http\Controllers\ChangelogController::class, 'seen'])->name('manage.nouveautes.seen');
+    Route::get('/manage/nouveautes/create', [\App\Http\Controllers\ChangelogController::class, 'create'])->name('manage.nouveautes.create');
+    Route::post('/manage/nouveautes', [\App\Http\Controllers\ChangelogController::class, 'store'])->name('manage.nouveautes.store');
+    Route::get('/manage/nouveautes/{entry}/edit', [\App\Http\Controllers\ChangelogController::class, 'edit'])->whereNumber('entry')->name('manage.nouveautes.edit');
+    Route::put('/manage/nouveautes/{entry}', [\App\Http\Controllers\ChangelogController::class, 'update'])->whereNumber('entry')->name('manage.nouveautes.update');
+    Route::delete('/manage/nouveautes/{entry}', [\App\Http\Controllers\ChangelogController::class, 'destroy'])->whereNumber('entry')->name('manage.nouveautes.destroy');
+});
+
 Route::get('/media/{path}', [MediaController::class, 'show'])
     ->where('path', '.*')
     ->name('media.show');
 
 Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
-    Route::get('/manage', [ManageController::class, 'index'])->name('manage.index');
+    Route::get('/manage', DashboardHomeController::class)->name('manage.index');
+    Route::post('/manage/idee/autre', DashboardHomeController::class)->name('manage.prompts.another');
     Route::get('manage/account', [AccountSettingsController::class, 'edit'])->name('manage.account.edit');
     Route::put('manage/account/password', [AccountSettingsController::class, 'updatePassword'])->name('manage.account.password');
     Route::put('manage/account/locale', [AccountSettingsController::class, 'updateLocale'])->name('manage.account.locale');

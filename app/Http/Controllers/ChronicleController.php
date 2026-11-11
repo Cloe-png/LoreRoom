@@ -398,12 +398,22 @@ class ChronicleController extends Controller
 
     public function create()
     {
-        abort(403, 'La frise chronologique est en lecture seule.');
+        $defaultWorld = $this->currentWorld();
+        $places = Place::query()
+            ->select(['id', 'name', 'region'])
+            ->orderBy('name')
+            ->get();
+        $characters = Character::query()
+            ->select(['id', 'name', 'first_name', 'last_name', 'birth_date', 'image_path'])
+            ->orderByRaw('birth_date IS NULL, birth_date ASC')
+            ->orderBy('name')
+            ->get();
+
+        return view('manage.chronicles.create', compact('defaultWorld', 'characters', 'places'));
     }
 
     public function store(Request $request)
     {
-        abort(403, 'La frise chronologique est en lecture seule.');
         $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
@@ -443,7 +453,6 @@ class ChronicleController extends Controller
 
     public function edit(Chronicle $chronicle)
     {
-        abort(403, 'La frise chronologique est en lecture seule.');
         $chronicle->load('linkedCharacters:id');
         $defaultWorld = $this->currentWorld();
         $places = Place::query()
@@ -461,7 +470,6 @@ class ChronicleController extends Controller
 
     public function update(Request $request, Chronicle $chronicle)
     {
-        abort(403, 'La frise chronologique est en lecture seule.');
         $defaultWorldId = $this->requireCurrentWorldId();
         if (!$defaultWorldId) {
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
@@ -494,7 +502,6 @@ class ChronicleController extends Controller
 
     public function destroy(Chronicle $chronicle)
     {
-        abort(403, 'La frise chronologique est en lecture seule.');
         $chronicle->delete();
 
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique supprimée.');

@@ -1,0 +1,7 @@
+/* TODO(design): hommage */
+.memorial-page { max-width: 760px; margin: 0 auto; padding: 2rem; color: var(--text); text-align: center; background: linear-gradient(135deg,var(--surface),var(--bg)); }
+.memorial-page section { margin: 1.5rem 0; padding: 1.25rem; border: 1px solid var(--border); }
+.memorial-page h2 { color: var(--heading); }
+.memorial-offering svg,.memorial-offering img { color: var(--ornament); }
+.memorial-page :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .memorial-page *, .memorial-page *::before, .memorial-page *::after { animation: none !important; transition: none !important; } }

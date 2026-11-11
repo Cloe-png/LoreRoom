@@ -33,6 +33,7 @@ class User extends Authenticatable
         'locked_at',
         'password_reset_pending_at',
         'preferred_locale',
+        'theme',
     ];
 
     /**
@@ -77,7 +78,17 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return (string) ($this->role ?? '') === 'admin' || in_array('admin', $this->roles ?? [], true);
+        return (string) ($this->role ?? '') === 'admin' || $this->isChef() || in_array('admin', $this->roles ?? [], true);
+    }
+
+    public function isChef(): bool
+    {
+        return (string) ($this->role ?? '') === 'chef';
+    }
+
+    public function isAdminOrChef(): bool
+    {
+        return $this->isAdmin();
     }
 
     public function hasRole(string $role): bool
@@ -92,7 +103,7 @@ class User extends Authenticatable
 
     public function canAccessModule(string $module): bool
     {
-        if ($this->isAdmin()) {
+        if ($this->isAdminOrChef()) {
             return true;
         }
 
