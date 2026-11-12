@@ -8,8 +8,8 @@
         <form method="POST" action="{{ route('manage.worlds.store') }}">
             @csrf
             <div class="field">
-                <label>{{ __('app.worlds.name') }}</label>
-                <input type="text" name="name" value="{{ old('name') }}" required>
+                <label for="world-name">{{ __('app.worlds.name') }}</label>
+                <input id="world-name" type="text" name="name" value="{{ old('name') }}" required autofocus>
             </div>
             <div class="field">
                 <label>{{ __('app.worlds.description') }}</label>

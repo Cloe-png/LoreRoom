@@ -34,6 +34,7 @@ class User extends Authenticatable
         'password_reset_pending_at',
         'preferred_locale',
         'theme',
+        'tour_completed_at',
     ];
 
     /**
@@ -59,6 +60,7 @@ class User extends Authenticatable
         'last_failed_login_at' => 'datetime',
         'locked_at' => 'datetime',
         'password_reset_pending_at' => 'datetime',
+        'tour_completed_at' => 'datetime',
     ];
 
     public function worlds(): HasMany

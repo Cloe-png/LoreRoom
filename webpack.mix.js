@@ -13,10 +13,12 @@ const mix = require('laravel-mix');
 
 mix.js('resources/js/app.js', 'public/js')
     .js('resources/js/auth-mascot.js', 'public/js')
+    .js('resources/js/tour.js', 'public/js')
     .postCss('resources/css/app.css', 'public/css', [
         //
     ])
     .postCss('resources/css/auth-mascot.css', 'public/css')
     .postCss('resources/css/shell.css', 'public/css')
     .postCss('resources/css/home.css', 'public/css')
-    .postCss('resources/css/manage-theme.css', 'public/css');
+    .postCss('resources/css/manage-theme.css', 'public/css')
+    .postCss('resources/css/tour.css', 'public/css');

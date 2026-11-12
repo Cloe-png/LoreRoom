@@ -19352,6 +19352,19 @@ var __WEBPACK_AMD_DEFINE_RESULT__;/**
 
 /***/ },
 
+/***/ "./resources/css/tour.css"
+/*!********************************!*\
+  !*** ./resources/css/tour.css ***!
+  \********************************/
+(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+// extracted by mini-css-extract-plugin
+
+
+/***/ },
+
 /***/ "./resources/css/app.css"
 /*!*******************************!*\
   !*** ./resources/css/app.css ***!
@@ -19743,7 +19756,8 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"axios","version":"0.21.4","de
 /******/ 			"css/home": 0,
 /******/ 			"css/shell": 0,
 /******/ 			"css/auth-mascot": 0,
-/******/ 			"css/app": 0
+/******/ 			"css/app": 0,
+/******/ 			"css/tour": 0
 /******/ 		};
 /******/ 		
 /******/ 		// no chunk on demand loading
@@ -19793,12 +19807,13 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"axios","version":"0.21.4","de
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
 /******/ 	// This entry module depends on other loaded chunks and execution need to be delayed
-/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/js/app.js")))
-/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/css/app.css")))
-/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/css/auth-mascot.css")))
-/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/css/shell.css")))
-/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/css/home.css")))
-/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app"], () => (__webpack_require__("./resources/css/manage-theme.css")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/js/app.js")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/app.css")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/auth-mascot.css")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/shell.css")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/home.css")))
+/******/ 	__webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/manage-theme.css")))
+/******/ 	var __webpack_exports__ = __webpack_require__.O(undefined, ["css/manage-theme","css/home","css/shell","css/auth-mascot","css/app","css/tour"], () => (__webpack_require__("./resources/css/tour.css")))
 /******/ 	__webpack_exports__ = __webpack_require__.O(__webpack_exports__);
 /******/ 	
 /******/ })()

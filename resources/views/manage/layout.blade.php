@@ -740,6 +740,7 @@
         </style>@endunless
 <meta name="theme-color" content="{{ (auth()->check() ? auth()->user()->theme : request()->cookie('theme')) === 'light' ? '#efe2c9' : '#111723' }}" data-theme-color>
 <script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
+        <link rel="stylesheet" href="{{ asset('css/tour.css') }}">
 </head>
     <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif">
         @if(request()->routeIs('manage.index'))
@@ -747,21 +748,22 @@
             <aside class="side">
                 <a class="logo" href="{{ route('manage.index') }}" aria-label="LoreRoom — accueil">LOREROOM</a><div class="orn" aria-hidden="true"><i></i><span>&#10022;</span><i></i></div>
                 <nav class="nav">
-                    <a class="on" href="{{ route('manage.index') }}">Accueil</a>
+                    <a class="on" href="{{ route('manage.index') }}" data-tour="home">Accueil</a>
                     <details @if(request()->routeIs('manage.worlds.*','manage.characters.*','manage.places.*','manage.chapters.*','manage.lore.*','manage.jobs.*','manage.factions.*','manage.species.*')) open @endif>
                         <summary class="par">Gestion <small>&#9662;</small></summary>
-                        <a class="sub" href="{{ route('manage.worlds.index') }}">Mondes</a><a class="sub" href="{{ route('manage.characters.index') }}">Personnages</a><a class="sub" href="{{ route('manage.places.index') }}">Lieux</a>
-                        @if(auth()->user()->canAccessModule('chapters'))<a class="sub" href="{{ route('manage.chapters.index') }}">Chapitres</a>@endif
-                        @if(auth()->user()->canAccessModule('lore'))<a class="sub" href="{{ route('manage.species.index') }}">Esp&egrave;ces</a><a class="sub" href="{{ route('manage.lore.index') }}">Lore</a>@endif
-                        @if(auth()->user()->canAccessModule('jobs'))<a class="sub" href="{{ route('manage.jobs.index') }}">M&eacute;tiers</a>@endif
-                        @if(auth()->user()->canAccessModule('factions'))<a class="sub" href="{{ route('manage.factions.index') }}">Factions</a>@endif
+                        <a class="sub" href="{{ route('manage.worlds.index') }}" data-tour="worlds">Mondes</a><a class="sub" href="{{ route('manage.characters.index') }}" data-tour="characters">Personnages</a><a class="sub" href="{{ route('manage.places.index') }}" data-tour="places">Lieux</a>
+                        @if(auth()->user()->canAccessModule('chapters'))<a class="sub" href="{{ route('manage.chapters.index') }}" data-tour="chapters">Chapitres</a>@endif
+                        @if(auth()->user()->canAccessModule('lore'))<a class="sub" href="{{ route('manage.species.index') }}" data-tour="species">Esp&egrave;ces</a><a class="sub" href="{{ route('manage.lore.index') }}" data-tour="lore">Lore</a>@endif
+                        @if(auth()->user()->canAccessModule('jobs'))<a class="sub" href="{{ route('manage.jobs.index') }}" data-tour="jobs">M&eacute;tiers</a>@endif
+                        @if(auth()->user()->canAccessModule('factions'))<a class="sub" href="{{ route('manage.factions.index') }}" data-tour="factions">Factions</a>@endif
                     </details>
-                    <details @if(request()->routeIs('manage.chronicles.*','manage.relations.*','manage.genealogy.*','manage.gallery.*')) open @endif><summary class="par">Lore <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.chronicles.index') }}">Chronologie</a><a class="sub" href="{{ route('manage.relations.index') }}">Relations</a>@if(auth()->user()->canAccessModule('genealogy'))<a class="sub" href="{{ route('manage.genealogy.index') }}">G&eacute;n&eacute;alogie</a>@endif @if(auth()->user()->canAccessModule('gallery'))<a class="sub" href="{{ route('manage.gallery.index') }}">Galerie</a>@endif</details>
-                    <details @if(request()->routeIs('manage.account.*','manage.suggestions.*','manage.trash.*')) open @endif><summary class="par">Outils <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.account.edit') }}">Param&egrave;tres</a>@if(auth()->user()->canAccessModule('suggestions'))<a class="sub" href="{{ route('manage.suggestions.index') }}">Suggestions</a>@endif @if(auth()->user()->canAccessModule('trash'))<a class="sub" href="{{ route('manage.trash.index') }}">Corbeille</a>@endif</details>
+                    <details @if(request()->routeIs('manage.chronicles.*','manage.relations.*','manage.genealogy.*','manage.gallery.*')) open @endif><summary class="par">Lore <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.chronicles.index') }}" data-tour="chronology">Chronologie</a><a class="sub" href="{{ route('manage.relations.index') }}" data-tour="relations">Relations</a>@if(auth()->user()->canAccessModule('genealogy'))<a class="sub" href="{{ route('manage.genealogy.index') }}" data-tour="genealogy">G&eacute;n&eacute;alogie</a>@endif @if(auth()->user()->canAccessModule('gallery'))<a class="sub" href="{{ route('manage.gallery.index') }}" data-tour="gallery">Galerie</a>@endif</details>
+                    <details @if(request()->routeIs('manage.account.*','manage.suggestions.*','manage.trash.*')) open @endif><summary class="par" data-tour="tools">Outils <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.account.edit') }}">Param&egrave;tres</a>@if(auth()->user()->canAccessModule('suggestions'))<a class="sub" href="{{ route('manage.suggestions.index') }}">Suggestions</a>@endif @if(auth()->user()->canAccessModule('trash'))<a class="sub" href="{{ route('manage.trash.index') }}">Corbeille</a>@endif</details>
                 </nav>
                 <div class="sep"></div><nav class="nav">
-                    @if(auth()->user()->canAccessModule('analytics'))<a href="{{ route('manage.analytics.index') }}">Analytics</a>@endif
-                    @if(auth()->user()->canAccessModule('users'))<a href="{{ route('manage.users.index') }}">Comptes</a>@endif
+                    @if(auth()->user()->canAccessModule('analytics'))<a href="{{ route('manage.analytics.index') }}" @if(auth()->user()->isAdminOrChef()) data-tour="analytics" @endif>Analytics</a>@endif
+                    @if(auth()->user()->canAccessModule('users'))<a href="{{ route('manage.users.index') }}" @if(auth()->user()->isAdminOrChef()) data-tour="accounts" @endif>Comptes</a>@endif
+                    <x-tour-restart-button />
                     <a class="q" href="#" onclick="event.preventDefault();this.nextElementSibling.submit()">D&eacute;connexion</a><form method="POST" action="{{ route('logout') }}" hidden>@csrf</form>
                 </nav>
             </aside>
@@ -798,7 +800,7 @@
                         </h1>
                     </div>
                     <div class="nav-group">
-                        <a class="nav-link @if(request()->routeIs('manage.index')) active @endif" href="{{ route('manage.index') }}">
+                    <a class="nav-link @if(request()->routeIs('manage.index')) active @endif" href="{{ route('manage.index') }}" data-tour="home">
                             <span class="nav-name">{{ __('app.nav.home') }}</span>
                         </a>
                     </div>
@@ -808,37 +810,37 @@
                             <span class="nav-name">Gestion</span>
                         </summary>
                         <div class="nav-accordion-body">
-                            <a class="nav-link @if(request()->routeIs('manage.worlds.*')) active @endif" href="{{ route('manage.worlds.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.worlds.*')) active @endif" href="{{ route('manage.worlds.index') }}" data-tour="worlds">
                                 <span class="nav-name">{{ __('app.nav.worlds') }}</span>
                             </a>
-                            <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.characters.*')) active @endif" href="{{ route('manage.characters.index') }}" data-tour="characters">
                                 <span class="nav-name">{{ __('app.nav.characters') }}</span>
                             </a>
-                            <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.places.*')) active @endif" href="{{ route('manage.places.index') }}" data-tour="places">
                                 <span class="nav-name">{{ __('app.nav.places') }}</span>
                             </a>
                             @if($currentUser && $currentUser->canAccessModule('chapters'))
-                                <a class="nav-link @if(request()->routeIs('manage.chapters.*')) active @endif" href="{{ route('manage.chapters.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.chapters.*')) active @endif" href="{{ route('manage.chapters.index') }}" data-tour="chapters">
                                     <span class="nav-name">{{ __('app.nav.chapters') }}</span>
                                 </a>
                             @endif
                             @if($currentUser && $currentUser->canAccessModule('lore'))
-                                <a class="nav-link @if(request()->routeIs('manage.lore.*')) active @endif" href="{{ route('manage.lore.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.lore.*')) active @endif" href="{{ route('manage.lore.index') }}" data-tour="lore">
                                     <span class="nav-name">{{ __('app.nav.lore') }}</span>
                                 </a>
                             @endif
                             @if($currentUser && $currentUser->canAccessModule('jobs'))
-                                <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.jobs.*')) active @endif" href="{{ route('manage.jobs.index') }}" data-tour="jobs">
                                     <span class="nav-name">{{ __('app.nav.jobs') }}</span>
                                 </a>
                             @endif
                             @if($currentUser && $currentUser->canAccessModule('factions'))
-                                <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.factions.*')) active @endif" href="{{ route('manage.factions.index') }}" data-tour="factions">
                                     <span class="nav-name">{{ __('app.nav.factions') }}</span>
                                 </a>
                             @endif
                             @if($currentUser && $currentUser->canAccessModule('lore'))
-                                <a class="nav-link @if(request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.species.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.species.*')) active @endif" href="{{ route('manage.species.index') }}" data-tour="species">
                                     <span class="nav-name">Espèces</span>
                                 </a>
                             @endif
@@ -850,19 +852,19 @@
                             <span class="nav-name">Lore</span>
                         </summary>
                         <div class="nav-accordion-body">
-                            <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.chronicles.*')) active @endif" href="{{ route('manage.chronicles.index') }}" data-tour="chronology">
                                 <span class="nav-name">{{ __('app.nav.chronicles') }}</span>
                             </a>
-                            <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.relations.*')) active @endif" href="{{ route('manage.relations.index') }}" data-tour="relations">
                                 <span class="nav-name">{{ __('app.nav.relations') }}</span>
                             </a>
                             @if($currentUser && $currentUser->canAccessModule('genealogy'))
-                                <a class="nav-link @if(request()->routeIs('manage.genealogy.*')) active @endif" href="{{ route('manage.genealogy.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.genealogy.*')) active @endif" href="{{ route('manage.genealogy.index') }}" data-tour="genealogy">
                                     <span class="nav-name">{{ __('app.nav.genealogy') }}</span>
                                 </a>
                             @endif
                             @if($currentUser && $currentUser->canAccessModule('gallery'))
-                                <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}">
+                                <a class="nav-link @if(request()->routeIs('manage.gallery.*')) active @endif" href="{{ route('manage.gallery.index') }}" data-tour="gallery">
                                     <span class="nav-name">{{ __('app.nav.gallery') }}</span>
                                 </a>
                             @endif
@@ -870,7 +872,7 @@
                     </details>
 
                     <details class="nav-accordion" @if(request()->routeIs('manage.suggestions.*') || request()->routeIs('manage.trash.*')) open @endif>
-                        <summary class="nav-link @if(request()->routeIs('manage.suggestions.*') || request()->routeIs('manage.trash.*')) active @endif">
+                        <summary class="nav-link @if(request()->routeIs('manage.suggestions.*') || request()->routeIs('manage.trash.*')) active @endif" data-tour="tools">
                             <span class="nav-name">Outils</span>
                         </summary>
                         <div class="nav-accordion-body">
@@ -892,15 +894,16 @@
 
                     <div class="sidebar-bottom">
                         @if($currentUser && $currentUser->canAccessModule('analytics'))
-                            <a class="nav-link @if(request()->routeIs('manage.analytics.*')) active @endif" href="{{ route('manage.analytics.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.analytics.*')) active @endif" href="{{ route('manage.analytics.index') }}" @if($currentUser && $currentUser->isAdminOrChef()) data-tour="analytics" @endif>
                                 <span class="nav-name">{{ __('app.nav.analytics') }}</span>
                             </a>
                         @endif
                         @if($currentUser && $currentUser->canAccessModule('users'))
-                            <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}">
+                            <a class="nav-link @if(request()->routeIs('manage.users.*')) active @endif" href="{{ route('manage.users.index') }}" @if($currentUser && $currentUser->isAdminOrChef()) data-tour="accounts" @endif>
                                 <span class="nav-name">{{ __('app.nav.accounts') }}</span>
                             </a>
                         @endif
+                        <x-tour-restart-button />
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="back-portals-link">{{ __('app.nav.logout') }}</button>
@@ -1103,6 +1106,8 @@
             })();
         </script>
         @include('partials.i18n')
+        @include('components.first-visit-tour', ['autoStart' => request()->routeIs('manage.index')])
+        <script src="{{ asset('js/tour.js') }}" defer></script>
     </body>
 </html>
 

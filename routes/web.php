@@ -15,6 +15,7 @@ use App\Http\Controllers\PlaceController;
 use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TrashController;
 use App\Http\Controllers\ThemePreferenceController;
+use App\Http\Controllers\TourController;
 use App\Http\Controllers\UserAnalyticsController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\WorldController;
@@ -42,6 +43,16 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.st
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'temp.token', 'session.activity'])->post('/manage/preferences/theme', [ThemePreferenceController::class, 'update'])->name('manage.preferences.theme');
+
+Route::middleware(['auth', 'throttle:30,1'])->prefix('/manage/tour')->name('manage.tour.')->group(function () {
+    Route::post('/complete', [TourController::class, 'complete'])->name('complete');
+    Route::post('/restart', [TourController::class, 'restart'])->name('restart');
+});
+
+Route::middleware(['auth', 'temp.token', 'session.activity'])->group(function () {
+    Route::get('manage/worlds/create', [WorldController::class, 'create'])->name('manage.worlds.create');
+    Route::post('manage/worlds', [WorldController::class, 'store'])->name('manage.worlds.store');
+});
 
 Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])->group(function () {
     Route::get('/manage/hommage', [MemorialController::class, 'show'])->name('manage.memorial.show');
@@ -71,7 +82,7 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
     Route::post('manage/account/import-world', [AccountSettingsController::class, 'importWorld'])->name('manage.account.import-world');
     Route::get('manage/characters/{character}/export-pdf', [CharacterController::class, 'exportPdf'])->name('manage.characters.export-pdf');
     Route::post('manage/worlds/{world}/switch', [WorldController::class, 'switch'])->name('manage.worlds.switch');
-    Route::resource('manage/worlds', WorldController::class)->names('manage.worlds');
+    Route::resource('manage/worlds', WorldController::class)->except(['create', 'store'])->names('manage.worlds');
     Route::resource('manage/characters', CharacterController::class)->names('manage.characters');
     Route::middleware('module.access:chapters')->group(function () {
         Route::resource('manage/chapters', ChapterController::class)->names('manage.chapters');
