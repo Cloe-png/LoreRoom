@@ -1108,6 +1108,7 @@
         @include('partials.i18n')
         @include('components.first-visit-tour', ['autoStart' => request()->routeIs('manage.index')])
         <script src="{{ asset('js/tour.js') }}" defer></script>
+        @if(request()->routeIs('manage.index'))<script src="{{ mix('js/birthday-party.js') }}" defer></script>@endif
     </body>
 </html>
 

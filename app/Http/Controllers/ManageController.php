@@ -10,6 +10,7 @@ use App\Models\Place;
 use App\Models\User;
 use App\Models\UserLog;
 use App\Models\World;
+use App\Support\TodayBirthdays;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -20,7 +21,7 @@ class ManageController extends Controller
 {
     public function index(Request $request)
     {
-        $today = Carbon::today();
+        $today = Carbon::today(config('app.timezone'));
         $user = $request->user();
         $searchTerm = trim((string) $request->query('q', ''));
         $activeWorld = $this->currentWorld();
@@ -42,11 +43,7 @@ class ManageController extends Controller
             'placesCount' => Place::count(),
             'chroniclesCount' => Chronicle::count(),
             'today' => $today,
-            'todayBirthdays' => Character::with('world')
-                ->whereMonth('birth_date', $today->month)
-                ->whereDay('birth_date', $today->day)
-                ->orderBy('name')
-                ->get(),
+            'todayBirthdays' => app(TodayBirthdays::class)->forWorld($activeWorld, $user, $today),
             'todayChronicles' => Chronicle::with('world')
                 ->whereDate('event_date', $today)
                 ->orderBy('title')

@@ -5,6 +5,10 @@
 <p class="hi">Voici où en est le monde de {{ $activeWorld->name ?? 'votre carnet' }}.</p>
 <div class="fl" aria-hidden="true"><i></i><span>❦</span><i></i></div>
 
+@if($activeWorld && $todayBirthdays->isNotEmpty())
+    @include('components.birthday-banner', ['birthdays' => $todayBirthdays, 'birthdayToday' => $today])
+@endif
+
 @if($activeWorld)
     <section class="card hero">
         <div>

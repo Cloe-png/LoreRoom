@@ -13,6 +13,7 @@ use App\Models\Place;
 use App\Models\PlaceGalleryImage;
 use App\Models\Species;
 use App\Models\WritingPrompt;
+use App\Support\TodayBirthdays;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class DashboardHomeController extends Controller
     {
         $user = $request->user();
         $world = $this->currentWorld();
+        $today = Carbon::today(config('app.timezone'));
         $steps = null;
         if (!$user->onboarding_completed_at) {
             $characterIds = $world ? Character::where('world_id', $world->id)->pluck('id') : collect();
@@ -59,6 +61,8 @@ class DashboardHomeController extends Controller
 
         return view('manage.home', [
             'activeWorld' => $world,
+            'todayBirthdays' => app(TodayBirthdays::class)->forWorld($world, $user, $today),
+            'today' => $today,
             'steps' => $steps,
             'accomplishedAt' => $user->onboarding_completed_at,
             'idea' => $idea,
