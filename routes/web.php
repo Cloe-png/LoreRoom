@@ -80,6 +80,7 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
     Route::get('manage/account/export-world', [AccountSettingsController::class, 'exportWorld'])->name('manage.account.export-world');
     Route::post('manage/account/import-world', [AccountSettingsController::class, 'importWorld'])->name('manage.account.import-world');
     Route::get('manage/characters/{character}/export-pdf', [CharacterController::class, 'exportPdf'])->name('manage.characters.export-pdf');
+    Route::get('manage/characters/{character}/export-image-view', [CharacterController::class, 'exportImage'])->name('manage.characters.export-image-view');
     Route::post('manage/worlds/{world}/switch', [WorldController::class, 'switch'])->name('manage.worlds.switch');
     Route::resource('manage/worlds', WorldController::class)->except(['create', 'store'])->names('manage.worlds');
     Route::resource('manage/characters', CharacterController::class)->names('manage.characters');

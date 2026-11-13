@@ -17,20 +17,28 @@
         table.tbl th, table.tbl td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         table.tbl th { background: #f5f5f5; }
         .gallery-img { width: 160px; height: 130px; object-fit: contain; border: 1px solid #ddd; margin-right: 8px; margin-bottom: 8px; }
+        .image-export-silhouette { display:inline-grid; place-items:center; overflow:hidden; background:#e1cfad; border:1px solid #9b8060; }
+        .image-export-silhouette svg { display:block; width:100%; height:100%; }
     </style>
 </head>
 <body>
 @php
     $children = $character->childrenFromFather->merge($character->childrenFromMother)->unique('id');
+    $imageExport = $imageExport ?? false;
 @endphp
 
+@if($imageExport)
+<main class="character-export-canvas" data-image-export-canvas style="box-sizing:border-box;width:900px;padding:32px;background:#efe2c9;color:#1e1e1e;font-family:Georgia,'Times New Roman',serif;">
+@endif
 <h1>{{ $character->display_name }}</h1>
 <p class="muted">Fiche personnage exportée en PDF</p>
 
 <table class="grid">
     <tr>
         <td style="width: 200px;">
-            @if($portraitDataUri)
+            @if($imageExport && $character->image_path)
+                <img class="portrait" src="{{ route('media.show', ['path' => $character->image_path]) }}" alt="Portrait">
+            @elseif($portraitDataUri)
                 <img class="portrait" src="{{ $portraitDataUri }}" alt="Portrait">
             @else
                 <div class="card muted">Aucune photo</div>
@@ -170,9 +178,9 @@
     @else
         @foreach($character->galleryImages as $img)
             @php $dataUri = $galleryDataUris[$img->id] ?? null; @endphp
-            @if($dataUri)
+            @if($imageExport || $dataUri)
                 <div style="display:inline-block; text-align:center;">
-                    <img class="gallery-img" src="{{ $dataUri }}" alt="Galerie">
+                    <img class="gallery-img" src="{{ $imageExport ? route('media.show', ['path' => $img->image_path]) : $dataUri }}" alt="Galerie">
                     <div class="muted">{{ $img->caption ?: 'Sans légende' }}</div>
                 </div>
             @endif
@@ -187,9 +195,9 @@
     @else
         @foreach($character->outfitImages as $outfit)
             @php $dataUri = $outfitDataUris[$outfit->id] ?? null; @endphp
-            @if($dataUri)
+            @if($imageExport || $dataUri)
                 <div style="display:inline-block; text-align:center; margin-right:8px; margin-bottom:8px;">
-                    <img class="gallery-img" src="{{ $dataUri }}" alt="Tenue">
+                    <img class="gallery-img" src="{{ $imageExport ? route('media.show', ['path' => $outfit->image_path]) : $dataUri }}" alt="Tenue">
                     <div><strong>Mode:</strong> {{ $outfit->mode ?: '-' }}</div>
                     <div class="muted">{{ $outfit->caption ?: 'Sans description' }}</div>
                 </div>
@@ -198,6 +206,9 @@
     @endif
 </div>
 
+@if($imageExport)
+</main>
+@endif
 </body>
 </html>
 

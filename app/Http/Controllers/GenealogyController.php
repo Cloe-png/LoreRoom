@@ -92,6 +92,7 @@ class GenealogyController extends Controller
             'nodes' => $nodes,
             'edges' => $edges,
             'layout' => $layout,
+            'worldName' => optional($this->currentWorld())->name ?: 'monde',
         ]);
     }
 

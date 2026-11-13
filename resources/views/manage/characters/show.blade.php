@@ -20,6 +20,12 @@
     @endphp
 
     <style>
+        .character-export-menu { position:relative; }
+        .character-export-menu > summary { display:inline-flex; cursor:pointer; list-style:none; }
+        .character-export-menu > summary::-webkit-details-marker { display:none; }
+        .character-export-options { position:absolute; z-index:20; right:0; top:calc(100% + 4px); display:grid; min-width:145px; padding:5px; border:1px solid var(--border); border-radius:6px; background:var(--paper); box-shadow:0 8px 24px rgba(0,0,0,.2); }
+        .character-export-options button, .character-export-options a { width:100%; text-align:left; }
+        .character-export-host { position:fixed; left:-100000px; top:0; z-index:-1; width:900px; overflow:visible; }
         .character-show {
             --accent: {{ $accent }};
         }
@@ -486,10 +492,24 @@
         </div>
 
         <div class="stack" style="margin-top:14px;">
-            <a class="btn" href="{{ route('manage.characters.export-pdf', $character) }}">Exporter PDF</a>
+            <details class="character-export-menu">
+                <summary class="btn secondary">Exporter ▾</summary>
+                <div class="character-export-options">
+                    <a class="btn secondary" href="{{ route('manage.characters.export-pdf', $character) }}">PDF</a>
+                    <button class="btn secondary" type="button" data-character-export-format="png">Image PNG</button>
+                    <button class="btn secondary" type="button" data-character-export-format="jpg">Image JPG</button>
+                </div>
+            </details>
             <a class="btn secondary" href="{{ route('manage.characters.edit', $character) }}">Éditer</a>
             <a class="btn secondary" href="{{ route('manage.characters.index') }}">Retour</a>
         </div>
+        <p id="character-export-status" role="status" aria-live="polite" hidden></p>
+        <div id="character-export-host" class="character-export-host"
+            data-export-view="{{ route('manage.characters.export-image-view', $character) }}"
+            data-character-name="{{ $character->display_name }}"
+            data-world-name="{{ optional($character->world)->name ?: 'monde' }}"
+            data-export-scale="2"></div>
+        <script src="{{ mix('js/image-export.js') }}" defer></script>
     </section>
 
     @if($character->galleryImages->count() > 1)

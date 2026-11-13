@@ -311,10 +311,11 @@
         <p class="genealogy-select-note">Passe en lecture ciblée quand l’univers devient dense: le but est de rendre l’histoire lisible, pas de tout montrer à la fois.</p>
         <div class="genealogy-toolbar">
             <div class="genealogy-toolbar-group"><label class="toggle"><input type="checkbox" id="tree-branch-highlight" checked> Mettre en avant la branche active</label><button type="button" class="btn secondary" id="tree-center-focus">Centrer la branche</button></div>
-            <div class="genealogy-toolbar-group"><details class="genealogy-export-menu"><summary>Exporter ▾</summary><div class="genealogy-export-options"><button type="button" class="btn secondary" id="tree-export-png">Exporter image</button><button type="button" class="btn secondary" id="tree-export-pdf">Exporter PDF</button></div></details><span class="genealogy-help" tabindex="0" title="Faites glisser pour déplacer l’arbre. Molette pour zoomer." aria-label="Aide sur la navigation">?</span></div>
+            <div class="genealogy-toolbar-group"><details class="genealogy-export-menu"><summary>Exporter ▾</summary><div class="genealogy-export-options"><button type="button" class="btn secondary" id="tree-export-png">Image PNG</button><button type="button" class="btn secondary" id="tree-export-jpg">Image JPG</button><button type="button" class="btn secondary" id="tree-export-pdf">PDF</button></div></details><span class="genealogy-help" tabindex="0" title="Faites glisser pour déplacer l’arbre. Molette pour zoomer." aria-label="Aide sur la navigation">?</span></div>
             <div class="genealogy-legend-floating"><span class="item"><span class="line"></span> Enfant</span><span class="item"><span class="line couple"></span> Couple</span><span class="item"><span class="line couple" style="border-top-style:dotted;"></span> Ex</span><span class="item"><span class="dot vivant"></span> Vivant</span><span class="item"><span class="dot mort"></span> Mort</span></div>
         </div>
     </section>
+    <p id="genealogy-export-status" class="muted" role="status" aria-live="polite" hidden></p>
 
     @if($nodes->isEmpty())
         <section class="panel">
@@ -388,6 +389,7 @@
         @endphp
 
         <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+        <script src="{{ mix('js/image-export.js') }}" defer></script>
         <script>
             (function(){
                 const root=document.getElementById('genealogy-network');
@@ -961,7 +963,9 @@
                     window.addEventListener('resize',()=>fitToView(currentFocusId));
 
                     const exportPngBtn=document.getElementById('tree-export-png');
+                    const exportJpgBtn=document.getElementById('tree-export-jpg');
                     const exportPdfBtn=document.getElementById('tree-export-pdf');
+                    const exportStatus=document.getElementById('genealogy-export-status');
                     const blobToDataUrl=(blob)=>new Promise((resolve,reject)=>{
                         const reader=new FileReader();
                         reader.onload=()=>resolve(String(reader.result || ''));
@@ -980,7 +984,11 @@
                                 const dataUrl=await blobToDataUrl(blob);
                                 imageNode.setAttribute('href', dataUrl);
                                 imageNode.setAttributeNS('http://www.w3.org/1999/xlink', 'href', dataUrl);
-                            } catch(_error){}
+                            } catch(_error){
+                                const fallback='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160"><rect width="120" height="160" fill="#e1cfad"/><circle cx="60" cy="42" r="27" fill="#9b8060"/><path d="M15 150c2-39 19-61 45-61s43 22 45 61" fill="#9b8060"/></svg>');
+                                imageNode.setAttribute('href',fallback);
+                                imageNode.setAttributeNS('http://www.w3.org/1999/xlink','href',fallback);
+                            }
                         }));
                     };
                     const exportAsPng=async()=>{
@@ -1047,19 +1055,45 @@
                             }
                         }
                     };
-                    if(exportPngBtn){
-                        exportPngBtn.addEventListener('click', async ()=>{
-                            try{
-                                const png=await exportAsPng();
-                                const a=document.createElement('a');
-                                a.href=png;
-                                a.download=`arbre-genealogique-${currentFocusId || 'focus'}.png`;
-                                document.body.appendChild(a);
-                                a.click();
-                                a.remove();
-                            } catch(e){ showErr((e && e.message) ? e.message : 'Erreur export image.'); }
-                        });
-                    }
+                    const exportAsImage=async(format,button)=>{
+                        const originalHighlightState=branchHighlightToggle ? !!branchHighlightToggle.checked : false;
+                        if(branchHighlightToggle && originalHighlightState){ branchHighlightToggle.checked=false; renderGraph(); }
+                        let host=null;
+                        try{
+                            if(!window.LoreRoomImageExport) throw new Error('La bibliothèque d’export image est indisponible.');
+                            const bounds=getExportBounds();
+                            const clone=svg.cloneNode(true);
+                            clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+                            clone.setAttribute('xmlns:xlink','http://www.w3.org/1999/xlink');
+                            clone.setAttribute('width',String(bounds.width));
+                            clone.setAttribute('height',String(bounds.height));
+                            clone.setAttribute('viewBox',`${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`);
+                            const cloneViewport=clone.querySelector('g');
+                            if(cloneViewport) cloneViewport.setAttribute('transform','translate(0 0) scale(1)');
+                            const bgRect=S('rect',{x:bounds.x,y:bounds.y,width:bounds.width,height:bounds.height,fill:'#efe2c9'});
+                            clone.insertBefore(bgRect,clone.firstChild);
+                            await inlineSvgImages(clone);
+                            host=document.createElement('div');
+                            host.style.cssText=`position:fixed;left:-100000px;top:0;width:${bounds.width}px;background:#efe2c9;`;
+                            clone.style.display='block';
+                            host.appendChild(clone);
+                            document.body.appendChild(host);
+                            const focused=raw.find(n=>Number(n.id)===Number(currentFocusId));
+                            const filename=`${window.LoreRoomImageExport.slug(focused ? focused.label : 'arbre')}-${window.LoreRoomImageExport.slug(@json($worldName))}`;
+                            await window.LoreRoomImageExport.exportElement({node:host,format,filename,scale:2,button,status:exportStatus});
+                        } finally {
+                            if(host) host.remove();
+                            if(branchHighlightToggle && originalHighlightState){ branchHighlightToggle.checked=true; renderGraph(); }
+                        }
+                    };
+                    if(exportPngBtn) exportPngBtn.addEventListener('click', async()=>{
+                        try { await exportAsImage('png',exportPngBtn); }
+                        catch(e){ if(exportStatus){exportStatus.hidden=false;exportStatus.textContent=(e&&e.message)?e.message:'L’export PNG a échoué.';} }
+                    });
+                    if(exportJpgBtn) exportJpgBtn.addEventListener('click', async()=>{
+                        try { await exportAsImage('jpg',exportJpgBtn); }
+                        catch(e){ if(exportStatus){exportStatus.hidden=false;exportStatus.textContent=(e&&e.message)?e.message:'L’export JPG a échoué.';} }
+                    });
                     if(exportPdfBtn){
                         exportPdfBtn.addEventListener('click', async ()=>{
                             try{

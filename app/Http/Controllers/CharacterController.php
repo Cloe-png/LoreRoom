@@ -534,6 +534,22 @@ class CharacterController extends Controller
 
     public function exportPdf(Character $character)
     {
+        $pdf = Pdf::loadView('manage.characters.export-pdf', $this->characterExportPayload($character, true));
+
+        return $pdf->download('personnage-' . $character->id . '.pdf');
+    }
+
+    public function exportImage(Character $character)
+    {
+        $data = $this->characterExportPayload($character, false);
+        $data['imageExport'] = true;
+        $data['imageExportScale'] = 2;
+
+        return response()->view('manage.characters.export-pdf', $data);
+    }
+
+    private function characterExportPayload(Character $character, bool $embedImages): array
+    {
         $relations = [
             'world',
             'father',
@@ -560,26 +576,28 @@ class CharacterController extends Controller
 
         $character->load($relations);
 
-        $portraitDataUri = $this->buildDataUriFromPublicDisk($character->image_path);
+        $portraitDataUri = $embedImages ? $this->buildDataUriFromPublicDisk($character->image_path) : null;
         $galleryDataUris = [];
-        foreach ($character->galleryImages as $img) {
-            $galleryDataUris[$img->id] = $this->buildDataUriFromPublicDisk($img->image_path);
+        if ($embedImages) {
+            foreach ($character->galleryImages as $img) {
+                $galleryDataUris[$img->id] = $this->buildDataUriFromPublicDisk($img->image_path);
+            }
         }
         $outfitDataUris = [];
-        if ($this->hasOutfitImagesTable()) {
+        if ($embedImages && $this->hasOutfitImagesTable()) {
             foreach ($character->outfitImages as $outfit) {
                 $outfitDataUris[$outfit->id] = $this->buildDataUriFromPublicDisk($outfit->image_path);
             }
         }
 
-        $pdf = Pdf::loadView('manage.characters.export-pdf', [
+        return [
             'character' => $character,
             'portraitDataUri' => $portraitDataUri,
             'galleryDataUris' => $galleryDataUris,
             'outfitDataUris' => $outfitDataUris,
-        ]);
-
-        return $pdf->download('personnage-' . $character->id . '.pdf');
+            'imageExport' => false,
+            'imageExportScale' => 2,
+        ];
     }
 
     public function edit(Character $character)
