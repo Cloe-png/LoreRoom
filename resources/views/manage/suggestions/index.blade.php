@@ -230,7 +230,7 @@
                         </div>
 
                         <div class="field">
-                            <label for="suggestion_email">Email</label>
+                            <label for="suggestion_email">Adresse e-mail</label>
                             <input
                                 id="suggestion_email"
                                 type="email"

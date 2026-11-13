@@ -159,25 +159,6 @@
         </section>
 
         <section class="panel account-panel">
-            <form method="POST" action="{{ route('manage.account.locale') }}" style="margin-bottom:16px;">
-                @csrf
-                @method('PUT')
-
-                <div class="field">
-                    <label for="locale">{{ __('app.account.language_label') }}</label>
-                    <select id="locale" name="locale">
-                        @foreach(($localeOptions ?? []) as $localeCode => $localeLabel)
-                            <option value="{{ $localeCode }}" {{ old('locale', $user->preferred_locale ?? app()->getLocale()) === $localeCode ? 'selected' : '' }}>
-                                {{ $localeLabel }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="account-help">{{ __('app.account.language_help') }}</div>
-                </div>
-
-                <button class="btn secondary" type="submit">{{ __('app.account.language_submit') }}</button>
-            </form>
-
             <form method="POST" action="{{ route('manage.account.roles') }}" style="margin-bottom:16px;">
                 @csrf
                 @method('PUT')

@@ -463,7 +463,7 @@
         <section class="analytics-columns">
             <section class="panel analytics-panel">
                 <div class="analytics-panel-top">
-                    <h3 class="analytics-panel-title">Top pages</h3>
+                    <h3 class="analytics-panel-title">Pages les plus consultées</h3>
                     <div class="analytics-panel-meta">Nom de page et nombre de consultations</div>
                 </div>
 

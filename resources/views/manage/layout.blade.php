@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-theme="{{ auth()->check() ? (auth()->user()->theme ?? 'dark') : (in_array(request()->cookie('theme'), ['dark','light','auto'], true) ? request()->cookie('theme') : 'dark') }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html data-theme="{{ auth()->check() ? (auth()->user()->theme ?? 'dark') : (in_array(request()->cookie('theme'), ['dark','light','auto'], true) ? request()->cookie('theme') : 'dark') }}" lang="fr">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -761,7 +761,7 @@
                     <details @if(request()->routeIs('manage.account.*','manage.suggestions.*','manage.trash.*')) open @endif><summary class="par" data-tour="tools">Outils <small>&#9662;</small></summary><a class="sub" href="{{ route('manage.account.edit') }}">Param&egrave;tres</a>@if(auth()->user()->canAccessModule('suggestions'))<a class="sub" href="{{ route('manage.suggestions.index') }}">Suggestions</a>@endif @if(auth()->user()->canAccessModule('trash'))<a class="sub" href="{{ route('manage.trash.index') }}">Corbeille</a>@endif</details>
                 </nav>
                 <div class="sep"></div><nav class="nav">
-                    @if(auth()->user()->canAccessModule('analytics'))<a href="{{ route('manage.analytics.index') }}" @if(auth()->user()->isAdminOrChef()) data-tour="analytics" @endif>Analytics</a>@endif
+                    @if(auth()->user()->canAccessModule('analytics'))<a href="{{ route('manage.analytics.index') }}" @if(auth()->user()->isAdminOrChef()) data-tour="analytics" @endif>Statistiques</a>@endif
                     @if(auth()->user()->canAccessModule('users'))<a href="{{ route('manage.users.index') }}" @if(auth()->user()->isAdminOrChef()) data-tour="accounts" @endif>Comptes</a>@endif
                     <x-tour-restart-button />
                     <a class="q" href="#" onclick="event.preventDefault();this.nextElementSibling.submit()">D&eacute;connexion</a><form method="POST" action="{{ route('logout') }}" hidden>@csrf</form>

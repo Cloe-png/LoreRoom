@@ -1033,7 +1033,7 @@
                                         ctx.drawImage(img,0,0,canvas.width,canvas.height);
                                         resolve(canvas.toDataURL('image/png'));
                                     };
-                                    img.onerror=()=>reject(new Error('Export image impossible.'));
+                                    img.onerror=()=>reject(new Error('Impossible d’exporter l’image.'));
                                     img.src=url;
                                 });
                                 return png;

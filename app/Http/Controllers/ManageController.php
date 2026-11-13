@@ -400,7 +400,7 @@ class ManageController extends Controller
             ['route_name' => 'manage.genealogy.index', 'label' => 'Généalogie', 'icon' => '⋆'],
             ['route_name' => 'manage.gallery.index', 'label' => 'Galerie', 'icon' => '◴'],
             ['route_name' => 'manage.factions.index', 'label' => 'Factions', 'icon' => '⬢'],
-            ['route_name' => 'manage.analytics.index', 'label' => 'Analytics', 'icon' => '◎'],
+            ['route_name' => 'manage.analytics.index', 'label' => 'Statistiques', 'icon' => '◎'],
         ])->filter(fn (array $shortcut) => Route::has($shortcut['route_name']));
 
         if (!$userId || $shortcuts->isEmpty()) {

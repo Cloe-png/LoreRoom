@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 
-return [
+$translations = [
     'nav' => [
         'home' => 'Accueil',
         'worlds' => 'Mondes',
@@ -17,7 +17,7 @@ return [
         'suggestions' => 'Suggestions',
         'trash' => 'Corbeille',
         'settings' => 'Paramètres',
-        'analytics' => 'Analytics',
+        'analytics' => 'Statistiques',
         'accounts' => 'Comptes',
         'logout' => 'Déconnexion',
     ],
@@ -478,5 +478,6 @@ return [
         'feelings_mood' => 'État',
         'feelings_note' => 'Lecture',
     ],
-];
+ ];
 
+return array_replace_recursive($translations, require __DIR__ . '/app_extra.php');

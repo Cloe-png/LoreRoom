@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 
 class AuthController extends Controller
 {
@@ -74,10 +73,6 @@ class AuthController extends Controller
             return redirect()->route('manage.index');
         }
 
-        if (request()->hasSession() && !request()->session()->has('locale')) {
-            request()->session()->put('locale', 'fr');
-        }
-
         return view('register', [
             'roleOptions' => config('module_access.signup_roles', []),
         ]);
@@ -88,7 +83,6 @@ class AuthController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:180', 'unique:users,email'],
-            'locale' => ['required', 'string', Rule::in(array_keys(LaravelLocalization::getSupportedLocales()))],
             'roles' => ['required', 'array', 'min:1'],
             'roles.*' => ['required', 'string', Rule::in(array_keys(config('module_access.signup_roles', [])))],
             'password' => PasswordRules::defaultsWithConfirmation(),
@@ -105,12 +99,10 @@ class AuthController extends Controller
             'role' => 'utilisateur',
             'roles' => array_values(array_unique(array_map('strval', $data['roles']))),
             'current_world_id' => null,
-            'preferred_locale' => $data['locale'],
         ]);
 
         Auth::login($user);
         $request->session()->regenerate();
-        $request->session()->put('locale', $data['locale']);
         $this->issueTemporaryLoginToken($request);
         UserLog::logAction((int) $user->id, 'connexion');
 

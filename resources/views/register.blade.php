@@ -18,15 +18,6 @@
             <input id="email" type="email" name="email" value="{{ old('email') }}" autocomplete="email" required @if($errors->has('email')) aria-invalid="true" aria-describedby="email-error" @endif>
             @error('email')<p class="field-error" id="email-error"><x-auth-error-message :message="$message" /></p>@enderror
         </div>
-        <div class="field">
-            <label for="locale">{{ __('app.public.language') }}</label>
-            <select id="locale" name="locale" required @if($errors->has('locale')) aria-invalid="true" aria-describedby="locale-error" @endif>
-                @foreach(config('laravellocalization.supportedLocales', []) as $localeCode => $localeInfo)
-                    <option value="{{ $localeCode }}" {{ old('locale', 'en') === $localeCode ? 'selected' : '' }}>{{ $localeInfo['native'] ?? $localeInfo['name'] ?? strtoupper($localeCode) }}</option>
-                @endforeach
-            </select>
-            @error('locale')<p class="field-error" id="locale-error"><x-auth-error-message :message="$message" /></p>@enderror
-        </div>
         <fieldset class="role-section">
             <legend>{{ __('app.public.roles_label') }}</legend>
             <p class="help">{{ __('app.public.roles_help') }}</p>

@@ -36,7 +36,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Illuminate\Validation\Rule;
-use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Throwable;
 use ZipArchive;
@@ -45,17 +44,9 @@ class AccountSettingsController extends Controller
 {
     public function edit(Request $request): View
     {
-        $localeOptions = collect(\Mcamara\LaravelLocalization\Facades\LaravelLocalization::getSupportedLocales())
-            ->only(['fr', 'en'])
-            ->mapWithKeys(function (array $info, string $locale) {
-                return [$locale => $info['native'] ?? $info['name'] ?? strtoupper($locale)];
-            })
-            ->all();
-
         return view('manage.account.edit', [
             'user' => $request->user(),
             'passwordHelp' => PasswordRules::helpText(),
-            'localeOptions' => $localeOptions,
             'roleOptions' => config('module_access.signup_roles', []),
         ]);
     }
@@ -95,26 +86,6 @@ class AccountSettingsController extends Controller
         return redirect()
             ->route('manage.account.edit')
             ->with('success', __('app.account.password_updated'));
-    }
-
-    public function updateLocale(Request $request): RedirectResponse
-    {
-        $data = $request->validate([
-            'locale' => ['required', 'string', Rule::in(array_keys(LaravelLocalization::getSupportedLocales()))],
-        ]);
-
-        $user = $request->user();
-        if ($user) {
-            $user->forceFill([
-                'preferred_locale' => $data['locale'],
-            ])->save();
-        }
-
-        $request->session()->put('locale', $data['locale']);
-
-        return redirect()
-            ->route('manage.account.edit')
-            ->with('success', __('app.account.language_updated'));
     }
 
     public function updateRoles(Request $request): RedirectResponse

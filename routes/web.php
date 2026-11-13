@@ -76,7 +76,6 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
     Route::post('/manage/idee/autre', DashboardHomeController::class)->name('manage.prompts.another');
     Route::get('manage/account', [AccountSettingsController::class, 'edit'])->name('manage.account.edit');
     Route::put('manage/account/password', [AccountSettingsController::class, 'updatePassword'])->name('manage.account.password');
-    Route::put('manage/account/locale', [AccountSettingsController::class, 'updateLocale'])->name('manage.account.locale');
     Route::put('manage/account/roles', [AccountSettingsController::class, 'updateRoles'])->name('manage.account.roles');
     Route::get('manage/account/export-world', [AccountSettingsController::class, 'exportWorld'])->name('manage.account.export-world');
     Route::post('manage/account/import-world', [AccountSettingsController::class, 'importWorld'])->name('manage.account.import-world');
