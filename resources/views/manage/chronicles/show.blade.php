@@ -15,6 +15,12 @@
         <div class="stack">
             <a class="btn secondary" href="{{ route('manage.chronicles.edit', $chronicle) }}">Éditer</a>
             <a class="btn secondary" href="{{ route('manage.chronicles.index') }}">Retour</a>
+            @can('delete', $chronicle)
+                <form method="POST" action="{{ route('manage.chronicles.destroy', $chronicle) }}" data-confirm-delete data-delete-title="{{ $chronicle->title }}">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="delete-link">✕ Supprimer</button>
+                </form>
+            @endcan
         </div>
     </section>
 @endsection

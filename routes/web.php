@@ -90,6 +90,7 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
     Route::post('manage/places/{place}/duplicate', [PlaceController::class, 'duplicate'])->name('manage.places.duplicate');
     Route::resource('manage/places', PlaceController::class)->names('manage.places');
     Route::get('manage/chronicles/global', [ChronicleController::class, 'globalTimeline'])->name('manage.chronicles.global');
+    Route::post('manage/chronicles/{chronicle}/restore', [ChronicleController::class, 'restore'])->whereNumber('chronicle')->name('manage.chronicles.restore');
     Route::get('manage/chronicles/characters/{character}', [ChronicleController::class, 'characterTimeline'])->name('manage.chronicles.character');
     Route::resource('manage/chronicles', ChronicleController::class)->names('manage.chronicles');
     Route::resource('manage/relations', CharacterRelationController::class)->names('manage.relations');

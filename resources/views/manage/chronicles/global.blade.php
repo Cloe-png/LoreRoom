@@ -462,6 +462,12 @@
                                 </div>
 
                                 <div class="poster-foot"></div>
+                                @if(($event['type'] ?? '') === 'chronicle' && !empty($event['can_manage']))
+                                    <form method="POST" action="{{ route('manage.chronicles.destroy', $event['chronicle_id']) }}" data-confirm-delete data-delete-title="{{ $event['title'] }}">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="delete-link">✕ Supprimer</button>
+                                    </form>
+                                @endif
                             </div>
                             </div>
                         </div>

@@ -10,6 +10,9 @@ use App\Models\Place;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use App\Models\UserLog;
+use Illuminate\Support\Facades\Gate;
 
 class ChronicleController extends Controller
 {
@@ -68,6 +71,7 @@ class ChronicleController extends Controller
                     'title' => $chronicle->title,
                     'description' => $chronicle->summary,
                     'type' => 'chronicle',
+                    'chronicle_id' => $chronicle->id,
                     'source_name' => optional($chronicle->world)->name,
                     'related_person_name' => $firstLinked ? $firstLinked->display_name : null,
                     'related_person_link' => $firstLinked ? route('manage.characters.show', $firstLinked) : null,
@@ -75,7 +79,7 @@ class ChronicleController extends Controller
                     'photo_path' => $firstLinked ? $firstLinked->image_path : null,
                     'accent_color' => $this->resolveColor($firstLinked ? $firstLinked->preferred_color : null),
                     'link' => route('manage.chronicles.show', $chronicle),
-                    'can_manage' => false,
+                    'can_manage' => Gate::allows('delete', $chronicle),
                 ];
             });
 
@@ -500,11 +504,35 @@ class ChronicleController extends Controller
         return redirect()->route('manage.chronicles.index')->with('success', 'Chronique mise à jour.');
     }
 
-    public function destroy(Chronicle $chronicle)
+    public function destroy(int $chronicle)
     {
-        $chronicle->delete();
+        $chronicle = Chronicle::withoutGlobalScopes()->findOrFail($chronicle);
+        $this->authorize('delete', $chronicle);
+        DB::transaction(function () use ($chronicle) {
+            $chronicle->linkedCharacters()->detach();
+            $chronicle->places()->detach();
+            $chronicle->event_place_id = null;
+            $chronicle->event_location = null;
+            $chronicle->delete();
+        });
+        UserLog::logAction((int) request()->user()->id, 'chronicle_deleted', 'manage.chronicles.destroy', (string) $chronicle->id);
 
-        return redirect()->route('manage.chronicles.index')->with('success', 'Chronique supprimée.');
+        return redirect()->route('manage.chronicles.index')->with([
+            'success' => 'Chronologie supprimée.',
+            'chronicle_undo_id' => $chronicle->id,
+            'chronicle_undo_until' => now()->addSeconds(10)->timestamp,
+        ]);
+    }
+
+    public function restore(int $chronicle)
+    {
+        abort_unless((int) session('chronicle_undo_id') === $chronicle && (int) session('chronicle_undo_until', 0) >= now()->timestamp, 403);
+        $record = Chronicle::withoutGlobalScopes()->withTrashed()->findOrFail($chronicle);
+        $this->authorize('restore', $record);
+        $record->restore();
+
+        return redirect()->route('manage.chronicles.show', $record)->with('success', 'Chronologie restaurée.');
     }
 }
+
 

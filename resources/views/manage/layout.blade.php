@@ -943,7 +943,15 @@
                     </header>
                     <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif">
                         @if (session('success'))
-                            <div class="flash" role="status" aria-live="polite">{{ session('success') }}</div>
+                            <div class="flash" role="status" aria-live="polite">
+                                {{ session('success') }}
+                                @if(session('chronicle_undo_id') && session('chronicle_undo_until', 0) >= now()->timestamp)
+                                    <form id="chronicle-undo-form" method="POST" action="{{ route('manage.chronicles.restore', session('chronicle_undo_id')) }}" style="display:inline;margin-left:8px">
+                                        @csrf
+                                        <button type="submit" class="btn secondary">Annuler <span id="chronicle-undo-countdown">10</span>s</button>
+                                    </form>
+                                @endif
+                            </div>
                         @endif
                         @if ($errors->any())
                             <div class="errors" role="alert" aria-live="assertive">
@@ -957,6 +965,16 @@
                         @endif
                         @yield('content')
                     </main>
+                    <dialog id="delete-confirm-dialog" class="delete-confirm-dialog" aria-labelledby="delete-confirm-title">
+                        <form method="dialog" class="delete-confirm-card">
+                            <h2 id="delete-confirm-title">Confirmer la suppression</h2>
+                            <p id="delete-confirm-text"></p>
+                            <div class="stack">
+                                <button type="submit" value="cancel" class="btn secondary" autofocus>Annuler</button>
+                                <button type="button" id="delete-confirm-submit" class="btn danger">Supprimer</button>
+                            </div>
+                        </form>
+                    </dialog>
                 </section>
             </div>
         </div>
@@ -1109,6 +1127,46 @@
         @include('components.first-visit-tour', ['autoStart' => request()->routeIs('manage.index')])
         <script src="{{ asset('js/tour.js') }}" defer></script>
         @if(request()->routeIs('manage.index'))<script src="{{ mix('js/birthday-party.js') }}" defer></script>@endif
+        <style>
+            .delete-link { border:0; padding:4px 0; background:transparent; color:var(--danger-text); font:inherit; font-style:italic; text-decoration:underline; cursor:pointer; }
+            .delete-confirm-dialog { max-width:min(92vw,520px); border:1px solid var(--border); border-radius:8px; padding:0; color:var(--text); background:var(--paper); box-shadow:0 18px 55px rgba(0,0,0,.35); }
+            .delete-confirm-dialog::backdrop { background:rgba(15,12,10,.62); }
+            .delete-confirm-card { padding:24px; }
+            .delete-confirm-card h2 { margin-top:0; }
+            .btn.danger { border-color:var(--danger-text); background:var(--danger-text); color:#fff; }
+        </style>
+        <script>
+            (function () {
+                const dialog = document.getElementById('delete-confirm-dialog');
+                const text = document.getElementById('delete-confirm-text');
+                const submit = document.getElementById('delete-confirm-submit');
+                let pendingForm = null;
+                document.querySelectorAll('[data-confirm-delete]').forEach((form) => form.addEventListener('submit', (event) => {
+                    if (form.dataset.confirmed === '1') return;
+                    event.preventDefault();
+                    pendingForm = form;
+                    const title = form.dataset.deleteTitle || '';
+                    text.textContent = `Supprimer « ${title} » ? Cette action est définitive. Les liens avec les personnages et les lieux seront retirés ; les fiches elles-mêmes sont conservées.`;
+                    dialog.showModal();
+                    dialog.querySelector('[value="cancel"]').focus();
+                }));
+                submit.addEventListener('click', () => {
+                    if (!pendingForm) return;
+                    pendingForm.dataset.confirmed = '1';
+                    pendingForm.requestSubmit();
+                });
+                const undoForm = document.getElementById('chronicle-undo-form');
+                if (undoForm) {
+                    let remaining = 10;
+                    const label = document.getElementById('chronicle-undo-countdown');
+                    const timer = window.setInterval(() => {
+                        remaining -= 1;
+                        if (label) label.textContent = String(Math.max(0, remaining));
+                        if (remaining <= 0) { undoForm.remove(); window.clearInterval(timer); }
+                    }, 1000);
+                }
+            })();
+        </script>
     </body>
 </html>
 
