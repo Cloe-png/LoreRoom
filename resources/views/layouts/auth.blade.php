@@ -47,7 +47,6 @@
 <body class="auth-page"><div class="auth-theme-toggle">@include('partials.theme-toggle')</div>
     <div class="auth-bg" aria-hidden="true"></div>
     @yield('content')
-    @include('partials.i18n')
     <script>
         document.querySelectorAll('[data-password-toggle]').forEach(function(button){button.addEventListener('click',function(){var input=document.getElementById(button.getAttribute('aria-controls'));var shown=input.type==='password';input.type=shown?'text':'password';button.setAttribute('aria-pressed',String(shown));button.textContent=shown?@json(__('app.public.hide_password')):@json(__('app.public.show_password'));});});
         document.querySelectorAll('form[data-auth-form]').forEach(function(form){form.addEventListener('submit',function(){var button=form.querySelector('[data-submit-button]');if(button){button.disabled=true;button.textContent=button.dataset.loadingText;}});});

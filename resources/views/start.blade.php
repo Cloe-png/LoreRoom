@@ -479,7 +479,6 @@
                 </nav>
             </main>
         </div>
-        @include('partials.i18n')
         <script>(function(){var b=document.querySelector('[data-theme-toggle]');var r=document.documentElement;function paint(t){r.dataset.theme=t;b.setAttribute('aria-checked',String(t==='light'));b.querySelector('[data-theme-label]').textContent=t==='light'?'Nuit':'Jour';var m=document.querySelector('[data-theme-color]');if(m)m.content=t==='light'?'#efe2c9':'#111723';}paint(r.dataset.theme);b.addEventListener('click',function(){var t=r.dataset.theme==='light'?'dark':'light';paint(t);document.cookie='theme='+t+'; path=/; max-age=31536000; SameSite=Lax';});})();</script>
         <script>
             const soundToggle = document.getElementById('soundToggle');
