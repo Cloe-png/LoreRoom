@@ -14,8 +14,6 @@ class UserAnalyticsController extends Controller
 {
     public function index(Request $request): View
     {
-        $this->requireAdmin();
-
         $days = max(7, min(90, (int) $request->query('days', 30)));
         $userSearch = trim((string) $request->query('user_search', ''));
         $since = Carbon::today()->subDays($days - 1)->startOfDay();
