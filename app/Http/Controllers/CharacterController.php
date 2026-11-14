@@ -871,6 +871,24 @@ class CharacterController extends Controller
             return back()->withErrors(['world' => "Créez d'abord un monde."])->withInput();
         }
 
+        if ($request->boolean('gallery_description_only')) {
+            abort_unless((int) $character->world_id === (int) $defaultWorldId, 404);
+            $ownerId = (int) $character->world()->value('user_id');
+            abort_unless($request->user()->isAdminOrChef() || $ownerId === (int) $request->user()->id, 403);
+
+            $cleanDescription = trim(strip_tags((string) $request->input('portrait_description', '')));
+            $request->merge(['portrait_description' => $cleanDescription !== '' ? $cleanDescription : null]);
+            $description = $request->validate([
+                'portrait_description' => ['nullable', 'string', 'max:280'],
+            ]);
+
+            $character->update($description);
+
+            return redirect()
+                ->route('manage.gallery.index', ['p' => $character->id])
+                ->with('success', 'Description enregistrée.');
+        }
+
         $data = $request->validate([
             'first_name' => ['required', 'string', 'max:120'],
             'last_name' => ['nullable', 'string', 'max:120'],

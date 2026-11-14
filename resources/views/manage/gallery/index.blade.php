@@ -5,6 +5,7 @@
 
 @section('content')
     <div class="stack" style="justify-content:space-between; margin-bottom:10px;">
+        <a class="btn secondary" href="{{ route('manage.gallery.index') }}">Musée</a>
         <div class="muted">{{ $totalCount }} image(s) dans la galerie du musée</div>
     </div>
 

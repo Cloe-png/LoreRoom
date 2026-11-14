@@ -4,14 +4,94 @@ namespace App\Http\Controllers;
 
 use App\Models\Character;
 use App\Models\CharacterGalleryImage;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class GalleryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $q = trim((string) request('q', ''));
-        $source = (string) request('source', 'all');
+        if ($request->query('view') === 'grid') {
+            return $this->gridView($request);
+        }
+
+        $user = $request->user();
+        $world = $this->currentWorld();
+        $showMissing = $request->boolean('without_portrait');
+        $canEditDescriptions = $world && (
+            (int) $world->user_id === (int) $user->id
+            || $user->isAdminOrChef()
+        );
+
+        $characters = collect();
+        if ($world) {
+            $characters = Character::query()
+                ->where('world_id', $world->id)
+                ->whereHas('world', fn ($query) => $query->where('user_id', $user->id))
+                ->when(!$showMissing, function ($query) {
+                    $query->whereNotNull('image_path')->where('image_path', '!=', '');
+                })
+                ->get([
+                    'id', 'world_id', 'name', 'first_name', 'last_name', 'family_name',
+                    'birth_date', 'death_date', 'image_path', 'portrait_description',
+                ])
+                ->sortBy(function (Character $character) {
+                    $family = trim((string) ($character->family_name ?: $character->last_name));
+                    return mb_strtolower(($family !== '' ? $family : 'inclassables') . "\0" . $character->display_name);
+                }, SORT_STRING)
+                ->values();
+        }
+
+        $paintings = $characters->map(function (Character $character) use ($canEditDescriptions) {
+            $family = trim((string) ($character->family_name ?: $character->last_name));
+            $fullName = trim($character->display_name);
+            $initials = collect(preg_split('/\s+/u', $fullName))
+                ->filter()
+                ->take(2)
+                ->map(fn ($part) => mb_substr($part, 0, 1))
+                ->implode('');
+
+            return [
+                'id' => (int) $character->id,
+                'name' => $fullName,
+                'room' => $family !== '' ? $family : 'Inclassables',
+                'birth_year' => optional($character->birth_date)->format('Y'),
+                'death_year' => optional($character->death_date)->format('Y'),
+                'image_url' => $character->image_path
+                    ? route('media.show', ['path' => $character->image_path, 'width' => 600])
+                    : null,
+                'description' => (string) ($character->portrait_description ?? ''),
+                'initials' => $initials ?: '?',
+                'sheet_url' => route('manage.characters.show', $character),
+                'update_url' => route('manage.characters.update', $character),
+                'can_edit' => (bool) $canEditDescriptions,
+            ];
+        })->values();
+
+        $requestedId = (int) $request->query('p', 0);
+        $activeIndex = $paintings->search(fn (array $painting) => $painting['id'] === $requestedId);
+        if ($activeIndex === false) {
+            $activeIndex = 0;
+        }
+
+        $visiblePaintings = $paintings->count() > 30
+            ? $paintings->slice(max(0, $activeIndex - 3), min(7, $paintings->count() - max(0, $activeIndex - 3)))->values()
+            : $paintings;
+
+        return view('manage.gallery.museum', [
+            'activeWorld' => $world,
+            'paintings' => $paintings,
+            'visiblePaintings' => $visiblePaintings,
+            'activeIndex' => $activeIndex,
+            'activeId' => $paintings->get($activeIndex)['id'] ?? null,
+            'showMissing' => $showMissing,
+        ]);
+    }
+
+    private function gridView(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+        $source = (string) $request->query('source', 'all');
         if (!in_array($source, ['all', 'portrait', 'gallery'], true)) {
             $source = 'all';
         }

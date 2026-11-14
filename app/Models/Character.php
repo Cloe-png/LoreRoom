@@ -63,6 +63,7 @@ class Character extends Model
         'power_level',
         'power_description',
         'image_path',
+        'portrait_description',
         'preferred_color',
         'height',
         'silhouette',
