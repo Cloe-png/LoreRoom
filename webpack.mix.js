@@ -11,8 +11,7 @@ const mix = require('laravel-mix');
  |
  */
 
-mix.js('resources/js/app.js', 'public/js')
-    .js('resources/js/auth-mascot.js', 'public/js')
+mix.js('resources/js/auth-mascot.js', 'public/js')
     .js('resources/js/tour.js', 'public/js')
     .js('resources/js/birthday-party.js', 'public/js')
     .postCss('resources/css/app.css', 'public/css', [
