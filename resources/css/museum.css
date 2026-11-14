@@ -77,4 +77,4 @@ html[data-theme="light"] .mus-floor { background: linear-gradient(#2e1d14, #190f
 }
 @media (prefers-reduced-motion: reduce) {
     .mus-slot { transition: none; }
-}\n
+}
