@@ -22,6 +22,7 @@ mix.js('resources/js/app.js', 'public/js')
     .postCss('resources/css/shell.css', 'public/css')
     .postCss('resources/css/home.css', 'public/css')
     .postCss('resources/css/manage-theme.css', 'public/css')
-    .postCss('resources/css/tour.css', 'public/css');
-
+    .postCss('resources/css/tour.css', 'public/css')
+    .postCss('resources/css/museum.css', 'public/css')
+    .js('resources/js/museum.js', 'public/js');
 mix.js('resources/js/image-export.js', 'public/js');

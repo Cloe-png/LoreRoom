@@ -742,7 +742,7 @@
 <script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
         <link rel="stylesheet" href="{{ asset('css/tour.css') }}">
 </head>
-    <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif">
+    <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif @if(request()->routeIs('manage.gallery.index'))mus-body @endif">
         @if(request()->routeIs('manage.index'))
         <div class="app">
             <aside class="side">
@@ -921,11 +921,14 @@
                         @endif
                     </div>
                 </aside>
-                <section class="main">
-                    <header>
+                <section class="main @if(request()->routeIs('manage.gallery.index'))mus-main @endif">
+                    <header class="@if(request()->routeIs('manage.gallery.index'))mus-header @endif">
                         <div class="header-left">
+                            @if(request()->routeIs('manage.gallery.index'))<a class="mus-back" href="{{ route('manage.index') }}" aria-label="Retour à l’accueil">←</a>@endif
+                            @unless(request()->routeIs('manage.gallery.index'))
                             <button class="sidebar-toggle mobile-nav-toggle" type="button" id="mobile-nav-toggle" aria-label="{{ __('app.layout.open_navigation') }}">&#9776;</button>
                             <button class="sidebar-toggle desktop-nav-toggle" type="button" id="sidebar-toggle" aria-label="{{ __('app.layout.toggle_navigation') }}">&#9664;</button>
+                            @endunless
                             <h1 class="title">@yield('header', __('app.layout.default_title'))</h1>
                         </div>
                         <div class="header-context">
@@ -941,7 +944,7 @@
                             </div>
                         </div>
                     </header>
-                    <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif">
+                    <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif @if(request()->routeIs('manage.gallery.index'))mus-content @endif">
                         @if (session('success'))
                             <div class="flash" role="status" aria-live="polite">
                                 {{ session('success') }}
@@ -1167,6 +1170,7 @@
                 }
             })();
         </script>
+        @if(request()->routeIs('manage.gallery.index'))<link rel="stylesheet" href="{{ mix('css/museum.css') }}">@endif
     </body>
 </html>
 
