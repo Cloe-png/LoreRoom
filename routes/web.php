@@ -7,7 +7,6 @@ use App\Http\Controllers\ChronicleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AccountSettingsController;
 use App\Http\Controllers\FactionController;
-use App\Http\Controllers\ManageController;
 use App\Http\Controllers\DashboardHomeController;
 use App\Http\Controllers\MemorialController;
 use App\Http\Controllers\MediaController;
