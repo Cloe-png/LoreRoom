@@ -18,8 +18,6 @@ return [
         'genealogy',
         'suggestions',
         'trash',
-        'analytics',
-        'users',
     ],
 
     'roles' => [

@@ -80,12 +80,12 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return (string) ($this->role ?? '') === 'admin' || $this->isChef() || in_array('admin', $this->roles ?? [], true);
+        return strtolower(trim((string) ($this->role ?? ''))) === 'admin' || $this->isChef() || in_array('admin', $this->roles ?? [], true);
     }
 
     public function isChef(): bool
     {
-        return (string) ($this->role ?? '') === 'chef';
+        return strtolower(trim((string) ($this->role ?? ''))) === 'chef';
     }
 
     public function isAdminOrChef(): bool
@@ -105,7 +105,15 @@ class User extends Authenticatable
 
     public function canAccessModule(string $module): bool
     {
-        if ($this->isAdminOrChef()) {
+        if ($module === 'analytics') {
+            return $this->isChef();
+        }
+
+        if ($module === 'users') {
+            return $this->isAdminOrChef();
+        }
+
+        if ($this->isChef()) {
             return true;
         }
 
