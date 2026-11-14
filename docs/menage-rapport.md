@@ -57,7 +57,7 @@ Ce sont des candidates de revue, pas des suppressions proposées. Aucun schéma 
 - `7440df9` : suppression du scaffold JS `app.js`/`bootstrap.js`, du bundle généré et de la dépendance Axios directe; retrait de l’entrée Mix et de l’entrée manifeste. Lodash est conservé car Mix en dépend encore transitivement.
 - Contrôles après chaque commit : `php artisan route:list` réussit et conserve 163 routes; `php artisan view:clear` réussit; `npm run dev` réussit. `php artisan test` reste à 34 réussis / 7 échoués (41 au total), avec les mêmes sept échecs observés avant le ménage et l’ajout du SmokeTest.
 - Le SmokeTest ajouté dans `6b0e985` passe. Il couvre 22 pages avec un compte chef et un monde synthétiques.
-- `git diff --stat avant-menage` : 133 fichiers, 144 insertions, 24 364 suppressions.
+- `git diff --stat avant-menage` : 133 fichiers, 149 insertions, 24 364 suppressions.
 
 ## Annulation
 
