@@ -10,6 +10,12 @@ return [
         'places',
         'chronicles',
         'relations',
+        'jobs',
+        'lore',
+        'species',
+        'factions',
+        'gallery',
+        'genealogy',
     ],
 
     'roles' => [
