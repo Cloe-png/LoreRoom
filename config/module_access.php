@@ -16,6 +16,10 @@ return [
         'factions',
         'gallery',
         'genealogy',
+        'suggestions',
+        'trash',
+        'analytics',
+        'users',
     ],
 
     'roles' => [
