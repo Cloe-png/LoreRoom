@@ -13,15 +13,15 @@
 
 | Chemin / élément | Catégorie | Certitude | Preuve et décision |
 | --- | --- | --- | --- |
-| `app/Http/Controllers/ManageController.php` | Contrôleur ancien | CERTAIN | Aucune route ne le cible; sa seule référence externe est un `use` inutilisé dans `routes/web.php`. La route d’accueil cible `DashboardHomeController`, qui rend `manage.home`. Suppression prévue avec l’ancien écran qu’il rend. |
-| `resources/views/manage/index.blade.php` | Vue ancienne | CERTAIN | Référencée uniquement par le contrôleur sans route ci-dessus; l’accueil réel rend `resources/views/manage/home.blade.php`. Suppression prévue. |
-| `resources/views/manage.blade.php` | Vue ancienne | CERTAIN | Aucun `view('manage')`, `View::make`, include ni route ne la référence. Suppression prévue. |
-| `resources/views/welcome.blade.php` | Vue Laravel par défaut | CERTAIN | `/` rend `start`; aucun appel à `welcome` ni include dynamique trouvé. Suppression prévue. |
-| `resources/js/app.js`, `resources/js/bootstrap.js`, `public/js/app.js` | Bundle JS scaffold | CERTAIN | Aucun template ne charge `js/app.js`; `app.js` ne fait qu’importer `bootstrap.js`, qui ne fournit que Lodash/Axios sans autre usage dans le code source. Suppression prévue avec l’entrée Mix. |
-| Dépendances npm directes `axios`, `lodash` | Dépendances | CERTAIN | Uniquement importées par le bootstrap JS non chargé. Suppression prévue sans mise à jour des autres versions. `html-to-image`, Mix et PostCSS ont des références actives et restent. |
-| `composer.phar` | Outil local versionné | CERTAIN | Binaire Composer à la racine, aucun appel applicatif. À retirer de l’index uniquement; le fichier local restera. |
-| `.composer/cache/files/**/*.zip` | Cache Composer versionné | CERTAIN | 112 archives de cache Composer suivies par Git, non nécessaires à l’application. À retirer de l’index uniquement; le cache local restera. |
-| `loreroom (3).sql` | Dump local versionné | CERTAIN | Dump contenant des enregistrements et informations d’identification hachées. À retirer de l’index uniquement; le fichier local restera. Le contenu existe toujours dans l’historique Git. |
+| `app/Http/Controllers/ManageController.php` | Contrôleur ancien | CERTAIN | Aucune route ne le cible; sa seule référence externe est un `use` inutilisé dans `routes/web.php`. La route d’accueil cible `DashboardHomeController`, qui rend `manage.home`. Supprimé dans `e89edcf` avec l’ancien écran qu’il rend. |
+| `resources/views/manage/index.blade.php` | Vue ancienne | CERTAIN | Référencée uniquement par le contrôleur sans route ci-dessus; l’accueil réel rend `resources/views/manage/home.blade.php`. Supprimé dans `e89edcf`. |
+| `resources/views/manage.blade.php` | Vue ancienne | CERTAIN | Aucun `view('manage')`, `View::make`, include ni route ne la référence. Supprimé dans `e89edcf`. |
+| `resources/views/welcome.blade.php` | Vue Laravel par défaut | CERTAIN | `/` rend `start`; aucun appel à `welcome` ni include dynamique trouvé. Supprimé dans `e89edcf`. |
+| `resources/js/app.js`, `resources/js/bootstrap.js`, `public/js/app.js` | Bundle JS scaffold | CERTAIN | Aucun template ne charge `js/app.js`; supprimés dans `7440df9`, avec l’entrée Mix et celle du manifeste. |
+| Dépendances npm directes `axios`, `lodash` | Dépendances | CERTAIN | Axios, uniquement importé par le bootstrap JS non chargé, a été retiré dans `7440df9`. Lodash reste dans le lockfile comme dépendance transitive de Mix. `html-to-image`, Mix et PostCSS ont des références actives et restent. |
+| `composer.phar` | Outil local versionné | CERTAIN | Binaire Composer à la racine, aucun appel applicatif. Retiré de l’index dans `3d9b3fa`; le fichier local reste. |
+| `.composer/cache/files/**/*.zip` | Cache Composer versionné | CERTAIN | 112 archives de cache Composer suivies par Git, non nécessaires à l’application. Retirées de l’index dans `3d9b3fa`; le cache local reste. |
+| `loreroom (3).sql` | Dump local versionné | CERTAIN | Dump contenant des enregistrements et informations d’identification hachées. Retiré de l’index dans `3d9b3fa`; le fichier local reste. Le contenu existe toujours dans l’historique Git. |
 | `routes/web.php` — import `ManageController` | Import mort | CERTAIN | Le nom n’est utilisé que par sa déclaration d’import et la classe elle-même, qui n’est pas enregistrée comme action de route. Suppression prévue avec le contrôleur. |
 | `public/css/dashboard-reference.css` | Feuille de référence | PROBABLE | Aucun chargement trouvé. Le nom suggère une feuille de maquette; conservée en attendant confirmation qu’elle n’est pas utile comme référence de l’accueil refait. |
 | `public/help.jpg`, `write1.png`, `write2.png`, `cadre.png` à la racine | Images hors répertoire applicatif | À VÉRIFIER | Aucun appel applicatif direct trouvé pour ces copies racine. Elles peuvent être des fichiers source/souvenirs utilisateur; conservées. Le cadre utilisé est `public/images/museum/cadre.png`; le `cadre.png` racine a servi de source à sa conversion. |
@@ -52,7 +52,12 @@ Ce sont des candidates de revue, pas des suppressions proposées. Aucun schéma 
 
 ## Suppressions réalisées
 
-Aucune au moment de cet inventaire initial. Le rapport sera mis à jour après les suppressions certaines, avec les nombres de fichiers/lignes et les commits correspondants.
+- `e89edcf` : retrait du contrôleur `ManageController`, des trois vues d’accueil orphelines et de son import mort. 5 fichiers touchés, 3 079 lignes supprimées.
+- `3d9b3fa` : retrait de l’index Git de `.composer` (112 archives et 2 fichiers `.htaccess`), `composer.phar` et `loreroom (3).sql`, soit 116 fichiers; tous restent sur le poste. `.gitignore` ignore désormais `.composer/`, `/composer.phar` et `*.sql`.
+- `7440df9` : suppression du scaffold JS `app.js`/`bootstrap.js`, du bundle généré et de la dépendance Axios directe; retrait de l’entrée Mix et de l’entrée manifeste. Lodash est conservé car Mix en dépend encore transitivement.
+- Contrôles après chaque commit : `php artisan route:list` réussit et conserve 163 routes; `php artisan view:clear` réussit; `npm run dev` réussit. `php artisan test` reste à 34 réussis / 7 échoués (41 au total), avec les mêmes sept échecs observés avant le ménage et l’ajout du SmokeTest.
+- Le SmokeTest ajouté dans `6b0e985` passe. Il couvre 22 pages avec un compte chef et un monde synthétiques.
+- `git diff --stat avant-menage` : 133 fichiers, 144 insertions, 24 364 suppressions.
 
 ## Annulation
 
