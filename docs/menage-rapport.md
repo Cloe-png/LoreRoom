@@ -60,9 +60,12 @@ Ce sont des candidates de revue, pas des suppressions proposées. Aucun schéma 
 - L’audit a aussi repéré deux squelettes Laravel non activés : `TrustHosts` n’était ni dans le Kernel ni ailleurs; `BroadcastServiceProvider` était explicitement désactivé et son seul fichier de canaux n’était chargé par aucun provider. Suppression dans le second lot de ménage.
 - `guzzlehttp/guzzle` était uniquement une dépendance Composer directe et son alias `Http` n’était appelé nulle part dans les sources. Retrait et suppression de ses dépendances exclusives dans le second lot de ménage.
 - Le test `tests/Unit/ExampleTest.php` ne vérifiait que `assertTrue(true)`; il a été supprimé et le dossier `Unit` vide a été retiré des tests PHPUnit. Le test fonctionnel de `/` est conservé.
-- Contrôles après chaque commit : `php artisan route:list` réussit et conserve 163 routes; `php artisan view:clear` réussit; `npm run dev` réussit. `php artisan test` reste à 34 réussis / 7 échoués (41 au total), avec les mêmes sept échecs observés avant le ménage et l’ajout du SmokeTest.
+- `laravel/sail` était le seul outillage Docker déclaré, sans fichier Docker/Compose ni référence au script Sail dans le dépôt; retiré des dépendances de développement. `laravel/tinker` reste disponible comme outil CLI.
+- Contrôles du premier ménage : `php artisan route:list` réussit et conserve 163 routes; `php artisan view:clear` réussit; `npm run dev` réussit. La suite comptait alors 34 réussis / 7 échoués (41 au total).
+- Contrôles du second ménage : `composer validate` est valide, `php artisan route:list` garde 163 routes, `php artisan view:clear` et `npm run dev` réussissent. Après retrait du test unitaire vide, la suite compte 33 réussis / 7 échoués (40 au total), les mêmes sept erreurs préexistantes dans `MemorialAndChefTest` et `TourTest`.
+- Composer a signalé 38 avis de vulnérabilité touchant 9 paquets déjà verrouillés. Aucun paquet restant n’a été mis à jour dans ce ménage; cet audit de sécurité devra être traité séparément.
 - Le SmokeTest ajouté dans `6b0e985` passe. Il couvre 22 pages avec un compte chef et un monde synthétiques.
-- `git diff --stat avant-menage` : 133 fichiers, 149 insertions, 24 364 suppressions.
+- `git diff --stat avant-menage` : 148 fichiers, 159 insertions, 25 768 suppressions.
 
 ## Annulation
 
