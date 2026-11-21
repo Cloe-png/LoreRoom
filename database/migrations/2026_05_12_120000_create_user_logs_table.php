@@ -17,7 +17,8 @@ class CreateUserLogsTable extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('route_name', 100)->nullable();
             $table->string('route_path', 255)->nullable();
-            $table->enum('action_user', ['connexion', 'deconnexion', 'page_consulte']);
+            // Later security events need extensible values; avoid a restrictive enum.
+            $table->string('action_user', 40);
             $table->dateTime('action_at')->useCurrent();
         });
     }

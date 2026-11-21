@@ -11,6 +11,7 @@ class FactionApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $query = Faction::query()
+            ->whereHas('world', fn ($builder) => $builder->where('user_id', $request->user()->getAuthIdentifier()))
             ->with(['world:id,name', 'leader:id,name', 'coLeader:id,name', 'founder:id,name'])
             ->orderBy('name');
 

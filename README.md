@@ -1,5 +1,7 @@
 # LoreRoom
 
+Guide de préparation et de mise en ligne sur o2switch : [DEPLOYMENT_O2SWITCH.md](DEPLOYMENT_O2SWITCH.md).
+
 LoreRoom est une application web de gestion d'univers narratifs. Elle permet de créer des mondes, de structurer des personnages, d'organiser leurs relations et de suivre l'évolution d'une chronologie dans un même espace de travail.
 
 ## Objectif du projet

@@ -106,7 +106,7 @@ class User extends Authenticatable
     public function canAccessModule(string $module): bool
     {
         if ($module === 'analytics') {
-            return $this->isChef();
+            return $this->isAdminOrChef();
         }
 
         if ($module === 'users') {

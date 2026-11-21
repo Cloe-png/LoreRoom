@@ -4,7 +4,7 @@
     background-image:
         radial-gradient(ellipse at center, transparent 25%, rgba(0, 0, 0, .6) 100%),
         linear-gradient(rgba(27, 21, 17, .55), rgba(27, 21, 17, .55)),
-        url('/museum_background.jpg');
+        url('/images/backgrounds/museum_background.jpg');
     background-position: center;
     background-size: cover;
     filter: blur(4px) saturate(.8);

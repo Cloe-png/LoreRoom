@@ -15,7 +15,9 @@ class AddSecurityFieldsAndExpandUserLogs extends Migration
             $table->timestamp('locked_at')->nullable()->after('last_failed_login_at');
         });
 
-        DB::statement("ALTER TABLE user_logs MODIFY action_user VARCHAR(40) NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE user_logs MODIFY action_user VARCHAR(40) NOT NULL");
+        }
     }
 
     public function down()
@@ -30,7 +32,9 @@ class AddSecurityFieldsAndExpandUserLogs extends Migration
             ])
             ->delete();
 
-        DB::statement("ALTER TABLE user_logs MODIFY action_user ENUM('connexion', 'deconnexion', 'page_consulte') NOT NULL");
+        if (DB::getDriverName() === 'mysql') {
+            DB::statement("ALTER TABLE user_logs MODIFY action_user ENUM('connexion', 'deconnexion', 'page_consulte') NOT NULL");
+        }
 
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([

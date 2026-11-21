@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#111723" data-theme-color>
-    <link rel="icon" type="image/png" href="{{ asset('loreroom.png') }}?v=1">
-    <link rel="apple-touch-icon" href="{{ asset('loreroom.png') }}?v=1">
+    <link rel="icon" type="image/png" href="{{ asset('images/brand/loreroom.png') }}?v=1">
+    <link rel="apple-touch-icon" href="{{ asset('images/brand/loreroom.png') }}?v=1">
     <title>{{ __('app.public.start_page_title') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,7 +54,7 @@
     </div>
     <main class="landing-main">
         <p class="landing-kicker">Le musée de vos histoires</p>
-        <img class="landing-logo" src="{{ asset('loreroom.png') }}" alt="LoreRoom">
+        <img class="landing-logo" src="{{ asset('images/brand/loreroom.png') }}" alt="LoreRoom">
         <div class="landing-rule" aria-hidden="true"><span>✦</span></div>
         <h1 class="landing-title">Chaque monde garde une histoire.</h1>
         <p class="landing-description">Retrouvez vos personnages, leurs récits et les souvenirs qui donnent vie à vos univers.</p>

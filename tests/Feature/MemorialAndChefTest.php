@@ -8,7 +8,8 @@ use App\Models\MemorialOffering;
 use App\Models\User;
 use App\Models\WritingPrompt;
 use App\Models\World;
-use Carbon\Carbon;
+use App\Http\Middleware\EnsureSessionActivity;
+use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class MemorialAndChefTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware(EnsureTemporaryLoginToken::class);
+        $this->withoutMiddleware([EnsureTemporaryLoginToken::class, EnsureSessionActivity::class]);
     }
 
     protected function tearDown(): void

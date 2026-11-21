@@ -3,8 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" type="image/png" href="{{ asset('loreroom.png') }}?v=1">
-        <link rel="apple-touch-icon" href="{{ asset('loreroom.png') }}?v=1">
+        <link rel="icon" type="image/png" href="{{ asset('images/brand/loreroom.png') }}?v=1">
+        <link rel="apple-touch-icon" href="{{ asset('images/brand/loreroom.png') }}?v=1">
         <title>@yield('title', __('app.layout.default_title'))</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,7 +55,7 @@
                 content: "";
                 position: fixed;
                 inset: 0;
-                background-image: url('{{ asset('museum_background.jpg') }}');
+                background-image: url('{{ asset('images/backgrounds/museum_background.jpg') }}');
                 background-size: cover;
                 background-position: center;
                 filter: blur(4px) saturate(0.85);

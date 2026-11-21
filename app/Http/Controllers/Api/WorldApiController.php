@@ -16,15 +16,12 @@ class WorldApiController extends BaseApiController
             ->select('id', 'user_id', 'name', 'slug', 'summary', 'status')
             ->with('user:id,name,email')
             ->withCount(['characters', 'places', 'chronicles'])
+            ->where('user_id', $request->user()->getAuthIdentifier())
             ->orderBy('name')
             ;
 
         if ($request->filled('status')) {
             $query->where('status', (string) $request->query('status'));
-        }
-
-        if ($request->filled('user_id')) {
-            $query->where('user_id', (int) $request->query('user_id'));
         }
 
         if ($request->filled('q')) {
@@ -42,7 +39,7 @@ class WorldApiController extends BaseApiController
 
     public function store(Request $request): JsonResponse
     {
-        $world = World::create($this->validatePayload($request));
+        $world = World::create(array_merge($this->validatePayload($request), ['user_id' => $request->user()->getAuthIdentifier()]));
 
         return $this->success($world->load('user:id,name,email'), [], 201);
     }
@@ -111,7 +108,6 @@ class WorldApiController extends BaseApiController
         $worldId = $world ? $world->id : null;
 
         return $request->validate([
-            'user_id' => ['nullable', 'integer', 'exists:users,id'],
             'name' => [$required, 'string', 'max:255'],
             'slug' => [
                 $required,

@@ -11,6 +11,7 @@ class CharacterRelationApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $query = CharacterRelation::query()
+            ->whereHas('fromCharacter.world', fn ($builder) => $builder->where('user_id', $request->user()->getAuthIdentifier()))
             ->with([
                 'fromCharacter:id,world_id,name',
                 'toCharacter:id,world_id,name',

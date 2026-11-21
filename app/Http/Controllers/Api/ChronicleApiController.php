@@ -11,6 +11,7 @@ class ChronicleApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $query = Chronicle::query()
+            ->whereHas('world', fn ($builder) => $builder->where('user_id', $request->user()->getAuthIdentifier()))
             ->with(['world:id,name', 'eventPlace:id,name'])
             ->orderByDesc('event_date')
             ->orderBy('title');

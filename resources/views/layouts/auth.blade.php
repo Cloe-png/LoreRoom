@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="{{ asset('loreroom.png') }}?v=1">
-    <link rel="apple-touch-icon" href="{{ asset('loreroom.png') }}?v=1">
+    <link rel="icon" type="image/png" href="{{ asset('images/brand/loreroom.png') }}?v=1">
+    <link rel="apple-touch-icon" href="{{ asset('images/brand/loreroom.png') }}?v=1">
     <title>@yield('title')</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,7 @@
         :root{--paper:#f1e6cc;--ink:#2b1d14;--soft:#5a4532;--accent:#6b1e2a;--gold:#a8842f;--leather:#1b1511;--line:#9a7f48;--inner:#c7ac72}
         *{box-sizing:border-box}
         body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px 16px;color:var(--ink);font-family:'Cormorant Garamond',serif;background:var(--leather)}
-        .auth-bg{position:fixed;inset:0;z-index:-1;background-image:radial-gradient(ellipse at center,transparent 25%,rgba(0,0,0,.6) 100%),linear-gradient(rgba(27,21,17,.55),rgba(27,21,17,.55)),url('{{ asset('museum_background.jpg') }}');background-position:center;background-size:cover;filter:blur(4px) saturate(.8);transform:scale(1.03)}
+        .auth-bg{position:fixed;inset:0;z-index:-1;background-image:radial-gradient(ellipse at center,transparent 25%,rgba(0,0,0,.6) 100%),linear-gradient(rgba(27,21,17,.55),rgba(27,21,17,.55)),url('{{ asset('images/backgrounds/museum_background.jpg') }}');background-position:center;background-size:cover;filter:blur(4px) saturate(.8);transform:scale(1.03)}
         .auth-card{position:relative;width:min(440px,100%);padding:40px;background:repeating-linear-gradient(0deg,rgba(90,60,30,.035) 0 1px,transparent 1px 3px),var(--paper);border:1px solid var(--line);border-radius:3px;box-shadow:4px 6px 0 rgba(0,0,0,.35)}
         .auth-card:before{content:"";position:absolute;inset:5px;border:1px solid var(--inner);pointer-events:none}
         .auth-brand,.auth-heading{text-align:center;font-family:Cinzel,serif;font-weight:700}

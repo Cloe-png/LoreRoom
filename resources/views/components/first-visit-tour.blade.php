@@ -83,7 +83,7 @@
      data-label-finish="{{ __('tour.actions.finish') }}"
      data-label-skip="{{ __('tour.actions.skip') }}"
      hidden>
-    <script type="application/json" data-tour-steps>@json($tourSteps)</script>
+    <script type="application/json" data-tour-steps>@json($tourSteps, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE)</script>
     <div class="tour-frame" aria-hidden="true"></div>
     <section class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-step-title" aria-describedby="tour-announcer" tabindex="-1">
         <div class="tour-card-inner">

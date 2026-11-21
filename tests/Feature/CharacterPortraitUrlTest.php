@@ -70,7 +70,26 @@ class CharacterPortraitUrlTest extends TestCase
         $this->assertNull($character->portrait_url);
         $this->get(route('manage.gallery.index', ['without_portrait' => 1]))
             ->assertOk()
-            ->assertSee('aria-hidden="false"', false)
-            ->assertSee('N', false);
+            ->assertSee('class="mus-silhouette" aria-hidden="true" hidden>N</span>', false);
+    }
+
+    public function test_media_is_visible_only_to_the_owner_of_its_world(): void
+    {
+        Storage::fake('public');
+        [$owner, $world] = $this->signedInWorld();
+        $path = 'characters/private-portrait.png';
+        Storage::disk('public')->put($path, 'portrait bytes');
+        Character::create([
+            'world_id' => $world->id,
+            'first_name' => 'Mina',
+            'name' => 'Mina',
+            'role' => 'Figurant',
+            'image_path' => $path,
+        ]);
+
+        $this->get(route('media.show', ['path' => $path]))->assertOk();
+
+        $other = User::factory()->create();
+        $this->actingAs($other)->get(route('media.show', ['path' => $path]))->assertNotFound();
     }
 }

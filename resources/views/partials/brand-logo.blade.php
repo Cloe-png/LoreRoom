@@ -4,7 +4,7 @@
 @endphp
 
 <img
-    src="{{ asset('loreroom.png') }}"
+    src="{{ asset('images/brand/loreroom.png') }}"
     alt="LoreRoom"
     style="height: {{ $size }}px; width: auto;"
     class="{{ trim('brand-logo ' . $class) }}"

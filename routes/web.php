@@ -34,12 +34,12 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/portals', function () {
     return redirect()->route('login');
 });
-Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.attempt');
 Route::get('/inscription', [AuthController::class, 'showRegister'])->name('register');
 Route::get('/register', function () {
     return redirect()->route('register');
 });
-Route::post('/register', [AuthController::class, 'register'])->name('register.store');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register.store');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'temp.token', 'session.activity'])->post('/manage/preferences/theme', [ThemePreferenceController::class, 'update'])->name('manage.preferences.theme');
@@ -68,6 +68,7 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
 });
 
 Route::get('/media/{path}', [MediaController::class, 'show'])
+    ->middleware('auth')
     ->where('path', '.*')
     ->name('media.show');
 

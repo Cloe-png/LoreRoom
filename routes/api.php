@@ -26,13 +26,16 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::apiResource('worlds', WorldApiController::class);
-Route::get('/worlds/{world}/characters', [WorldApiController::class, 'characters']);
-Route::get('/worlds/{world}/stats', [WorldApiController::class, 'stats']);
-Route::apiResource('characters', CharacterApiController::class);
-Route::apiResource('places', PlaceApiController::class);
-Route::apiResource('chronicles', ChronicleApiController::class);
-Route::apiResource('factions', FactionApiController::class);
-Route::apiResource('jobs', JobApiController::class);
-Route::apiResource('species', SpeciesApiController::class);
-Route::apiResource('relations', CharacterRelationApiController::class);
+// These endpoints expose and mutate private world data; require a Sanctum token.
+Route::middleware(['auth:sanctum', \App\Http\Middleware\EnsureApiOwnership::class])->group(function () {
+    Route::apiResource('worlds', WorldApiController::class);
+    Route::get('/worlds/{world}/characters', [WorldApiController::class, 'characters']);
+    Route::get('/worlds/{world}/stats', [WorldApiController::class, 'stats']);
+    Route::apiResource('characters', CharacterApiController::class);
+    Route::apiResource('places', PlaceApiController::class);
+    Route::apiResource('chronicles', ChronicleApiController::class);
+    Route::apiResource('factions', FactionApiController::class);
+    Route::apiResource('jobs', JobApiController::class);
+    Route::apiResource('species', SpeciesApiController::class);
+    Route::apiResource('relations', CharacterRelationApiController::class);
+});

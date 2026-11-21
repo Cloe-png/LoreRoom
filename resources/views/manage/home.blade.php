@@ -73,5 +73,24 @@
             @if($latestNews)<section class="card">@if($newsIsNew)<span class="stamp">NOUVEAU</span>@endif<h3>Nouveautés</h3><div class="dt">{{ \Carbon\Carbon::parse($latestNews->published_at)->locale('fr')->translatedFormat('j F Y') }}</div><div style="font-family:'Cinzel',serif;font-size:14px;margin:4px 0;color:var(--heading)">{{ $latestNews->title }}</div><p class="sub" style="margin:0">{{ \Illuminate\Support\Str::limit(strip_tags($latestNews->body), 140) }}</p></section>@endif
         </div>
     </div>
+@else
+    <div class="cols">
+        <div class="col">
+            @if($steps)
+                <section class="card">
+                    <h3>Premiers pas</h3><p class="sub">Crée un monde pour commencer ton univers.</p>
+                    @foreach($steps as $step)
+                        <div class="qs {{ $step['done'] ? 'd' : '' }}"><span class="bx">{{ $step['done'] ? '✓' : '' }}</span><span class="t">{{ $step['label'] }}</span>@unless($step['done'])<a class="btn" href="{{ $step['url'] }}">Commencer</a>@endunless</div>
+                    @endforeach
+                </section>
+            @endif
+            @if($latestNews)
+                <section class="card">@if($newsIsNew)<span class="stamp">NOUVEAU</span>@endif<h3>Nouveautés</h3><div class="dt">{{ \Carbon\Carbon::parse($latestNews->published_at)->locale('fr')->translatedFormat('j F Y') }}</div><div style="font-family:'Cinzel',serif;font-size:14px;margin:4px 0;color:var(--heading)">{{ $latestNews->title }}</div><p class="sub" style="margin:0">{{ \Illuminate\Support\Str::limit(strip_tags($latestNews->body), 140) }}</p></section>
+            @endif
+        </div>
+        <div class="col">
+            @if(auth()->user()->canAccessModule('suggestions'))<div class="sg"><a class="lk" href="{{ route('manage.suggestions.index') }}">Une idée pour Loreroom ?</a></div>@endif
+        </div>
+    </div>
 @endif
 @endsection

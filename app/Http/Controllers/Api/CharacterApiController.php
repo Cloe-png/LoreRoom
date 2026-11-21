@@ -12,6 +12,7 @@ class CharacterApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $query = Character::query()
+            ->whereHas('world', fn ($builder) => $builder->where('user_id', $request->user()->getAuthIdentifier()))
             ->with(['world:id,name', 'birthPlace:id,name', 'residencePlace:id,name'])
             ->orderBy('name');
 

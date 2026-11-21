@@ -11,6 +11,7 @@ class SpeciesApiController extends BaseApiController
     public function index(Request $request): JsonResponse
     {
         $query = Species::query()
+            ->whereHas('world', fn ($builder) => $builder->where('user_id', $request->user()->getAuthIdentifier()))
             ->with('world:id,name')
             ->orderBy('name');
 
