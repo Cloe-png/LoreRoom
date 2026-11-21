@@ -210,8 +210,9 @@
     <section class="panel character-show">
         <div class="show-hero">
             <div class="show-portrait">
-                @if($character->image_path)
-                    <img src="{{ route('media.show', ['path' => $character->image_path]) }}" alt="Portrait de {{ $character->display_name }}">
+            <p><a class="btn secondary" href="{{ route('manage.character-gallery.show', $character) }}">Voir sa galerie</a></p>
+                @if($character->portrait_url)
+                    <img src="{{ $character->portrait_url }}" alt="Portrait de {{ $character->display_name }}">
                 @else
                     <p class="muted">Aucune photo</p>
                 @endif

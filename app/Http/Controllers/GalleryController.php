@@ -6,6 +6,7 @@ use App\Models\Character;
 use App\Models\CharacterGalleryImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class GalleryController extends Controller
 {
@@ -42,7 +43,11 @@ class GalleryController extends Controller
                 ->values();
         }
 
-        $paintings = $characters->map(function (Character $character) use ($canEditDescriptions) {
+        $characterIds = $characters->pluck('id')->all();
+        $ownedCounts = CharacterGalleryImage::whereIn('character_id', $characterIds)->select('character_id', DB::raw('COUNT(*) as aggregate'))->groupBy('character_id')->pluck('aggregate', 'character_id');
+        $mentionCounts = DB::table('gallery_image_mentions')->join('character_gallery_images', 'character_gallery_images.id', '=', 'gallery_image_mentions.gallery_image_id')->whereIn('gallery_image_mentions.character_id', $characterIds)->whereNull('character_gallery_images.deleted_at')->select('gallery_image_mentions.character_id', DB::raw('COUNT(*) as aggregate'))->groupBy('gallery_image_mentions.character_id')->pluck('aggregate', 'character_id');
+
+        $paintings = $characters->map(function (Character $character) use ($canEditDescriptions, $ownedCounts, $mentionCounts) {
             $family = trim((string) ($character->family_name ?: $character->last_name));
             $fullName = trim($character->display_name);
             $initials = collect(preg_split('/\s+/u', $fullName))
@@ -57,14 +62,15 @@ class GalleryController extends Controller
                 'room' => $family !== '' ? $family : 'Inclassables',
                 'birth_year' => optional($character->birth_date)->format('Y'),
                 'death_year' => optional($character->death_date)->format('Y'),
-                'image_url' => $character->image_path
-                    ? route('media.show', ['path' => $character->image_path, 'width' => 600])
-                    : null,
+                // Replace this file with your own default portrait whenever you're ready.
+                'image_url' => $character->portrait_url ?: asset('images/museum/portrait-par-defaut.svg'),
                 'description' => (string) ($character->portrait_description ?? ''),
                 'initials' => $initials ?: '?',
                 'sheet_url' => route('manage.characters.show', $character),
                 'update_url' => route('manage.characters.update', $character),
                 'can_edit' => (bool) $canEditDescriptions,
+                'gallery_count' => (int) ($ownedCounts[$character->id] ?? 0) + (int) ($mentionCounts[$character->id] ?? 0),
+                'gallery_url' => route('manage.character-gallery.show', $character),
             ];
         })->values();
 
@@ -105,7 +111,8 @@ class GalleryController extends Controller
                     'uid' => 'portrait-' . $character->id,
                     'source' => 'portrait',
                     'source_label' => 'Portrait',
-                    'image_path' => $character->image_path,
+                    'image_path' => $character->portrait_url,
+                    'image_url' => $character->portrait_url,
                     'caption' => null,
                     'character_id' => $character->id,
                     'character_name' => $character->display_name,

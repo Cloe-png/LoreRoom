@@ -135,7 +135,7 @@
                             'label' => (string) ($edge['from'] ?? ('#' . $edge['from_id'])),
                             'is_dead' => (($edge['from_status'] ?? null) === 'mort'),
                             'preferred_color' => (string) ($edge['from_color'] ?? ''),
-                            'image' => !empty($edge['from_photo']) ? route('media.show', ['path' => $edge['from_photo']], false) : null,
+                            'image' => $edge['from_photo'] ?? null,
                         ];
                     }
                     if (!empty($edge['to_id']) && !isset($networkNodes[(int) $edge['to_id']])) {
@@ -144,7 +144,7 @@
                             'label' => (string) ($edge['to'] ?? ('#' . $edge['to_id'])),
                             'is_dead' => (($edge['to_status'] ?? null) === 'mort'),
                             'preferred_color' => (string) ($edge['to_color'] ?? ''),
-                            'image' => !empty($edge['to_photo']) ? route('media.show', ['path' => $edge['to_photo']], false) : null,
+                            'image' => $edge['to_photo'] ?? null,
                         ];
                     }
                 }

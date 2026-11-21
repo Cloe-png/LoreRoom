@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 680" role="img" aria-label="Portrait à personnaliser">
+  <defs>
+    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#71604d"/><stop offset="1" stop-color="#28232a"/></linearGradient>
+    <radialGradient id="light" cx="50%" cy="34%" r="62%"><stop stop-color="#e5d0a5" stop-opacity=".8"/><stop offset="1" stop-color="#e5d0a5" stop-opacity="0"/></radialGradient>
+    <linearGradient id="coat" x2="1"><stop stop-color="#243044"/><stop offset=".5" stop-color="#49546a"/><stop offset="1" stop-color="#20283a"/></linearGradient>
+  </defs>
+  <rect width="480" height="680" fill="url(#wall)"/>
+  <rect width="480" height="680" fill="url(#light)"/>
+  <path d="M38 660c12-135 79-211 202-211s190 76 202 211" fill="url(#coat)"/>
+  <path d="M151 256c0-94 37-145 89-145s89 51 89 145v58c0 82-39 135-89 135s-89-53-89-135z" fill="#c9ad8b"/>
+  <path d="M143 274c-19-129 28-203 98-203 87 0 119 91 97 204l-20-32-17-93-54 38-73-20-15 92z" fill="#302b31"/>
+  <path d="M185 319h18m74 0h18" stroke="#403536" stroke-width="7" stroke-linecap="round"/>
+  <path d="M219 374q21 17 42 0" fill="none" stroke="#79574c" stroke-width="6" stroke-linecap="round"/>
+  <path d="M240 688V472" stroke="#d5bd91" stroke-opacity=".42" stroke-width="4"/>
+  <text x="240" y="624" fill="#ead7af" fill-opacity=".8" font-family="serif" font-size="19" letter-spacing="5" text-anchor="middle">PORTRAIT À VENIR</text>
+</svg>

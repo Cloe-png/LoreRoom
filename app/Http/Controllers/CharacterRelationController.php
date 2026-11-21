@@ -264,7 +264,7 @@ class CharacterRelationController extends Controller
 
         $path = (string) $character->image_path;
 
-        return Storage::disk('public')->exists($path) ? $path : null;
+        return Storage::disk('public')->exists($path) ? $character->portrait_url : null;
     }
 
     private function assignRelationMetadata(array $data): array

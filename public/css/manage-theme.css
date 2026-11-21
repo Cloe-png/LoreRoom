@@ -242,50 +242,50 @@ html[data-theme="light"] {
     border-color: var(--border) !important;
 }
 
-.content p,
-.content li,
-.content dd,
-.content dt,
-.content td,
-.content th,
-.content small,
-.content time,
-.content .help,
-.content .muted,
-.content .text-muted,
-.content label,
-.content legend,
-.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
-.content select,
-.content textarea {
+.content:not(.mus-content) p,
+.content:not(.mus-content) li,
+.content:not(.mus-content) dd,
+.content:not(.mus-content) dt,
+.content:not(.mus-content) td,
+.content:not(.mus-content) th,
+.content:not(.mus-content) small,
+.content:not(.mus-content) time,
+.content:not(.mus-content) .help,
+.content:not(.mus-content) .muted,
+.content:not(.mus-content) .text-muted,
+.content:not(.mus-content) label,
+.content:not(.mus-content) legend,
+.content:not(.mus-content) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.content:not(.mus-content) select,
+.content:not(.mus-content) textarea {
     color: var(--text) !important;
 }
 
-.content h1,
-.content h2,
-.content h3,
-.content h4,
-.content h5,
-.content a:not(.btn):not(.btn-mini) {
+.content:not(.mus-content) h1,
+.content:not(.mus-content) h2,
+.content:not(.mus-content) h3,
+.content:not(.mus-content) h4,
+.content:not(.mus-content) h5,
+.content:not(.mus-content) a:not(.btn):not(.btn-mini) {
     color: var(--heading) !important;
 }
 
-.content .btn,
-.content .btn-mini,
-.content button:not(.sidebar-toggle):not(.sidebar-close),
-.content input[type="submit"],
-.content .worlds-cta,
-.content .world-action--view,
-.content .plus-btn {
+.content:not(.mus-content) .btn,
+.content:not(.mus-content) .btn-mini,
+.content:not(.mus-content) button:not(.sidebar-toggle):not(.sidebar-close),
+.content:not(.mus-content) input[type="submit"],
+.content:not(.mus-content) .worlds-cta,
+.content:not(.mus-content) .world-action--view,
+.content:not(.mus-content) .plus-btn {
     color: var(--on-accent) !important;
     -webkit-text-fill-color: currentColor !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
 
-.content .btn.secondary,
-.content .btn-mini.secondary,
-.content .world-action--edit {
+.content:not(.mus-content) .btn.secondary,
+.content:not(.mus-content) .btn-mini.secondary,
+.content:not(.mus-content) .world-action--edit {
     color: var(--heading) !important;
     -webkit-text-fill-color: currentColor !important;
 }

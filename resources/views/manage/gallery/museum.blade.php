@@ -31,10 +31,8 @@
                     <article class="mus-slot" data-index="{{ $index }}" role="group" aria-roledescription="diapositive" aria-label="{{ $painting['name'] }}, {{ $index + 1 }} sur {{ $paintings->count() }}">
                         <figure class="mus-fr">
                             <button class="mus-art" type="button" aria-label="Afficher {{ $painting['name'] }}">
-                                @if($painting['image_url'])
-                                    <img class="mus-portrait" src="{{ $painting['image_url'] }}" alt="Portrait de {{ $painting['name'] }}" loading="{{ $index === $activeIndex ? 'eager' : 'lazy' }}">
-                                @endif
-                                <span class="mus-silhouette" aria-hidden="{{ $painting['image_url'] ? 'true' : 'false' }}" @if($painting['image_url']) hidden @endif>{{ $painting['initials'] }}</span>
+                                <img class="mus-portrait" src="{{ $painting['image_url'] }}" alt="Portrait de {{ $painting['name'] }}" loading="{{ $index === $activeIndex ? 'eager' : 'lazy' }}">
+                                <span class="mus-silhouette" aria-hidden="true" hidden>{{ $painting['initials'] }}</span>
                             </button>
                             <img class="mus-cd" src="{{ asset('images/museum/cadre.png') }}" alt="" aria-hidden="true" draggable="false">
                         </figure>
@@ -42,7 +40,7 @@
                             <h2>{{ $painting['name'] }}</h2>
                             <p class="mus-dates">{{ trim(($painting['birth_year'] ?: '') . (($painting['birth_year'] || $painting['death_year']) ? ' — ' : '') . ($painting['death_year'] ?: '')) }}</p>
                             <p class="mus-description">{{ $painting['description'] ?: 'Aucune description pour l’instant.' }}</p>
-                            <div class="mus-plaque-links"><a href="{{ $painting['sheet_url'] }}">Ouvrir la fiche</a></div>
+                            <div class="mus-plaque-links"><a href="{{ $painting['sheet_url'] }}">Ouvrir la fiche</a> · <a href="{{ $painting['gallery_url'] }}">Sa galerie · {{ $painting['gallery_count'] }} images</a></div>
                         </section>
                     </article>
                 @endforeach
@@ -64,5 +62,5 @@
         </section>
     @endif
 </div>
-<script src="{{ mix('js/museum.js') }}" defer></script>
+<script src="{{ mix('js/museum.js') }}?v={{ filemtime(public_path('js/museum.js')) }}" defer></script>
 @endsection

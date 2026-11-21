@@ -161,8 +161,8 @@
                     @endphp
                     <article class="wanted-card">
                         <div class="wanted-photo">
-                            @if(!empty($character->image_path))
-                                <img src="{{ route('media.show', ['path' => $character->image_path]) }}" alt="Portrait {{ $character->display_name }}">
+                            @if($character->portrait_url)
+                                <img src="{{ $character->portrait_url }}" alt="Portrait {{ $character->display_name }}">
                             @else
                                 <div class="wanted-fallback">Sans photo</div>
                             @endif

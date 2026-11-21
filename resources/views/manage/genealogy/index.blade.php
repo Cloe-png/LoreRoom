@@ -382,7 +382,7 @@
                     'is_dead' => (($node['status'] ?? '') === 'mort'),
                     'is_ghost' => (bool) ($node['is_ghost'] ?? false),
                     'is_selected' => ((int) $node['id'] === (int) $selectedId),
-                    'image' => !empty($node['image_path']) ? route('media.show', ['path' => $node['image_path']], false) : null,
+                    'image' => $node['portrait_url'] ?? null,
                     'level' => (int) ($node['level'] ?? 0),
                 ];
             })->values();

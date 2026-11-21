@@ -261,7 +261,7 @@ class GenealogyController extends Controller
                     'father_id' => $character ? (int) ($character->father_id ?? 0) : 0,
                     'mother_id' => $character ? (int) ($character->mother_id ?? 0) : 0,
                     'spouse_id' => $character ? (int) ($character->spouse_id ?? 0) : 0,
-                    'image_path' => $this->resolveUsableImagePath($character),
+                    'portrait_url' => $this->resolveUsableImagePath($character),
                     'level' => (int) $level,
                     'generation' => $this->generationLabel((int) $level),
                     'birth_date' => $birthDate ?: null,
@@ -578,7 +578,7 @@ class GenealogyController extends Controller
 
         $path = (string) $character->image_path;
 
-        return Storage::disk('public')->exists($path) ? $path : null;
+        return Storage::disk('public')->exists($path) ? $character->portrait_url : null;
     }
 
     private function compareByBirthThenName(Character $a, Character $b): int

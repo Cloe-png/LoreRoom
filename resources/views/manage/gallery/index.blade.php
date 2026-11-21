@@ -37,7 +37,7 @@
             @foreach($images as $image)
                 <article class="gallery-card">
                     <a class="gallery-media-link" href="{{ route('manage.characters.show', $image['character_id']) }}">
-                        <img class="gallery-media" src="{{ route('media.show', ['path' => $image['image_path']]) }}" alt="{{ $image['character_name'] }}">
+                        <img class="gallery-media" src="{{ $image['image_url'] ?? route('media.show', ['path' => $image['image_path']]) }}" alt="{{ $image['character_name'] }}">
                     </a>
                     <div class="gallery-meta">
                         <div class="stack" style="justify-content:space-between;">

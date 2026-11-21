@@ -19,6 +19,7 @@ use App\Http\Controllers\UserAnalyticsController;
 use App\Http\Controllers\UserAdminController;
 use App\Http\Controllers\WorldController;
 use App\Http\Controllers\GalleryController;
+use App\Http\Controllers\CharacterGalleryController;
 use App\Http\Controllers\GenealogyController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\LoreController;
@@ -109,6 +110,12 @@ Route::middleware(['auth', 'temp.token', 'session.activity', 'world.selected'])-
 
     Route::middleware('module.access:gallery')->group(function () {
         Route::get('manage/galerie', [GalleryController::class, 'index'])->name('manage.gallery.index');
+        Route::get('manage/gallery/{character}', [CharacterGalleryController::class, 'show'])->whereNumber('character')->name('manage.character-gallery.show');
+        Route::post('manage/gallery/{character}/images', [CharacterGalleryController::class, 'store'])->whereNumber('character')->middleware('throttle:60,1')->name('manage.character-gallery.store');
+        Route::put('manage/gallery/{character}/images/{image}', [CharacterGalleryController::class, 'update'])->whereNumber('character')->whereNumber('image')->middleware('throttle:60,1')->name('manage.character-gallery.update');
+        Route::post('manage/gallery/{character}/images/{image}/mentions', [CharacterGalleryController::class, 'mention'])->whereNumber('character')->whereNumber('image')->middleware('throttle:60,1')->name('manage.character-gallery.mention');
+        Route::delete('manage/gallery/{character}/images/{image}/mentions/{mentioned}', [CharacterGalleryController::class, 'unmention'])->whereNumber('character')->whereNumber('image')->whereNumber('mentioned')->middleware('throttle:60,1')->name('manage.character-gallery.unmention');
+        Route::delete('manage/gallery/{character}/images/{image}', [CharacterGalleryController::class, 'destroy'])->whereNumber('character')->whereNumber('image')->middleware('throttle:60,1')->name('manage.character-gallery.destroy');
     });
 
     Route::middleware('module.access:genealogy')->group(function () {

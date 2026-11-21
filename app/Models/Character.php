@@ -6,7 +6,9 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Character extends Model
 {
@@ -23,6 +25,9 @@ class Character extends Model
             if (!$request->is('manage*')) {
                 return;
             }
+            if ($request->routeIs('manage.character-gallery.*')) {
+                return;
+            }
 
             $worldId = (int) $request->session()->get('selected_world_id', 0);
             if ($worldId > 0) {
@@ -32,6 +37,17 @@ class Character extends Model
 
         static::saving(function (self $character) {
             $character->status = $character->resolveAutoStatus();
+        });
+
+        static::deleting(function (self $character) {
+            $character->ownedGalleryImages()->withTrashed()->get()->each(function (CharacterGalleryImage $image) {
+                $image->mentions()->detach();
+                Storage::disk('public')->delete(array_filter([$image->image_path, $image->display_path]));
+                $image->delete();
+            });
+            $character->mentionedGalleryImages()->get()->each(function (CharacterGalleryImage $image) use ($character) {
+                $image->mentions()->detach($character->id);
+            });
         });
     }
 
@@ -98,6 +114,18 @@ class Character extends Model
         'secrets_is_private' => 'boolean',
         'traumas' => 'array',
     ];
+
+    /** Return the canonical same-origin URL used to display this character's portrait. */
+    public function getPortraitUrlAttribute(): ?string
+    {
+        $path = trim((string) $this->image_path);
+        $disk = Storage::disk('public');
+        $version = $path !== '' && $disk->exists($path) ? $disk->lastModified($path) : null;
+
+        // Keep the portrait on the page's host and invalidate stale browser
+        // failures after a portrait is uploaded or replaced.
+        return $path === '' ? null : route('media.show', ['path' => $path, 'v' => $version], false);
+    }
 
     public function world()
     {
@@ -213,7 +241,29 @@ class Character extends Model
 
     public function galleryImages()
     {
+        return CharacterGalleryImage::query()
+            ->where('world_id', $this->world_id)
+            ->where(function ($query) {
+                $query->where('character_id', $this->getKey())
+                    ->orWhereHas('mentions', fn ($mentions) => $mentions->whereKey($this->getKey()));
+            })
+            ->with(['owner:id,name,first_name,last_name,image_path', 'mentions:id,name,first_name,last_name'])
+            ->orderByDesc('created_at')->orderByDesc('id');
+    }
+
+    public function ownedGalleryImages(): HasMany
+    {
         return $this->hasMany(CharacterGalleryImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function getGalleryImagesAttribute()
+    {
+        return $this->galleryImages()->get();
+    }
+
+    public function mentionedGalleryImages()
+    {
+        return $this->belongsToMany(CharacterGalleryImage::class, 'gallery_image_mentions', 'character_id', 'gallery_image_id');
     }
 
     public function outfitImages()

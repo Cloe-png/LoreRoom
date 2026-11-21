@@ -3,6 +3,8 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" type="image/png" href="{{ asset('loreroom.png') }}?v=1">
+        <link rel="apple-touch-icon" href="{{ asset('loreroom.png') }}?v=1">
         <title>@yield('title', __('app.layout.default_title'))</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -742,7 +744,7 @@
 <script>if(document.documentElement.dataset.theme==='auto'){document.documentElement.dataset.theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var tc=document.querySelector('[data-theme-color]');if(tc)tc.content=document.documentElement.dataset.theme==='light'?'#efe2c9':'#111723';}</script>
         <link rel="stylesheet" href="{{ asset('css/tour.css') }}">
 </head>
-    <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif @if(request()->routeIs('manage.gallery.index'))mus-body @endif">
+    <body class="@if(request()->routeIs('manage.index'))manage-dashboard @endif @if(request()->routeIs('manage.gallery.index', 'manage.character-gallery.show'))mus-body @endif">
         @if(request()->routeIs('manage.index'))
         <div class="app">
             <aside class="side">
@@ -921,11 +923,11 @@
                         @endif
                     </div>
                 </aside>
-                <section class="main @if(request()->routeIs('manage.gallery.index'))mus-main @endif">
-                    <header class="@if(request()->routeIs('manage.gallery.index'))mus-header @endif">
+                <section class="main @if(request()->routeIs('manage.gallery.index', 'manage.character-gallery.show'))mus-main @endif">
+                    <header class="@if(request()->routeIs('manage.gallery.index', 'manage.character-gallery.show'))mus-header @endif">
                         <div class="header-left">
-                            @if(request()->routeIs('manage.gallery.index'))<a class="mus-back" href="{{ route('manage.index') }}" aria-label="Retour à l’accueil">←</a>@endif
-                            @unless(request()->routeIs('manage.gallery.index'))
+                            @if(request()->routeIs('manage.gallery.index'))<a class="mus-back" href="{{ route('manage.index') }}" aria-label="Retour à l’accueil">←</a>@elseif(request()->routeIs('manage.character-gallery.show'))<a class="mus-back" href="{{ route('manage.gallery.index', ['p' => $character->id]) }}" aria-label="Retour au couloir">←</a>@endif
+                            @unless(request()->routeIs('manage.gallery.index', 'manage.character-gallery.show'))
                             <button class="sidebar-toggle mobile-nav-toggle" type="button" id="mobile-nav-toggle" aria-label="{{ __('app.layout.open_navigation') }}">&#9776;</button>
                             <button class="sidebar-toggle desktop-nav-toggle" type="button" id="sidebar-toggle" aria-label="{{ __('app.layout.toggle_navigation') }}">&#9664;</button>
                             @endunless
@@ -944,7 +946,7 @@
                             </div>
                         </div>
                     </header>
-                    <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif @if(request()->routeIs('manage.gallery.index'))mus-content @endif">
+                    <main class="content @if(request()->routeIs('manage.index'))content--dashboard @endif @if(request()->routeIs('manage.gallery.index', 'manage.character-gallery.show'))mus-content @endif">
                         @if (session('success'))
                             <div class="flash" role="status" aria-live="polite">
                                 {{ session('success') }}
@@ -1021,8 +1023,8 @@
             .content h1,.content h2,.content h3,.content h4,.content legend { color:var(--ink); font-family:"Cinzel",serif; }
             .content .card,.content .panel,.content .dashboard-card,.content .stat-card,.content .world-card,.content .first-world,.content .sheet,.content .journal-cover { border-radius:3px; border-color:var(--gold-dark); background-color:rgba(255,255,255,.35); background-image:none; box-shadow:3px 4px 0 rgba(59,45,28,.28); }
             .content .card,.content .panel,.content .dashboard-card,.content .world-card { outline:1px solid var(--gold); outline-offset:-5px; }
-            .content .btn,.content .btn-mini,.content button:not(.sidebar-toggle):not(.sidebar-close),.content input[type="submit"] { min-height:36px; padding:9px 16px; border:1px solid var(--gold-dark); border-radius:2px; background:var(--gold-dark); color:var(--paper); box-shadow:2px 3px 0 rgba(59,45,28,.35); font:600 11px/1.2 "Cinzel",serif; letter-spacing:.16em; text-decoration:none; text-transform:uppercase; transition:transform 180ms ease,box-shadow 180ms ease,background 180ms ease; }
-            .content .btn:hover,.content .btn-mini:hover,.content button:not(.sidebar-toggle):not(.sidebar-close):hover,.content input[type="submit"]:hover { transform:translate(1px,1px); box-shadow:1px 2px 0 rgba(40,15,10,.25); }
+            .content:not(.mus-content) .btn,.content:not(.mus-content) .btn-mini,.content:not(.mus-content) button:not(.sidebar-toggle):not(.sidebar-close),.content:not(.mus-content) input[type="submit"] { min-height:36px; padding:9px 16px; border:1px solid var(--gold-dark); border-radius:2px; background:var(--gold-dark); color:var(--paper); box-shadow:2px 3px 0 rgba(59,45,28,.35); font:600 11px/1.2 "Cinzel",serif; letter-spacing:.16em; text-decoration:none; text-transform:uppercase; transition:transform 180ms ease,box-shadow 180ms ease,background 180ms ease; }
+            .content:not(.mus-content) .btn:hover,.content:not(.mus-content) .btn-mini:hover,.content:not(.mus-content) button:not(.sidebar-toggle):not(.sidebar-close):hover,.content:not(.mus-content) input[type="submit"]:hover { transform:translate(1px,1px); box-shadow:1px 2px 0 rgba(40,15,10,.25); }
             .content .btn.secondary,.content .btn-mini.secondary { background:transparent; color:var(--gold-dark); box-shadow:none; }
             .content .btn.secondary:hover,.content .btn-mini.secondary:hover { background:rgba(202,164,106,.12); box-shadow:none; }
             .content .btn.danger,.content .btn-mini.danger { background:transparent; color:var(--danger); border-color:var(--danger); box-shadow:none; }
@@ -1059,7 +1061,7 @@
         @yield('head')
         <link rel="stylesheet" href="{{ asset('css/theme.css') }}">
         @yield('page-styles')
-        @unless(request()->routeIs('manage.index'))<link rel="stylesheet" href="{{ asset('css/manage-theme.css') }}?v=20261109-5">@endunless
+        @unless(request()->routeIs('manage.index'))<link rel="stylesheet" href="{{ asset('css/manage-theme.css') }}?v={{ filemtime(public_path('css/manage-theme.css')) }}">@endunless
         <script>
             (function () {
                 const body = document.body;
@@ -1169,7 +1171,7 @@
                 }
             })();
         </script>
-        @if(request()->routeIs('manage.gallery.index'))<link rel="stylesheet" href="{{ mix('css/museum.css') }}">@endif
+        @if(request()->routeIs('manage.gallery.index'))<link rel="stylesheet" href="{{ mix('css/museum.css') }}?v={{ filemtime(public_path('css/museum.css')) }}">@endif
     </body>
 </html>
 

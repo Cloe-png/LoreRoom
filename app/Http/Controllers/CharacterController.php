@@ -517,7 +517,6 @@ class CharacterController extends Controller
             'educations.faction',
             'educations.diploma',
             'species',
-            'galleryImages',
             'powers',
             'places',
             'ledPlaces',
@@ -566,7 +565,6 @@ class CharacterController extends Controller
             'educations.faction',
             'educations.diploma',
             'species',
-            'galleryImages',
             'powers',
         ];
 
@@ -769,7 +767,7 @@ class CharacterController extends Controller
             $selectedHalfSiblingIds = array_values(array_unique($selectedHalfSiblingIds));
         }
 
-        $existingGallery = $character->galleryImages()->get();
+        $existingGallery = $character->ownedGalleryImages()->get();
         $existingOutfits = $this->hasOutfitImagesTable() ? $character->outfitImages()->get() : collect();
         $existingPowers = $character->powers()->get();
         $outfitRows = old('outfits');
@@ -2091,11 +2089,9 @@ class CharacterController extends Controller
             return;
         }
 
-        $images = $character->galleryImages()->whereIn('id', $ids)->get();
+        $images = $character->ownedGalleryImages()->whereIn('id', $ids)->get();
         foreach ($images as $image) {
-            if ($image->image_path) {
-                Storage::disk('public')->delete($image->image_path);
-            }
+            Storage::disk('public')->delete(array_filter([$image->image_path, $image->display_path]));
             $image->delete();
         }
     }
@@ -2106,7 +2102,7 @@ class CharacterController extends Controller
             return;
         }
 
-        $startOrder = (int) ($character->galleryImages()->max('sort_order') ?? 0);
+        $startOrder = (int) ($character->ownedGalleryImages()->max('sort_order') ?? 0);
 
         foreach ($uploadedFiles as $index => $file) {
             if (!$file) {
@@ -2118,9 +2114,14 @@ class CharacterController extends Controller
 
             CharacterGalleryImage::create([
                 'character_id' => $character->id,
+                'world_id' => $character->world_id,
                 'image_path' => $path,
+                'display_path' => $path,
+                'title' => trim((string) ($captions[$index] ?? '')) ?: 'Photo',
                 'caption' => trim((string) ($captions[$index] ?? '')) ?: null,
+                'description' => trim((string) ($captions[$index] ?? '')) ?: null,
                 'sort_order' => $startOrder,
+                'position' => $startOrder,
             ]);
         }
     }
