@@ -2,6 +2,7 @@
     "/js/auth-mascot.js": "/js/auth-mascot.js",
     "/js/tour.js": "/js/tour.js",
     "/js/birthday-party.js": "/js/birthday-party.js",
+    "/js/landing.js": "/js/landing.js",
     "/js/museum.js": "/js/museum.js",
     "/js/image-export.js": "/js/image-export.js",
     "/css/manage-theme.css": "/css/manage-theme.css",
@@ -9,6 +10,7 @@
     "/css/shell.css": "/css/shell.css",
     "/css/auth-mascot.css": "/css/auth-mascot.css",
     "/css/app.css": "/css/app.css",
+    "/css/landing.css": "/css/landing.css",
     "/css/museum.css": "/css/museum.css",
     "/css/tour.css": "/css/tour.css"
 }

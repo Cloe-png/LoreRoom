@@ -1,0 +1,140 @@
+.lp-page {
+    position: relative;
+    display: flex;
+    min-height: 100vh;
+    min-height: 100svh;
+    flex-direction: column;
+    overflow-x: hidden;
+    color: var(--text);
+    background: var(--bg);
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.lp-page::before,
+.lp-page::after {
+    position: fixed;
+    z-index: 5;
+    pointer-events: none;
+    content: '';
+}
+
+.lp-page::before { inset: 14px; border: 1px solid var(--border-soft); }
+.lp-page::after { inset: 19px; border: 1px solid color-mix(in srgb, var(--border-soft) 55%, transparent); }
+
+.lp-shell { display: flex; width: min(1390px, calc(100% - 88px)); min-height: calc(100svh - 72px); flex: 1; flex-direction: column; margin: 36px auto; }
+.lp-header { display: flex; min-height: 70px; align-items: center; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--border-soft); }
+.lp-brand { color: var(--heading); font: 600 20px/1 Cinzel, serif; letter-spacing: .32em; text-decoration: none; }
+.lp-header-actions { display: flex; align-items: center; gap: 20px; }
+.lp-login { color: var(--text); font: 500 16px/1.2 'Cormorant Garamond', serif; text-decoration-color: var(--border); text-underline-offset: 4px; }
+.lp-header .theme-toggle { color: var(--heading); background: var(--surface); }
+
+.lp-main { display: grid; min-height: 510px; flex: 1; grid-template-columns: minmax(0, .88fr) minmax(460px, 1.12fr); align-items: center; gap: clamp(28px, 4vw, 70px); padding: 24px 0 30px; }
+.lp-intro { max-width: 560px; padding: 14px 0 24px; }
+.lp-kicker { display: flex; align-items: center; gap: 13px; margin: 0 0 22px; color: var(--heading); font: 600 11px/1.4 Cinzel, serif; letter-spacing: .18em; text-transform: uppercase; }
+.lp-kicker::before { width: 34px; height: 1px; background: var(--ornament); content: ''; }
+.lp-title { margin: 0; color: var(--text); font: 600 clamp(40px, 5.4vw, 72px)/.98 'Cormorant Garamond', serif; letter-spacing: -.025em; }
+.lp-title em { color: var(--gold); font-weight: 600; }
+.lp-description { max-width: 470px; margin: 20px 0 27px; color: var(--text-soft); font: 400 clamp(19px, 1.75vw, 22px)/1.42 'Cormorant Garamond', serif; }
+.lp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.lp-button { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; gap: 15px; padding: 0 19px; border: 1px solid var(--border); border-radius: 2px; font: 600 10px/1.2 Cinzel, serif; letter-spacing: .13em; text-align: center; text-decoration: none; text-transform: uppercase; transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease; }
+.lp-button--primary { min-width: 150px; border-color: var(--accent-solid); background: var(--accent-solid); color: var(--on-accent); box-shadow: 3px 4px 0 var(--shadow); }
+.lp-button--secondary { min-width: 160px; background: var(--surface); color: var(--heading); }
+.lp-button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; }
+.lp-button:hover { transform: translateY(2px); box-shadow: 1px 2px 0 var(--shadow); }
+.lp-resume { margin: 18px 0 0; color: var(--text-soft); font: italic 17px/1.3 'Cormorant Garamond', serif; }
+.lp-resume a { color: var(--heading); text-underline-offset: 3px; }
+
+.lp-salle { position: relative; display: flex; min-width: 0; height: min(530px, 62vh); min-height: 420px; align-items: center; justify-content: center; isolation: isolate; container-type: inline-size; }
+.lp-wall { position: absolute; z-index: -2; inset: 0 0 15%; background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--surface-2) 88%, var(--heading)) 0%, var(--surface) 58%, var(--bg) 100%); }
+.lp-floor { position: absolute; z-index: -1; inset: 85% 0 0; border-top: 3px solid #b18a48; background: linear-gradient(#2a1f18, #171009); }
+.lp-picture { position: absolute; width: 180px; margin: 0; filter: brightness(.62) drop-shadow(0 11px 10px var(--shadow)); }
+.lp-picture--left { top: 17%; left: 3%; transform: rotate(-3deg) scale(.88); }
+.lp-picture--right { top: 16%; right: 3%; transform: rotate(3deg) scale(.88); }
+.lp-picture--center { z-index: 2; top: 4%; left: 50%; width: min(270px, 49%); transform: translateX(-50%); filter: drop-shadow(0 15px 13px var(--shadow)); }
+.lp-frame { position: relative; width: 100%; aspect-ratio: 725 / 1024; isolation: isolate; }
+.lp-art-window { position: absolute; z-index: -1; inset: 8.5% 11% 8.5%; overflow: hidden; background: var(--surface-2); }
+.lp-frame-overlay { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
+.lp-side-art,.lp-slide img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
+.lp-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.2s ease; }
+.lp-slide.is-active { opacity: 1; }
+.lp-silhouette { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, var(--surface-2), var(--surface) 72%, var(--bg)); color: var(--heading); }
+.lp-silhouette::before { position: absolute; bottom: -15%; left: 50%; width: 67%; height: 62%; border-radius: 48% 48% 8% 8%; background: linear-gradient(90deg, var(--bg), var(--surface-2) 48%, var(--bg)); content: ''; transform: translateX(-50%); }
+.lp-silhouette::after { position: absolute; top: 20%; left: 50%; width: 31%; aspect-ratio: 1; border-radius: 50%; background: var(--surface); box-shadow: 0 0 0 7px color-mix(in srgb, var(--heading) 42%, transparent); content: ''; transform: translateX(-50%); }
+.lp-silhouette span,.lp-silhouette small { position: relative; z-index: 1; }
+.lp-silhouette span { margin-top: 40%; font: 600 30px/1 Cinzel, serif; }
+.lp-silhouette small { margin-top: 8px; color: var(--text); font: italic 16px/1 'Cormorant Garamond', serif; }
+.lp-plaque { display: grid; min-height: 62px; align-content: center; gap: 4px; margin: 9px 3px 0; padding: 8px 12px; border: 1px solid #98733d; background: linear-gradient(115deg, #ead7a2, #c9a965); box-shadow: 0 5px 9px rgba(0,0,0,.28); color: #2b1d14; text-align: center; }
+.lp-plaque strong { color: #2b1d14; font: 600 13px/1.2 Cinzel, serif; text-transform: uppercase; }
+.lp-plaque span { color: #2b1d14; font: italic 15px/1.1 'Cormorant Garamond', serif; }
+
+.lp-benefits { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 20px 0 22px; border-top: 1px solid var(--border-soft); }
+.lp-benefit { display: flex; min-width: 0; align-items: flex-start; gap: 13px; }
+.lp-benefit svg { width: 29px; height: 29px; flex: 0 0 29px; fill: none; stroke: var(--heading); stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.5; }
+.lp-benefit h2 { margin: 0 0 4px; color: var(--heading); font: 600 12px/1.3 Cinzel, serif; }
+.lp-benefit p { margin: 0; color: var(--text-soft); font: 400 16px/1.25 'Cormorant Garamond', serif; }
+.lp-footer { padding: 14px 0 4px; border-top: 1px solid var(--border-soft); color: var(--text-soft); font: 10px/1.4 Cinzel, serif; letter-spacing: .17em; text-align: center; }
+.lp-mascot { position: fixed; z-index: 4; right: 12px; bottom: 0; width: min(230px, 28vw); height: auto; pointer-events: none; }
+
+.lp-page.lp-animate .lp-reveal { opacity: 0; animation: lp-arrive .8s ease both; }
+.lp-page.lp-animate .lp-reveal:nth-child(1) { animation-delay: .1s; }
+.lp-page.lp-animate .lp-reveal:nth-child(2) { animation-delay: .2s; }
+.lp-page.lp-animate .lp-reveal:nth-child(3) { animation-delay: .3s; }
+.lp-page.lp-animate .lp-reveal:nth-child(4) { animation-delay: .4s; }
+.lp-page.lp-animate .lp-reveal:nth-child(5) { animation-delay: .5s; }
+@keyframes lp-arrive { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.lp-page :focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+
+@media (max-width: 1000px) {
+    .lp-shell { width: calc(100% - 72px); }
+    .lp-main { grid-template-columns: minmax(0, .9fr) minmax(390px, 1.1fr); gap: 24px; }
+    .lp-picture { width: 150px; }
+    .lp-picture--center { width: min(250px, 52%); }
+}
+
+@media (max-width: 900px) {
+    .lp-shell { width: calc(100% - 56px); min-height: calc(100svh - 56px); margin: 28px auto; }
+    .lp-main { min-height: 0; grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 38px 0 25px; }
+    .lp-intro { max-width: 680px; padding: 0 0 8px; }
+    .lp-salle { width: 100%; height: 430px; min-height: 430px; }
+    .lp-picture { width: 155px; }
+    .lp-picture--left { left: 10%; }
+    .lp-picture--right { right: 10%; }
+    .lp-picture--center { width: min(230px, 48%); }
+    .lp-benefits { grid-template-columns: 1fr; gap: 16px; padding: 20px 0; }
+    .lp-benefit { max-width: 470px; }
+}
+
+@media (max-width: 520px) {
+    .lp-shell { width: calc(100% - 48px); margin: 24px auto; }
+    .lp-header { min-height: 60px; gap: 10px; }
+    .lp-brand { font-size: 17px; letter-spacing: .25em; }
+    .lp-header-actions { gap: 9px; }
+    .lp-login { font-size: 15px; }
+    .lp-header .theme-toggle { min-height: 34px; gap: 5px; padding: 4px 7px; font-size: 10px; }
+    .lp-header .theme-toggle svg { width: 15px; height: 15px; }
+    .lp-main { padding-top: 30px; }
+    .lp-kicker { margin-bottom: 17px; font-size: 10px; }
+    .lp-title { font-size: clamp(40px, 10.8vw, 52px); }
+    .lp-description { margin: 15px 0 20px; font-size: 19px; }
+    .lp-actions { gap: 9px; }
+    .lp-button { min-height: 45px; padding-inline: 13px; font-size: 9px; letter-spacing: .09em; }
+    .lp-button--primary { min-width: 130px; }
+    .lp-button--secondary { min-width: 145px; }
+    .lp-resume { font-size: 16px; }
+    .lp-salle { height: 430px; min-height: 430px; }
+    .lp-picture { width: 125px; }
+    .lp-picture--left { top: 21%; left: 4%; }
+    .lp-picture--right { top: 21%; right: 4%; }
+    .lp-picture--center { top: 7%; width: min(205px, 55%); }
+    .lp-plaque { min-height: 57px; }
+    .lp-plaque strong { font-size: 11px; }
+    .lp-plaque span { font-size: 14px; }
+    .lp-benefits { gap: 14px; }
+    .lp-mascot { width: min(170px, 38vw); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .lp-page.lp-animate .lp-reveal { opacity: 1; animation: none; }
+    .lp-slide { transition: none; }
+    .lp-button { transition: none; }
+}

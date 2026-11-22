@@ -23,5 +23,7 @@ mix.js('resources/js/auth-mascot.js', 'public/js')
     .postCss('resources/css/manage-theme.css', 'public/css')
     .postCss('resources/css/tour.css', 'public/css')
     .postCss('resources/css/museum.css', 'public/css')
+    .postCss('resources/css/landing.css', 'public/css')
+    .js('resources/js/landing.js', 'public/js')
     .js('resources/js/museum.js', 'public/js');
 mix.js('resources/js/image-export.js', 'public/js');

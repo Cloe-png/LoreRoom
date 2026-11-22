@@ -8,6 +8,8 @@
 
 ## Mise en ligne
 
+Le domaine doit avoir `public/` comme racine web : Apache lance `public/index.php`, puis la route Laravel `/` affiche `resources/views/start.blade.php` comme page d'accueil.
+
 1. Faire une sauvegarde complète de la base et de `storage/app/public`.
 2. Choisir PHP 8.3+ dans cPanel et vérifier les extensions listées ci-dessus.
 3. Créer une base MySQL et un utilisateur dédiés, avec les droits limités à cette base.

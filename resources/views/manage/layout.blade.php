@@ -1032,7 +1032,7 @@
             .content .field input,.content .field select,.content .field textarea,.content input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),.content select,.content textarea { border:1px solid color-mix(in srgb,var(--gold-dark) 50%,transparent); border-radius:2px; background:rgba(255,255,255,.35); color:var(--ink); font-family:"Cormorant Garamond",serif; }
             .content .muted,.content .text-muted { color:var(--soft); }
             .content table th { color:var(--soft); font:600 11px/1.35 "Cinzel",serif; letter-spacing:.12em; text-transform:uppercase; }
-            .content .flash { border-color:var(--emerald); border-radius:3px; background:rgba(255,255,255,.35); color:var(--emerald); }
+            .content .flash { border-color:var(--success-text); border-radius:3px; background:var(--surface-2); }
             .content .errors { border-color:var(--danger); border-radius:3px; background:rgba(255,255,255,.35); color:var(--danger); }
             body { color:var(--paper); background:linear-gradient(180deg,var(--stone-2),var(--stone-1)); }
             body::before,body::after { display:none; }

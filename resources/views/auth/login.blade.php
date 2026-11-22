@@ -3,7 +3,7 @@
 @section('title', __('app.public.login_page_title'))
 
 @section('content')
-<x-auth-card :title="__('app.public.login_heading')">
+<x-auth-card :title="__('app.public.login_heading')" :mascot="true" mascot-image="images/mascot/Hi.png">
     @if(session('success'))<div class="auth-message" role="status"><x-auth-error-message :message="session('success')" /></div>@endif
     @if($errors->any())<div class="auth-message error" role="alert"><x-auth-error-message :message="$errors->first()" /></div>@endif
     <form method="POST" action="{{ route('login.attempt') }}" data-auth-form>

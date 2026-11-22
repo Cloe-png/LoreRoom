@@ -270,9 +270,9 @@ html[data-theme="light"] {
     color: var(--heading) !important;
 }
 
-.content:not(.mus-content) .btn,
+.content:not(.mus-content) .btn:not(.character-sort-button),
 .content:not(.mus-content) .btn-mini,
-.content:not(.mus-content) button:not(.sidebar-toggle):not(.sidebar-close),
+.content:not(.mus-content) button:not(.sidebar-toggle):not(.sidebar-close):not(.character-sort-button),
 .content:not(.mus-content) input[type="submit"],
 .content:not(.mus-content) .worlds-cta,
 .content:not(.mus-content) .world-action--view,
@@ -477,3 +477,108 @@ html[data-theme="light"] {
 .content .active-badge {
     color: var(--success-text) !important;
 }
+
+/* Legacy paper cards kept pale backgrounds while the shared theme switched
+   their text to the light-on-dark palette. Recolor those surfaces together. */
+html[data-theme="dark"] .content :is(
+        .account-hero, .role-section, .role-card, .account-security, .accordion,
+        .chapter-card, .chapter-preview, .chapter-preview-card, .chapter-preview-row,
+        .chapter-accordion, .chapter-block, .chapter-hero, .chapter-row,
+        .chronicle-preview, .preview-card, .preview-shell, .preview-middle, .preview-foot,
+        .preview-badge, .preview-portrait-fallback, .select-panel, .characters-scroll,
+        .mode-btn, .character-btn,
+        .wanted-card, .show-hero, .section-card, .meta-item, .dl-row,
+        .world-hero, .world-kicker, .world-node, .world-stat, .world-card,
+        .world-list-item, .job-card, .job-hero, .row-card, .list-card,
+        .faction-card, .faction-hero, .lore-card, .lore-hero,
+        .relations-hero, .species-card, .species-section,
+        .trash-hero, .trash-item, .trash-panel,
+        .suggestion-hero, .suggestion-panel, .suggestion-panel-inner,
+        .genealogy-summary-card, .genealogy-toolbar-card, .pref-block,
+        .users-hero, .users-mobile-card, .users-search-panel, .users-table-panel
+    ) {
+        background: var(--surface-2) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+        box-shadow: 0 8px 18px var(--shadow) !important;
+    }
+
+    html[data-theme="dark"] .content :is(
+        .account-hero, .role-section, .role-card, .account-security, .accordion,
+        .chapter-card, .chapter-preview, .chapter-preview-card, .chapter-preview-row,
+        .chapter-accordion, .chapter-block, .chapter-hero, .chapter-row,
+        .chronicle-preview, .preview-card, .preview-shell, .preview-middle, .preview-foot,
+        .preview-badge, .preview-portrait-fallback, .select-panel, .characters-scroll,
+        .mode-btn, .character-btn,
+        .wanted-card, .show-hero, .section-card, .meta-item, .dl-row,
+        .world-hero, .world-kicker, .world-node, .world-stat, .world-card,
+        .world-list-item, .job-card, .job-hero, .row-card, .list-card,
+        .faction-card, .faction-hero, .lore-card, .lore-hero,
+        .relations-hero, .species-card, .species-section,
+        .trash-hero, .trash-item, .trash-panel,
+        .suggestion-hero, .suggestion-panel, .suggestion-panel-inner,
+        .genealogy-summary-card, .genealogy-toolbar-card, .pref-block,
+        .users-hero, .users-mobile-card, .users-search-panel, .users-table-panel
+    ) * {
+        color: var(--text) !important;
+        -webkit-text-fill-color: currentColor;
+    }
+
+    html[data-theme="dark"] .content :is(
+        .account-hero, .role-section, .role-card, .account-security, .accordion,
+        .chapter-card, .chapter-preview, .chapter-preview-card, .chapter-preview-row,
+        .chapter-accordion, .chapter-block, .chapter-hero, .chapter-row,
+        .chronicle-preview, .preview-card, .preview-shell, .preview-middle, .preview-foot,
+        .preview-badge, .preview-portrait-fallback, .select-panel, .characters-scroll,
+        .mode-btn, .character-btn,
+        .wanted-card, .show-hero, .section-card, .meta-item, .dl-row,
+        .world-hero, .world-kicker, .world-node, .world-stat, .world-card,
+        .world-list-item, .job-card, .job-hero, .row-card, .list-card,
+        .faction-card, .faction-hero, .lore-card, .lore-hero,
+        .relations-hero, .species-card, .species-section,
+        .trash-hero, .trash-item, .trash-panel,
+        .suggestion-hero, .suggestion-panel, .suggestion-panel-inner,
+        .genealogy-summary-card, .genealogy-toolbar-card, .pref-block,
+        .users-hero, .users-mobile-card, .users-search-panel, .users-table-panel
+    ) :is(h1, h2, h3, h4, a:not(.btn)) {
+        color: var(--heading) !important;
+        -webkit-text-fill-color: currentColor;
+    }
+
+    html[data-theme="dark"] .content :is(
+        .account-hero, .role-section, .role-card, .account-security, .accordion,
+        .chapter-card, .chapter-preview, .chapter-preview-card, .chapter-preview-row,
+        .chapter-accordion, .chapter-block, .chapter-hero, .chapter-row,
+        .chronicle-preview, .preview-card, .preview-shell, .preview-middle, .preview-foot,
+        .preview-badge, .preview-portrait-fallback, .select-panel, .characters-scroll,
+        .mode-btn, .character-btn,
+        .wanted-card, .show-hero, .section-card, .meta-item, .dl-row,
+        .world-hero, .world-kicker, .world-node, .world-stat, .world-card,
+        .world-list-item, .job-card, .job-hero, .row-card, .list-card,
+        .faction-card, .faction-hero, .lore-card, .lore-hero,
+        .relations-hero, .species-card, .species-section,
+        .trash-hero, .trash-item, .trash-panel,
+        .suggestion-hero, .suggestion-panel, .suggestion-panel-inner,
+        .genealogy-summary-card, .genealogy-toolbar-card, .pref-block,
+        .users-hero, .users-mobile-card, .users-search-panel, .users-table-panel
+    ) .btn,
+    html[data-theme="dark"] .content :is(
+        .account-hero, .role-section, .role-card, .account-security, .accordion,
+        .chapter-card, .chapter-preview, .chapter-preview-card, .chapter-preview-row,
+        .chapter-accordion, .chapter-block, .chapter-hero, .chapter-row,
+        .chronicle-preview, .preview-card, .preview-shell, .preview-middle, .preview-foot,
+        .preview-badge, .preview-portrait-fallback, .select-panel, .characters-scroll,
+        .mode-btn, .character-btn,
+        .wanted-card, .show-hero, .section-card, .meta-item, .dl-row,
+        .world-hero, .world-kicker, .world-node, .world-stat, .world-card,
+        .world-list-item, .job-card, .job-hero, .row-card, .list-card,
+        .faction-card, .faction-hero, .lore-card, .lore-hero,
+        .relations-hero, .species-card, .species-section,
+        .trash-hero, .trash-item, .trash-panel,
+        .suggestion-hero, .suggestion-panel, .suggestion-panel-inner,
+        .genealogy-summary-card, .genealogy-toolbar-card, .pref-block,
+        .users-hero, .users-mobile-card, .users-search-panel, .users-table-panel
+    ) .btn * {
+        color: var(--on-accent) !important;
+        -webkit-text-fill-color: currentColor;
+    }

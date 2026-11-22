@@ -1,1 +1,392 @@
-!function(){"use strict";var t=document.getElementById("first-visit-tour");if(t){var e=t.querySelector(".tour-card"),n=t.querySelector(".tour-frame"),o=t.querySelector("#tour-step-title"),r=t.querySelector(".tour-copy-reserve"),i=t.querySelector(".tour-copy-typed"),a=t.querySelector("#tour-announcer"),c=t.querySelector("[data-tour-counter]"),l=t.querySelector("[data-tour-skip]"),u=t.querySelector("[data-tour-previous]"),s=t.querySelector("[data-tour-next]"),d=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches,f=t.querySelector(".tour-mascot"),m=[],h=0,w=!1,p=!1,y=null,v=null,g=null,b=null,x=0,k="talk2",S=new Map,L=[];t.querySelector("[data-tour-next]").addEventListener("click",N),t.querySelector("[data-tour-previous]").addEventListener("click",F),t.querySelector("[data-tour-skip]").addEventListener("click",I),t.querySelector("[data-tour-never]").addEventListener("click",I),e.addEventListener("click",function(t){t.target.closest("button")||(p?D():N())}),document.addEventListener("keydown",function(t){w&&("Escape"===t.key?(t.preventDefault(),I()):"ArrowRight"===t.key?(t.preventDefault(),N()):"ArrowLeft"===t.key?(t.preventDefault(),F()):"Tab"===t.key&&function(t){var n=Array.prototype.slice.call(e.querySelectorAll("button:not(:disabled)"));if(n.length){var o=n[0],r=n[n.length-1];!t.shiftKey||document.activeElement!==o&&e.contains(document.activeElement)?t.shiftKey||document.activeElement!==r&&e.contains(document.activeElement)||(t.preventDefault(),o.focus()):(t.preventDefault(),r.focus())}}(t))}),window.addEventListener("resize",function(){w&&!t.classList.contains("is-centered")&&R(m[h].target?document.querySelector('[data-tour="'+m[h].target+'"]'):null,"review"===m[h].key)}),window.addEventListener("scroll",function(){w&&!t.classList.contains("is-centered")&&R(m[h].target?document.querySelector('[data-tour="'+m[h].target+'"]'):null,"review"===m[h].key)},!0),document.querySelectorAll("[data-tour-restart]").forEach(function(e){e.addEventListener("click",function(){e.disabled=!0,w&&j(),O(t.getAttribute("data-restart-url")).then(function(e){if(!e.ok)throw new Error("Tutoriel indisponible");t.setAttribute("data-completed","false"),K()}).catch(function(){e.disabled=!1})})});var q=document.querySelector("[data-tour-steps]");try{m=JSON.parse(q?q.textContent:"[]")}catch(t){m=[]}window.tourLabels={counter:t.getAttribute("data-label-counter")||":current / :total",next:t.getAttribute("data-label-next")||"Suivant",finish:t.getAttribute("data-label-finish")||"Terminer",skip:t.getAttribute("data-label-skip")||"Passer"};var A=function(){if(!f)return Promise.resolve();var t=Array.prototype.slice.call(f.querySelectorAll("img[data-tour-frame]"));return Promise.all(t.map(function(t){var e=new Image;return e.src=t.currentSrc||t.src,e.decode?e.decode().catch(function(){}):new Promise(function(t){if(e.complete)return t();e.onload=t,e.onerror=t})}))}();"true"===t.getAttribute("data-auto-start")&&"true"!==t.getAttribute("data-completed")&&window.setTimeout(function(){A.then(K)},500)}function E(t){f&&f.querySelectorAll("[data-tour-frame]").forEach(function(e){e.style.opacity=e.getAttribute("data-tour-frame")===t?"1":"0"})}function T(){window.clearTimeout(g),window.clearTimeout(b),f&&f.classList.remove("is-bouncing")}function C(){var t=Date.now();return t<x?(E("closed"),void(g=window.setTimeout(C,Math.max(20,x-t)))):Math.random()<.3?(E("closed"),void(g=window.setTimeout(C,110+90*Math.random()))):(E(k="talk1"===k?"talk2":"talk1"),f&&!d&&(f.classList.remove("is-bouncing"),f.offsetWidth,f.classList.add("is-bouncing"),window.clearTimeout(b),b=window.setTimeout(function(){f.classList.remove("is-bouncing")},120)),void(g=window.setTimeout(C,130+120*Math.random())))}function M(){L.forEach(function(t){S.has(t)&&(t.open=S.get(t))}),L=[]}function R(t,e){if(!t)return n.style.top="0px",n.style.left="0px",n.style.width="0px",n.style.height="0px",void(n.style.borderRadius="");var o=t.getBoundingClientRect();if(e){var r=Math.max(o.width,o.height)+10;return n.style.top=o.top+(o.height-r)/2+"px",n.style.left=o.left+(o.width-r)/2+"px",n.style.width=r+"px",n.style.height=r+"px",void(n.style.borderRadius="50%")}n.style.top=Math.max(0,o.top-2)+"px",n.style.left=Math.max(0,o.left-2)+"px",n.style.width=Math.max(0,o.width)+"px",n.style.height=Math.max(0,o.height)+"px",n.style.borderRadius=""}function D(){p&&(p=!1,window.clearTimeout(v),i.textContent=m[h].text,T(),E("look"))}function P(t,e){if(d||!f)return i.textContent=t,E("look"),void(p=!1);p=!0,T(),!d&&f?C():E("look");var n=Array.from(t);!function o(){if(w&&h===e)if(i.textContent.length>=t.length)D();else{var r=Array.from(i.textContent).length,a=n[r];i.textContent+=a,/[.,!?…]/.test(a)?(x=Date.now()+220,E("closed"),v=window.setTimeout(o,220)):v=window.setTimeout(o,24)}}()}function B(e){for(window.clearTimeout(v),T(),p=!1,x=0,M();e>=0&&e<m.length;){var n=m[e],d=n.target?document.querySelector('[data-tour="'+n.target+'"]'):null;if(!n.target||d)break;e+=1}if(e<0&&(e=0),e>=m.length)I();else{var f=m[h=e],w=f.target?document.querySelector('[data-tour="'+f.target+'"]'):null;w&&(function(t){M();for(var e=t.closest("details");e;)S.has(e)||S.set(e,e.open),e.open=!0,L.push(e),e=e.parentElement?e.parentElement.closest("details"):null}(w),w.scrollIntoView({block:"nearest",inline:"nearest"})),t.classList.toggle("is-centered",!w),o.textContent=f.title,r.textContent=f.text,i.textContent="",a.textContent=f.text,c.textContent=window.tourLabels.counter.replace(":current",String(h+1)).replace(":total",String(m.length)),u.disabled=0===h,function(){var t=m[h]||{};s.textContent=t.actionLabel||(h===m.length-1?window.tourLabels.finish:window.tourLabels.next),l&&(l.textContent=t.skipLabel||window.tourLabels.skip)}(),E("look"),window.requestAnimationFrame(function(){R(w,"review"===f.key),!w||0!==w.getBoundingClientRect().width&&0!==w.getBoundingClientRect().height?(s.focus(),P(f.text,h)):B(e+=1)})}}function O(e,n){return fetch(e,{method:"POST",credentials:"same-origin",headers:{Accept:"application/json","X-CSRF-TOKEN":t.getAttribute("data-csrf"),"Content-Type":"application/json"},body:JSON.stringify(n||{})})}function j(){w=!1,window.clearTimeout(v),T(),M(),S.forEach(function(t,e){e.open=t}),S.clear(),t.hidden=!0,t.classList.remove("is-centered"),document.body.classList.remove("first-visit-tour-active"),y&&"function"==typeof y.focus&&y.focus()}function I(e){return w?(t.setAttribute("data-completed","true"),j(),O(t.getAttribute("data-complete-url"),e).catch(function(){return null})):Promise.resolve(null)}function K(){!w&&m.length&&(w=!0,y=document.activeElement,S.clear(),t.hidden=!1,document.body.classList.add("first-visit-tour-active"),B(0))}function N(){if(p)D();else if(h>=m.length-1){var t=m[h].action||"complete";"create-world"===t||"choose-world"===t?I({create_world:"create-world"===t,choose_world:"choose-world"===t}).then(function(t){t&&t.ok&&t.json().then(function(t){t.redirect&&window.location.assign(t.redirect)})}):I()}else B(h+1)}function F(){h>0&&B(h-1)}}();
+/******/ (() => { // webpackBootstrap
+/*!******************************!*\
+  !*** ./resources/js/tour.js ***!
+  \******************************/
+(function () {
+  'use strict';
+
+  // Animation setting: 'natural' uses speech-like timing; 'fixed' shows one frame per FRAME_MS.
+  var MOUTH_MODE = 'natural';
+  var FRAME_MS = 2000;
+  var root = document.getElementById('first-visit-tour');
+  if (!root) return;
+  var dialog = root.querySelector('.tour-card');
+  var frame = root.querySelector('.tour-frame');
+  var title = root.querySelector('#tour-step-title');
+  var reserve = root.querySelector('.tour-copy-reserve');
+  var typed = root.querySelector('.tour-copy-typed');
+  var announcer = root.querySelector('#tour-announcer');
+  var counter = root.querySelector('[data-tour-counter]');
+  var skipButton = root.querySelector('[data-tour-skip]');
+  var previousButton = root.querySelector('[data-tour-previous]');
+  var nextButton = root.querySelector('[data-tour-next]');
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mascot = root.querySelector('.tour-mascot');
+  var steps = [];
+  var index = 0;
+  var isOpen = false;
+  var isTyping = false;
+  var previousFocus = null;
+  var typeTimer = null;
+  var mouthTimer = null;
+  var bounceTimer = null;
+  var punctuationUntil = 0;
+  var lastOpenFrame = 'talk2';
+  var fixedFrameIndex = 0;
+  var savedDetails = new Map();
+  var currentDetails = [];
+  function mascotFrame(name) {
+    if (!mascot) return;
+    mascot.querySelectorAll('[data-tour-frame]').forEach(function (image) {
+      image.style.opacity = image.getAttribute('data-tour-frame') === name ? '1' : '0';
+    });
+  }
+  function preloadFrames() {
+    if (!mascot) return Promise.resolve();
+    var images = Array.prototype.slice.call(mascot.querySelectorAll('img[data-tour-frame]'));
+    return Promise.all(images.map(function (element) {
+      var image = new Image();
+      image.src = element.currentSrc || element.src;
+      if (image.decode) return image.decode()["catch"](function () {});
+      return new Promise(function (resolve) {
+        if (image.complete) return resolve();
+        image.onload = resolve;
+        image.onerror = resolve;
+      });
+    }));
+  }
+  function stopMouth() {
+    window.clearTimeout(mouthTimer);
+    window.clearTimeout(bounceTimer);
+    if (mascot) mascot.classList.remove('is-bouncing');
+  }
+  function bounceMouth() {
+    if (!mascot || reducedMotion) return;
+    mascot.classList.remove('is-bouncing');
+    // Restart the 120 ms, 3 px bounce for each open frame.
+    void mascot.offsetWidth;
+    mascot.classList.add('is-bouncing');
+    window.clearTimeout(bounceTimer);
+    bounceTimer = window.setTimeout(function () {
+      mascot.classList.remove('is-bouncing');
+    }, 120);
+  }
+  function nextNaturalMouth() {
+    var now = Date.now();
+    if (now < punctuationUntil) {
+      mascotFrame('closed');
+      mouthTimer = window.setTimeout(nextNaturalMouth, Math.max(20, punctuationUntil - now));
+      return;
+    }
+    if (Math.random() < 0.3) {
+      mascotFrame('closed');
+      mouthTimer = window.setTimeout(nextNaturalMouth, 110 + Math.random() * 90);
+      return;
+    }
+    lastOpenFrame = lastOpenFrame === 'talk1' ? 'talk2' : 'talk1';
+    mascotFrame(lastOpenFrame);
+    bounceMouth();
+    mouthTimer = window.setTimeout(nextNaturalMouth, 130 + Math.random() * 120);
+  }
+  function nextFixedMouth() {
+    var sequence = ['talk1', 'talk2', 'closed', 'look'];
+    mascotFrame(sequence[fixedFrameIndex % sequence.length]);
+    fixedFrameIndex += 1;
+    mouthTimer = window.setTimeout(nextFixedMouth, FRAME_MS);
+  }
+  function startMouth() {
+    stopMouth();
+    if (reducedMotion || !mascot) {
+      mascotFrame('look');
+      return;
+    }
+    if (MOUTH_MODE === 'fixed') {
+      fixedFrameIndex = 0;
+      nextFixedMouth();
+    } else {
+      nextNaturalMouth();
+    }
+  }
+  function restoreCurrentDetails() {
+    currentDetails.forEach(function (details) {
+      if (savedDetails.has(details)) details.open = savedDetails.get(details);
+    });
+    currentDetails = [];
+  }
+  function prepareDetails(target) {
+    restoreCurrentDetails();
+    var details = target.closest('details');
+    while (details) {
+      if (!savedDetails.has(details)) savedDetails.set(details, details.open);
+      details.open = true;
+      currentDetails.push(details);
+      details = details.parentElement ? details.parentElement.closest('details') : null;
+    }
+  }
+  function restoreAllDetails() {
+    restoreCurrentDetails();
+    savedDetails.forEach(function (wasOpen, details) {
+      details.open = wasOpen;
+    });
+    savedDetails.clear();
+  }
+  function updateFrame(target, circular) {
+    if (!target) {
+      frame.style.top = '0px';
+      frame.style.left = '0px';
+      frame.style.width = '0px';
+      frame.style.height = '0px';
+      frame.style.borderRadius = '';
+      return;
+    }
+    var rect = target.getBoundingClientRect();
+    if (circular) {
+      var side = Math.max(rect.width, rect.height) + 10;
+      frame.style.top = rect.top + (rect.height - side) / 2 + 'px';
+      frame.style.left = rect.left + (rect.width - side) / 2 + 'px';
+      frame.style.width = side + 'px';
+      frame.style.height = side + 'px';
+      frame.style.borderRadius = '50%';
+      return;
+    }
+    frame.style.top = Math.max(0, rect.top - 2) + 'px';
+    frame.style.left = Math.max(0, rect.left - 2) + 'px';
+    frame.style.width = Math.max(0, rect.width) + 'px';
+    frame.style.height = Math.max(0, rect.height) + 'px';
+    frame.style.borderRadius = '';
+  }
+  function setNextLabel() {
+    var step = steps[index] || {};
+    nextButton.textContent = step.actionLabel || (index === steps.length - 1 ? window.tourLabels.finish : window.tourLabels.next);
+    if (skipButton) skipButton.textContent = step.skipLabel || window.tourLabels.skip;
+  }
+  function finishTyping() {
+    if (!isTyping) return;
+    isTyping = false;
+    window.clearTimeout(typeTimer);
+    typed.textContent = steps[index].text;
+    stopMouth();
+    mascotFrame('look');
+  }
+  function typeText(text, position) {
+    if (reducedMotion || !mascot) {
+      typed.textContent = text;
+      mascotFrame('look');
+      isTyping = false;
+      return;
+    }
+    isTyping = true;
+    startMouth();
+    var characters = Array.from(text);
+    function writeNext() {
+      if (!isOpen || index !== position) return;
+      if (typed.textContent.length >= text.length) {
+        finishTyping();
+        return;
+      }
+      var offset = Array.from(typed.textContent).length;
+      var character = characters[offset];
+      typed.textContent += character;
+      if (/[.,!?…]/.test(character)) {
+        punctuationUntil = Date.now() + 220;
+        mascotFrame('closed');
+        typeTimer = window.setTimeout(writeNext, 220);
+      } else {
+        typeTimer = window.setTimeout(writeNext, 24);
+      }
+    }
+    writeNext();
+  }
+  function showStep(nextIndex) {
+    window.clearTimeout(typeTimer);
+    stopMouth();
+    isTyping = false;
+    punctuationUntil = 0;
+    restoreCurrentDetails();
+    while (nextIndex >= 0 && nextIndex < steps.length) {
+      var candidate = steps[nextIndex];
+      var candidateTarget = candidate.target ? document.querySelector('[data-tour="' + candidate.target + '"]') : null;
+      if (!candidate.target || candidateTarget) break;
+      nextIndex += 1;
+    }
+    if (nextIndex < 0) nextIndex = 0;
+    if (nextIndex >= steps.length) {
+      completeTour();
+      return;
+    }
+    index = nextIndex;
+    var step = steps[index];
+    var target = step.target ? document.querySelector('[data-tour="' + step.target + '"]') : null;
+    if (target) {
+      prepareDetails(target);
+      target.scrollIntoView({
+        block: 'nearest',
+        inline: 'nearest'
+      });
+    }
+    root.classList.toggle('is-centered', !target);
+    title.textContent = step.title;
+    reserve.textContent = step.text;
+    typed.textContent = '';
+    announcer.textContent = step.text;
+    counter.textContent = window.tourLabels.counter.replace(':current', String(index + 1)).replace(':total', String(steps.length));
+    previousButton.disabled = index === 0;
+    setNextLabel();
+    mascotFrame('look');
+    window.requestAnimationFrame(function () {
+      updateFrame(target, step.key === 'review');
+      if (target && (target.getBoundingClientRect().width === 0 || target.getBoundingClientRect().height === 0)) {
+        nextIndex += 1;
+        showStep(nextIndex);
+        return;
+      }
+      nextButton.focus();
+      typeText(step.text, index);
+    });
+  }
+  function postState(url, data) {
+    return fetch(url, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': root.getAttribute('data-csrf'),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data || {})
+    });
+  }
+  function closeTour() {
+    isOpen = false;
+    window.clearTimeout(typeTimer);
+    stopMouth();
+    restoreAllDetails();
+    root.hidden = true;
+    root.classList.remove('is-centered');
+    document.body.classList.remove('first-visit-tour-active');
+    if (previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+  }
+  function completeTour(data) {
+    if (!isOpen) return Promise.resolve(null);
+    root.setAttribute('data-completed', 'true');
+    closeTour();
+    return postState(root.getAttribute('data-complete-url'), data)["catch"](function () {
+      return null;
+    });
+  }
+  function openTour() {
+    if (isOpen || !steps.length) return;
+    isOpen = true;
+    previousFocus = document.activeElement;
+    savedDetails.clear();
+    root.hidden = false;
+    document.body.classList.add('first-visit-tour-active');
+    showStep(0);
+  }
+  function advance() {
+    if (isTyping) {
+      finishTyping();
+      return;
+    }
+    if (index >= steps.length - 1) {
+      var action = steps[index].action || 'complete';
+      if (action === 'create-world' || action === 'choose-world') {
+        completeTour({
+          create_world: action === 'create-world',
+          choose_world: action === 'choose-world'
+        }).then(function (response) {
+          if (!response || !response.ok) return;
+          response.json().then(function (result) {
+            if (result.redirect) window.location.assign(result.redirect);
+          });
+        });
+      } else {
+        completeTour();
+      }
+      return;
+    }
+    showStep(index + 1);
+  }
+  function goPrevious() {
+    if (index > 0) showStep(index - 1);
+  }
+  function trapFocus(event) {
+    var controls = Array.prototype.slice.call(dialog.querySelectorAll('button:not(:disabled)'));
+    if (!controls.length) return;
+    var first = controls[0];
+    var last = controls[controls.length - 1];
+    if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+  root.querySelector('[data-tour-next]').addEventListener('click', advance);
+  root.querySelector('[data-tour-previous]').addEventListener('click', goPrevious);
+  root.querySelector('[data-tour-skip]').addEventListener('click', completeTour);
+  root.querySelector('[data-tour-never]').addEventListener('click', completeTour);
+  dialog.addEventListener('click', function (event) {
+    if (event.target.closest('button')) return;
+    if (isTyping) finishTyping();else advance();
+  });
+  document.addEventListener('keydown', function (event) {
+    if (!isOpen) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      completeTour();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      advance();
+    } else if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      goPrevious();
+    } else if (event.key === 'Tab') {
+      trapFocus(event);
+    }
+  });
+  window.addEventListener('resize', function () {
+    if (!isOpen || root.classList.contains('is-centered')) return;
+    var target = steps[index].target ? document.querySelector('[data-tour="' + steps[index].target + '"]') : null;
+    updateFrame(target, steps[index].key === 'review');
+  });
+  window.addEventListener('scroll', function () {
+    if (!isOpen || root.classList.contains('is-centered')) return;
+    var target = steps[index].target ? document.querySelector('[data-tour="' + steps[index].target + '"]') : null;
+    updateFrame(target, steps[index].key === 'review');
+  }, true);
+  document.querySelectorAll('[data-tour-restart]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      button.disabled = true;
+      if (isOpen) closeTour();
+      postState(root.getAttribute('data-restart-url')).then(function (response) {
+        if (!response.ok) throw new Error('Tutoriel indisponible');
+        root.setAttribute('data-completed', 'false');
+        openTour();
+      })["catch"](function () {
+        button.disabled = false;
+      });
+    });
+  });
+  var localeConfig = document.querySelector('[data-tour-steps]');
+  try {
+    steps = JSON.parse(localeConfig ? localeConfig.textContent : '[]');
+  } catch (error) {
+    steps = [];
+  }
+  window.tourLabels = {
+    counter: root.getAttribute('data-label-counter') || ':current / :total',
+    next: root.getAttribute('data-label-next') || 'Suivant',
+    finish: root.getAttribute('data-label-finish') || 'Terminer',
+    skip: root.getAttribute('data-label-skip') || 'Passer'
+  };
+  var preloaded = preloadFrames();
+  if (root.getAttribute('data-auto-start') === 'true' && root.getAttribute('data-completed') !== 'true') {
+    window.setTimeout(function () {
+      preloaded.then(openTour);
+    }, 500);
+  }
+})();
+/******/ })()
+;

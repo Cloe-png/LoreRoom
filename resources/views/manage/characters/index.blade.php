@@ -16,9 +16,9 @@
                 <label>Recherche avancée</label>
                 <input type="text" name="q" value="{{ $q ?? '' }}" placeholder="Nom, prénom...">
             </div>
-            <div class="stack" style="gap:6px;">
-                <button class="btn secondary" type="submit" name="sort" value="birth_date">Trier par date de naissance</button>
-                <button class="btn secondary" type="submit" name="sort" value="alpha">Trier par ordre alphabétique</button>
+            <div id="characters-sort-actions" class="stack" style="gap:6px;">
+                <button class="btn secondary character-sort-button" type="submit" name="sort" value="birth_date">Trier par date de naissance</button>
+                <button class="btn secondary character-sort-button" type="submit" name="sort" value="alpha">Trier par ordre alphabétique</button>
                 @if(!empty($sort))
                     <a class="btn secondary" href="{{ route('manage.characters.index', array_filter(['name' => $name ?? '', 'birth_date' => $birthDate ?? '', 'q' => $q ?? ''])) }}">Tri par défaut</a>
                 @endif
