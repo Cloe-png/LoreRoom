@@ -5,6 +5,17 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Keep the application behind the public launch countdown until opening day.
+$opensAt = new DateTimeImmutable('2026-12-21T00:00:00+01:00');
+$now = new DateTimeImmutable('now', new DateTimeZone('Europe/Paris'));
+
+if ($now < $opensAt) {
+    header('Content-Type: text/html; charset=UTF-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    readfile(__DIR__.'/Coming_Soon.html');
+    exit;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Check If The Application Is Under Maintenance

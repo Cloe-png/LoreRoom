@@ -114,6 +114,7 @@
       const target = new Date(countdown.dataset.target).getTime();
       const dateLabel = document.querySelector('.date');
       const arrived = document.getElementById('arrived');
+      let openingRedirected = false;
       const fields = {
         days: document.getElementById('days'),
         hours: document.getElementById('hours'),
@@ -127,6 +128,10 @@
           countdown.hidden = true;
           dateLabel.hidden = true;
           arrived.hidden = false;
+          if (!openingRedirected) {
+            openingRedirected = true;
+            window.setTimeout(() => window.location.replace('/'), 1800);
+          }
           return;
         }
         fields.days.textContent = String(Math.floor(remaining / 86400000)).padStart(2, '0');
